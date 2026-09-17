@@ -10,16 +10,17 @@
 - Validators (Zod v4) + Services (product, inventory, sale, cashbox, financial)
 - APIs com sessão→tenant (`src/lib/api-context.ts`): `/api/tenants`, `/api/products`, `/api/users`, `/api/sales`, `/api/stock`, `/api/cashbox`, `/api/cashbox/[id]/close`, `/api/financial` (+ `/api/test` pública)
 - Super Admin: `requireSuperAdmin`, `/unauthorized`, `/admin` (métricas), `/admin/empresas`, `/admin/usuarios`, `/admin/permissoes`, bootstrap `scripts/bootstrap-admin.cjs`
+- Produtos UI: `/dashboard/produtos` (lista com estoque, cadastro com conversão R$→centavos, ativa/desativa) + `requireSessionTenant` (`src/lib/tenant.ts`)
 - Docs: PRD, ARCHITECTURE, DATABASE, AUTH, TENANCY, PERMISSIONS, DESIGN_SYSTEM, MODULES, ROADMAP, AI_RULES + ADR-001..004
 
 ## Em desenvolvimento 🟡
 - Nenhum (Fase B fechada).
 
 ## Não implementado ⬜
-- UIs comerciais (produtos/estoque/PDV/caixa/financeiro) · planos/assinaturas · relatórios/auditoria · testes automatizados · logo oficial · dark toggle · presets alternativos.
+- Estoque UI, PDV, caixa e financeiro UI · planos/assinaturas · relatórios/auditoria · testes automatizados · logo oficial · dark toggle · presets alternativos.
 
 ## Bugs conhecidos
-- Nenhum registrado. Build verde (19 rotas). Gate B 16/16 (401/307/200 + marcas visuais).
+- Nenhum registrado. Build verde (20 rotas). Gate produtos: /dashboard/produtos sem sessão → 307.
 
 ## Próxima tarefa
-1. Primeiro módulo comercial (sugestão: produtos UI no visual do kit) ou deploy Vercel da estrutura atual.
+1. Estoque UI (`/dashboard/estoque` — saldo + movimentar ENTRADA/SAIDA/AJUSTE) ou deploy Vercel da estrutura atual.

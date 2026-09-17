@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { getSessionUser } from "@/lib/auth";
 
 /**
  * Resolve o tenant atual.
@@ -33,4 +35,19 @@ export async function getUserContextByEmail(email: string) {
     include: { tenant: true },
   });
   return user;
+}
+
+/**
+ * Contexto do tenant para Server Components/Actions da área do tenant.
+ * Sem sessão → /login. Sem vínculo ativo → /unauthorized.
+ */
+export async function requireSessionTenant(redirectTo = "/dashboard") {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser?.email) redirect(`/login?redirect=${redirectTo}`);
+
+  const dbUser = await getUserContextByEmail(sessionUser.email);
+  if (!dbUser || !dbUser.active) redirect("/unauthorized");
+
+  const tenant = await requireTenant(dbUser.tenantId);
+  return { tenant, dbUser };
 }

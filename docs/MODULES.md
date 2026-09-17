@@ -18,8 +18,8 @@ Projeto, configuração, banco, ORM, contexto, Design System.
 - [x] Bootstrap via `scripts/bootstrap-admin.cjs`
 - [ ] Planos, assinaturas, configurações
 
-## Operação — 🟡 APIs prontas, UI pendente
-- [x] Produtos (API) · [ ] UI
+## Operação — 🟡 parcial
+- [x] Produtos: API + UI (`/dashboard/produtos` — lista, cadastro em R$, ativa/desativa)
 - [x] Estoque/movimentações (API) · [ ] UI
 - [ ] Categorias e imagens (Supabase Storage)
 

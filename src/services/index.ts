@@ -17,13 +17,13 @@ import {
 
 export class ProductService {
   static async listProducts(tenantId: number, filters?: {
-    active?: boolean;
+    active?: boolean | "all";
     category?: string;
   }) {
     return prisma.product.findMany({
       where: {
         tenantId,
-        active: filters?.active !== undefined ? filters.active : true,
+        active: filters?.active === "all" ? undefined : (filters?.active ?? true),
         category: filters?.category,
       },
       include: {
