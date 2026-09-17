@@ -29,6 +29,7 @@ model Tenant {
   saleItems SaleItem[]
   cashBoxes CashBox[]
   financialMovements FinancialMovement[]
+  categories Category[]
   
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -362,6 +363,32 @@ model AuditLog {
   @@index([action])
   @@index([entity])
   @@index([createdAt])
+}
+
+// ============================================================
+// CATEGORIAS (Produto e Financeiro)
+// ============================================================
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name      String
+  kind      CategoryKind
+  active    Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([tenantId, kind, name])
+  @@index([tenantId])
+  @@index([kind])
+}
+
+enum CategoryKind {
+  PRODUCT
+  FINANCIAL
 }
 
 // ============================================================

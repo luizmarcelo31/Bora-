@@ -1,16 +1,16 @@
 # ROADMAP
 
-## Feito (fundação + Fase A + Fase B + módulos)
+## Feito (fundação + Fases A/B + roadmap 1-7)
 - [x] Next.js + Tailwind + shadcn base + Supabase clients
-- [x] Prisma schema + migration inicial
-- [x] Validators + Services
-- [x] APIs: test, tenants, products, users, sales, stock, cashbox, financial
+- [x] Prisma (2 migrations) + Validators + Services
+- [x] APIs: test, tenants, products, users, sales, stock, cashbox, financial (sessão→tenant)
 - [x] Auth UI + proxy + roles/permissions libs
 - [x] Docs contínuos + Design System (Studio Admin, preset Neutral)
-- [x] Sessão→tenant nas APIs + Super Admin (/admin)
-- [x] Produtos, Estoque, PDV, Caixa e Financeiro UI
+- [x] Super Admin (/admin) + conta raiz imutável
+- [x] Produtos + Categorias + Estoque + PDV (c/ cancelar) + Caixa (c/ diferença) + Financeiro (c/ baixa)
+- [x] Relatórios + Configurações + Auditoria (com trilha)
 
 ## Próximo
-7. Relatórios simples + auditoria.
-8. Testes (Vitest unit + Playwright E2E nos fluxos críticos).
-9. Domínio + backup + polish.
+8. Imagens de produto (Supabase Storage) + planos/assinaturas (se necessário).
+9. Testes (Vitest unit + Playwright E2E nos fluxos críticos).
+10. Domínio + backup + polish.

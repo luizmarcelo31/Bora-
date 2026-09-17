@@ -20,16 +20,19 @@ Projeto, configuração, banco, ORM, contexto, Design System.
 
 ## Operação — ✅ pronto
 - [x] Produtos: API + UI (`/dashboard/produtos`)
+- [x] Categorias: API + UI (`/dashboard/categorias` — PRODUCT/FINANCIAL, wire em produtos/financeiro)
 - [x] Estoque: API + UI (`/dashboard/estoque` — saldo, ENTRADA/SAIDA/AJUSTE, histórico)
-- [ ] Categorias e imagens (Supabase Storage)
+- [ ] Imagens (Supabase Storage)
 
 ## Financeiro — ✅ pronto
-- [x] Caixa: API + UI (`/dashboard/caixa` — abrir/fechar/histórico)
-- [x] Financeiro: API + UI (`/dashboard/financeiro` — lançar, resumo do mês)
-- [ ] Contas a pagar/receber com baixa (usar campo `paid`)
+- [x] Caixa: API + UI (`/dashboard/caixa` — abrir/fechar c/ diferença + estorno, histórico)
+- [x] Financeiro: API + UI (`/dashboard/financeiro` — lançar, resumo do mês, baixa paid/unpay)
 
 ## Conveniência — ✅ pronto
-- [x] PDV: API + UI (`/dashboard/pdv` — carrinho, pagamento, caixa, vendas do dia)
+- [x] PDV: API + UI (`/dashboard/pdv` — carrinho, pagamento, caixa, vendas do dia, cancelar c/ estorno)
 
-## Finalização — ⬜ pendente
-Relatórios, auditoria, testes, segurança, polish UX.
+## Finalização — ✅ relatórios/config/auditoria prontos
+- [x] Relatórios (`/dashboard/relatorios` — vendas, financeiro, top produtos)
+- [x] Configurações (`/dashboard/configuracoes` — TenantSettings)
+- [x] Auditoria (`/dashboard/auditoria` — 100 últimos logs + trilha nas actions)
+- [ ] Testes (Vitest/Playwright), segurança avançada, polish UX.

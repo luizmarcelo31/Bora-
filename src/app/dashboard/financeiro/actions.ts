@@ -40,7 +40,17 @@ export async function createFinancialAction(formData: FormData) {
   });
   if (!parsed.success) redirect("/dashboard/financeiro?error=invalid");
 
-  await FinancialService.registerMovement(tenant.id, parsed.data);
+  const movement = await FinancialService.registerMovement(tenant.id, parsed.data);
+  const { logAudit } = await import("@/lib/audit");
+  await logAudit({
+    tenantId: tenant.id,
+    action: "create",
+    entity: "financial",
+    entityId: movement.id,
+    userId: dbUser.id,
+    userEmail: dbUser.email,
+    changes: parsed.data,
+  });
   revalidatePath("/dashboard/financeiro");
   redirect("/dashboard/financeiro?ok=1");
 }

@@ -20,6 +20,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatCurrency } from "@/lib/validators";
 import { createFinancialAction } from "./actions";
+import { togglePaidAction } from "./pay-actions";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Confira tipo, categoria, descrição, valor e data.",
@@ -41,7 +42,7 @@ export default async function FinanceiroPage({
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const [resume, movements, cashboxes] = await Promise.all([
+  const [resume, movements, cashboxes, finCategories] = await Promise.all([
     FinancialService.getFinancialResume(tenant.id, monthStart, now),
     prisma.financialMovement.findMany({
       where: { tenantId: tenant.id },
@@ -51,6 +52,10 @@ export default async function FinanceiroPage({
     prisma.cashBox.findMany({
       where: { tenantId: tenant.id, status: "OPEN" },
       orderBy: { createdAt: "desc" },
+    }),
+    prisma.category.findMany({
+      where: { tenantId: tenant.id, kind: "FINANCIAL", active: true },
+      orderBy: { name: "asc" },
     }),
   ]);
 
@@ -91,7 +96,25 @@ export default async function FinanceiroPage({
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Categoria*
-              <Input name="category" required placeholder="Ex.: Aluguel, Vendas" />
+              {finCategories.length > 0 ? (
+                <select
+                  name="category"
+                  required
+                  defaultValue=""
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="" disabled>
+                    Selecione...
+                  </option>
+                  {finCategories.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Input name="category" required placeholder="Ex.: Aluguel (crie em Categorias)" />
+              )}
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Valor (R$)*
@@ -153,6 +176,8 @@ export default async function FinanceiroPage({
                   <TableHead>Categoria</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead>Valor</TableHead>
+                  <TableHead>Pago</TableHead>
+                  <TableHead>Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -163,6 +188,16 @@ export default async function FinanceiroPage({
                     <TableCell>{m.category}</TableCell>
                     <TableCell>{m.description}</TableCell>
                     <TableCell>{formatCurrency(m.amount)}</TableCell>
+                    <TableCell>{m.paid ? "✅" : "—"}</TableCell>
+                    <TableCell>
+                      <form action={togglePaidAction}>
+                        <input type="hidden" name="movementId" value={m.id} />
+                        <input type="hidden" name="paid" value={m.paid ? "false" : "true"} />
+                        <Button variant="outline" size="sm" type="submit">
+                          {m.paid ? "Desmarcar" : "Dar baixa"}
+                        </Button>
+                      </form>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

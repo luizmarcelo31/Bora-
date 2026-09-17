@@ -6,6 +6,10 @@ import {
   ShoppingCart,
   Wallet,
   Landmark,
+  Tag,
+  BarChart3,
+  Settings,
+  ClipboardList,
 } from "lucide-react";
 
 /**
@@ -58,6 +62,7 @@ export const tenantNav: NavGroup[] = [
     items: [
       { id: "overview", title: "Visão geral", url: "/dashboard", icon: LayoutDashboard },
       { id: "products", title: "Produtos", url: "/dashboard/produtos", icon: Package },
+      { id: "categories", title: "Categorias", url: "/dashboard/categorias", icon: Tag },
       { id: "stock", title: "Estoque", url: "/dashboard/estoque", icon: Boxes },
       { id: "pdv", title: "PDV", url: "/dashboard/pdv", icon: ShoppingCart },
     ],
@@ -68,6 +73,15 @@ export const tenantNav: NavGroup[] = [
     items: [
       { id: "cashbox", title: "Caixa", url: "/dashboard/caixa", icon: Wallet },
       { id: "financial", title: "Financeiro", url: "/dashboard/financeiro", icon: Landmark },
+    ],
+  },
+  {
+    id: 3,
+    label: "Gestão",
+    items: [
+      { id: "reports", title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3 },
+      { id: "settings", title: "Configurações", url: "/dashboard/configuracoes", icon: Settings },
+      { id: "audit", title: "Auditoria", url: "/dashboard/auditoria", icon: ClipboardList },
     ],
   },
 ];

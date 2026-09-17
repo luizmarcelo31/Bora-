@@ -37,7 +37,17 @@ export async function moveStockAction(formData: FormData) {
       quantity,
       reason,
     });
-    await InventoryService.registerMovement(tenant.id, parsed);
+    const movement = await InventoryService.registerMovement(tenant.id, parsed);
+    const { logAudit } = await import("@/lib/audit");
+    await logAudit({
+      tenantId: tenant.id,
+      action: "move",
+      entity: "stock",
+      entityId: movement.id,
+      userId: dbUser.id,
+      userEmail: dbUser.email,
+      changes: parsed,
+    });
   } catch {
     redirect("/dashboard/estoque?error=stock");
   }

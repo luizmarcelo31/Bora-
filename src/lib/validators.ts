@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Role, PaymentMethod, StockMovementType, SaleStatus } from '@prisma/client';
+import { Role, PaymentMethod, StockMovementType, SaleStatus, CategoryKind } from '@prisma/client';
 
 // ============================================================
 // TENANT (Empresa)
@@ -245,6 +245,17 @@ export const updateTenantSettingsSchema = z.object({
 });
 
 export type UpdateTenantSettingsInput = z.infer<typeof updateTenantSettingsSchema>;
+
+// ============================================================
+// CATEGORY (Categoria)
+// ============================================================
+
+export const createCategorySchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório").max(100),
+  kind: z.nativeEnum(CategoryKind),
+});
+
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 
 // ============================================================
 // SHARED VALIDATION UTILITIES

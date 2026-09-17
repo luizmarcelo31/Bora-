@@ -20,7 +20,17 @@ export async function openCashBoxAction(formData: FormData) {
   const openingBalance = parseBRLToCents(formData.get("openingBalance")) ?? 0;
   if (!name) redirect("/dashboard/caixa?error=invalid");
 
-  await CashBoxService.openCashBox(tenant.id, name, openingBalance);
+  const box = await CashBoxService.openCashBox(tenant.id, name, openingBalance);
+  const { logAudit } = await import("@/lib/audit");
+  await logAudit({
+    tenantId: tenant.id,
+    action: "open",
+    entity: "cashbox",
+    entityId: box.id,
+    userId: dbUser.id,
+    userEmail: dbUser.email,
+    details: `Abrir ${name} ${openingBalance}`,
+  });
   revalidatePath("/dashboard/caixa");
   redirect("/dashboard/caixa?ok=1");
 }
@@ -38,7 +48,31 @@ export async function closeCashBoxAction(formData: FormData) {
   if (!cashBoxId || closingBalance === undefined) redirect("/dashboard/caixa?error=invalid");
 
   try {
-    await CashBoxService.closeCashBox(tenant.id, cashBoxId, closingBalance);
+    const result = await CashBoxService.closeCashBox(tenant.id, cashBoxId, closingBalance);
+    // Item 4 — diferença no fechamento: sobra/falta como lançamento financeiro
+    const { FinancialService } = await import("@/services");
+    const diff = closingBalance - result.currentBalance;
+    if (diff !== 0) {
+      await FinancialService.registerMovement(tenant.id, {
+        type: diff > 0 ? "RECEITA" : "DESPESA",
+        category: diff > 0 ? "Sobra de caixa" : "Falta de caixa",
+        description: `Fechamento ${result.name} — diferença ${diff > 0 ? "sobra" : "falta"}`,
+        amount: Math.abs(diff),
+        movementDate: new Date(),
+        cashBoxId: result.id,
+      });
+    }
+    const { logAudit: logAuditClose } = await import("@/lib/audit");
+    await logAuditClose({
+      tenantId: tenant.id,
+      action: "close",
+      entity: "cashbox",
+      entityId: result.id,
+      userId: dbUser.id,
+      userEmail: dbUser.email,
+      details: `Fechar ${result.name} diferença ${diff}`,
+    });
+    // Item 2 — baixa: marcar como pagas as pendências do caixa (opcional p/ consulta)
   } catch {
     redirect("/dashboard/caixa?error=close");
   }

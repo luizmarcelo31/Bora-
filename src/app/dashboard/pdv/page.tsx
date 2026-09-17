@@ -13,15 +13,17 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/validators";
-import { getPdvPageData } from "./actions";
+import { getPdvPageData, cancelSaleAction } from "./actions";
 import { PdvClient } from "./pdv-client";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Venda inválida. Confira os itens.",
   empty: "Adicione ao menos um item.",
   stock: "Não foi possível concluir (verifique estoque e caixa).",
-  forbidden: "Seu role não tem permissão para vender.",
+  forbidden: "Seu role não tem permissão para esta ação.",
+  cancel: "Não foi possível cancelar (venda já cancelada ou inexistente).",
 };
 
 export default async function PdvPage({
@@ -45,7 +47,9 @@ export default async function PdvPage({
       {params.error ? (
         <p className="text-sm text-destructive">{ERROR_MSG[params.error] ?? "Erro na venda."}</p>
       ) : null}
-      {params.ok ? (
+      {params.ok === "cancel" ? (
+        <p className="text-sm text-muted-foreground">Venda cancelada e estoque/financeiro estornados.</p>
+      ) : params.ok ? (
         <p className="text-sm text-muted-foreground">Venda #{params.ok} registrada com sucesso.</p>
       ) : null}
 
@@ -77,6 +81,7 @@ export default async function PdvPage({
                   <TableHead>Itens</TableHead>
                   <TableHead>Pagamento</TableHead>
                   <TableHead>Total</TableHead>
+                  <TableHead>Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -89,6 +94,14 @@ export default async function PdvPage({
                     <TableCell>{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
                     <TableCell>{s.paymentMethod}</TableCell>
                     <TableCell>{formatCurrency(s.total)}</TableCell>
+                    <TableCell>
+                      <form action={cancelSaleAction}>
+                        <input type="hidden" name="saleId" value={s.id} />
+                        <Button variant="outline" size="sm" type="submit">
+                          Cancelar
+                        </Button>
+                      </form>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

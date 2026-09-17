@@ -1,4 +1,5 @@
 import { ProductService } from "@/services";
+import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +31,13 @@ export default async function ProdutosPage({
   const { tenant } = await requireSessionTenant("/dashboard/produtos");
   const params = await searchParams;
 
-  const products = await ProductService.listProducts(tenant.id, { active: "all" });
+  const [products, productCategories] = await Promise.all([
+    ProductService.listProducts(tenant.id, { active: "all" }),
+    prisma.category.findMany({
+      where: { tenantId: tenant.id, kind: "PRODUCT", active: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
@@ -52,7 +59,22 @@ export default async function ProdutosPage({
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Categoria
-              <Input name="category" placeholder="Bebidas" />
+              {productCategories.length > 0 ? (
+                <select
+                  name="category"
+                  defaultValue=""
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">Sem categoria</option>
+                  {productCategories.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Input name="category" placeholder="Bebidas (crie em Categorias)" />
+              )}
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Preço de venda (R$)*

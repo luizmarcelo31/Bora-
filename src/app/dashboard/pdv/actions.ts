@@ -61,11 +61,74 @@ export async function createSaleAction(formData: FormData) {
       customerName: String(formData.get("customerName") ?? ""),
     });
     const sale = await SaleService.createSale(tenant.id, parsed);
+    // PDV → Financeiro (§19 PRD): toda venda gera RECEITA automaticamente
+    if (sale.status === "COMPLETED") {
+      const { FinancialService } = await import("@/services");
+      await FinancialService.registerMovement(tenant.id, {
+        type: "RECEITA",
+        category: "Vendas PDV",
+        description: `Venda #${sale.id} — ${sale.paymentMethod}`,
+        amount: sale.total,
+        movementDate: sale.createdAt,
+        cashBoxId: sale.cashBoxId ?? undefined,
+      });
+    }
+    const { logAudit } = await import("@/lib/audit");
+    await logAudit({
+      tenantId: tenant.id,
+      action: "create",
+      entity: "sale",
+      entityId: sale.id,
+      userId: dbUser.id,
+      userEmail: dbUser.email,
+      changes: { total: sale.total, items: sale.items?.length ?? items.length },
+      details: `Venda #${sale.id} ${sale.paymentMethod} ${sale.total}`,
+    });
     revalidatePath("/dashboard/pdv");
     redirect(`/dashboard/pdv?ok=${sale.id}`);
   } catch {
     redirect("/dashboard/pdv?error=stock");
   }
+}
+
+export async function cancelSaleAction(formData: FormData) {
+  const { tenant, dbUser } = await requireSessionTenant("/dashboard/pdv");
+  try {
+    requirePermission(dbUser.role as Role, "sales.cancel");
+  } catch {
+    redirect("/dashboard/pdv?error=forbidden");
+  }
+  const saleId = parseInt(String(formData.get("saleId") ?? "0"), 10);
+  if (!saleId) redirect("/dashboard/pdv?error=invalid");
+  try {
+    const saleBefore = await prisma.sale.findFirst({ where: { id: saleId, tenantId: tenant.id } });
+    await SaleService.cancelSale(tenant.id, saleId);
+    // Estorno financeiro: se havia RECEITA, criar DESPESA de estorno
+    const { FinancialService: FinancialService2 } = await import("@/services");
+    if (saleBefore) {
+      await FinancialService2.registerMovement(tenant.id, {
+        type: "DESPESA",
+        category: "Estorno PDV",
+        description: `Estorno venda #${saleBefore.id}`,
+        amount: saleBefore.total,
+        movementDate: new Date(),
+        cashBoxId: saleBefore.cashBoxId ?? undefined,
+      });
+    }
+    const { logAudit: logAuditCancel } = await import("@/lib/audit");
+    await logAuditCancel({
+      tenantId: tenant.id,
+      action: "cancel",
+      entity: "sale",
+      entityId: saleId,
+      userId: dbUser.id,
+      userEmail: dbUser.email,
+    });
+  } catch {
+    redirect("/dashboard/pdv?error=cancel");
+  }
+  revalidatePath("/dashboard/pdv");
+  redirect("/dashboard/pdv?ok=cancel");
 }
 
 export async function getPdvPageData(tenantId: number) {

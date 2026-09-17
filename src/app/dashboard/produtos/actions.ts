@@ -35,11 +35,25 @@ export async function createProductAction(formData: FormData) {
   });
   if (!parsed.success) redirect("/dashboard/produtos?error=invalid");
 
+  let productId: number | undefined;
   try {
-    await ProductService.createProduct(tenant.id, parsed.data);
+    const p = await ProductService.createProduct(tenant.id, parsed.data);
+    productId = p.id;
   } catch {
     redirect("/dashboard/produtos?error=duplicate");
   }
+
+  const { logAudit } = await import("@/lib/audit");
+  await logAudit({
+    tenantId: tenant.id,
+    action: "create",
+    entity: "product",
+    entityId: productId!,
+    userId: dbUser.id,
+    userEmail: dbUser.email,
+    changes: parsed.data,
+    details: `Produto ${parsed.data.name}`,
+  });
 
   revalidatePath("/dashboard/produtos");
   redirect("/dashboard/produtos?ok=1");
@@ -53,5 +67,14 @@ export async function toggleProductAction(formData: FormData) {
   if (!productId) redirect("/dashboard/produtos?error=invalid");
 
   await ProductService.toggleProduct(tenant.id, productId);
+  const { logAudit: logAudit2 } = await import("@/lib/audit");
+  await logAudit2({
+    tenantId: tenant.id,
+    action: "toggle",
+    entity: "product",
+    entityId: productId,
+    userId: dbUser.id,
+    userEmail: dbUser.email,
+  });
   revalidatePath("/dashboard/produtos");
 }
