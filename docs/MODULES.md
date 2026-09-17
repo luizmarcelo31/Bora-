@@ -12,11 +12,10 @@ Projeto, configuração, banco, ORM, contexto, Design System.
 - [x] Roles + permissões (libs + página /admin/permissoes)
 - [x] Sessão→tenant nas APIs (`requireApiContext`, 401/403)
 
-## Super Admin — 🟡 parcial (visual atual, sem kit)
+## Super Admin — ✅ funcional no visual do kit
 - [x] Guarda `requireSuperAdmin` + `/unauthorized` + `/admin/*` no proxy
-- [x] Dashboard (/admin), empresas, usuários, permissões
+- [x] Shell (sidebar + header) + empresas, usuários, permissões
 - [x] Bootstrap via `scripts/bootstrap-admin.cjs`
-- [ ] Re-skin com Studio Admin (Fase B)
 - [ ] Planos, assinaturas, configurações
 
 ## Operação — 🟡 APIs prontas, UI pendente

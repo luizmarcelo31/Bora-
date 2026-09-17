@@ -1,8 +1,6 @@
-import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { signup } from "@/app/(auth)/actions";
+import Link from "next/link";
+import { BrandMark } from "@/components/shared/BrandMark";
+import { RegisterForm } from "@/components/auth/register-form";
 
 export default async function SignupPage({
   searchParams,
@@ -12,35 +10,45 @@ export default async function SignupPage({
   const params = await searchParams;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-6 py-12">
-      <PageHeader
-        title="Criar conta"
-        description="O acesso ao tenant é liberado pelo administrador após o cadastro."
-      />
+    <div className="flex min-h-full flex-1">
+      <div className="hidden bg-primary lg:block lg:w-1/3">
+        <div className="flex h-full flex-col items-center justify-center p-12 text-center">
+          <div className="space-y-6">
+            <BrandMark
+              inverted
+              className="justify-center text-primary-foreground [&_span:last-child]:text-5xl [&_span:last-child]:font-light"
+            />
+            <p className="text-primary-foreground/80 text-xl">
+              Comece a gerenciar sua conveniência
+            </p>
+          </div>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Cadastro</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={signup} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1 text-sm">
-              Email
-              <Input name="email" type="email" required placeholder="voce@empresa.com" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Senha
-              <Input name="password" type="password" required minLength={6} placeholder="Mínimo 6 caracteres" />
-            </label>
+      <div className="flex w-full items-center justify-center bg-background p-8 lg:w-2/3">
+        <div className="w-full max-w-md space-y-8 py-16">
+          <div className="space-y-2 text-center">
+            <div className="font-medium tracking-tight">Criar conta</div>
+            <p className="mx-auto max-w-xl text-muted-foreground">
+              O acesso à empresa é liberado pelo administrador após o cadastro.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <RegisterForm />
             {params.error ? (
-              <p className="text-sm text-destructive">
+              <p className="text-center text-sm text-destructive">
                 Não foi possível criar a conta. Tente outro email.
               </p>
             ) : null}
-            <Button type="submit">Criar conta</Button>
-          </form>
-        </CardContent>
-      </Card>
-    </main>
+            <p className="text-center text-muted-foreground text-xs">
+              Já tem conta?{" "}
+              <Link prefetch={false} href="/login" className="text-primary">
+                Entrar
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

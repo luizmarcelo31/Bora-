@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createUserAction } from "@/app/admin/actions";
 
@@ -104,26 +104,26 @@ export default async function UsuariosPage({
         <EmptyState title="Nenhum usuário" description="Crie o primeiro acima." />
       ) : (
         <Table>
-          <THead>
-            <TR>
-              <TH>Nome</TH>
-              <TH>Email</TH>
-              <TH>Empresa</TH>
-              <TH>Role</TH>
-              <TH>Status</TH>
-            </TR>
-          </THead>
-          <TBody>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {users.map((u) => (
-              <TR key={u.id}>
-                <TD>{u.name}</TD>
-                <TD>{u.email}</TD>
-                <TD>{u.tenant.name}</TD>
-                <TD>{u.role}</TD>
-                <TD>{u.active ? "Ativo" : "Inativo"}</TD>
-              </TR>
+              <TableRow key={u.id}>
+                <TableCell>{u.name}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.tenant.name}</TableCell>
+                <TableCell>{u.role}</TableCell>
+                <TableCell>{u.active ? "Ativo" : "Inativo"}</TableCell>
+              </TableRow>
             ))}
-          </TBody>
+          </TableBody>
         </Table>
       )}
     </main>

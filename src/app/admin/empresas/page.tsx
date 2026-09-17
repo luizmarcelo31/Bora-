@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createTenantAction } from "@/app/admin/actions";
 
@@ -68,30 +68,30 @@ export default async function EmpresasPage({
         <EmptyState title="Nenhuma empresa" description="Crie a primeira acima." />
       ) : (
         <Table>
-          <THead>
-            <TR>
-              <TH>ID</TH>
-              <TH>Nome</TH>
-              <TH>Tipo</TH>
-              <TH>Usuários</TH>
-              <TH>Produtos</TH>
-              <TH>Vendas</TH>
-              <TH>Status</TH>
-            </TR>
-          </THead>
-          <TBody>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Usuários</TableHead>
+              <TableHead>Produtos</TableHead>
+              <TableHead>Vendas</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {tenants.map((t) => (
-              <TR key={t.id}>
-                <TD>{t.id}</TD>
-                <TD>{t.name}</TD>
-                <TD>{t.type}</TD>
-                <TD>{t._count.users}</TD>
-                <TD>{t._count.products}</TD>
-                <TD>{t._count.sales}</TD>
-                <TD>{t.suspended ? "Suspensa" : t.active ? "Ativa" : "Inativa"}</TD>
-              </TR>
+              <TableRow key={t.id}>
+                <TableCell>{t.id}</TableCell>
+                <TableCell>{t.name}</TableCell>
+                <TableCell>{t.type}</TableCell>
+                <TableCell>{t._count.users}</TableCell>
+                <TableCell>{t._count.products}</TableCell>
+                <TableCell>{t._count.sales}</TableCell>
+                <TableCell>{t.suspended ? "Suspensa" : t.active ? "Ativa" : "Inativa"}</TableCell>
+              </TableRow>
             ))}
-          </TBody>
+          </TableBody>
         </Table>
       )}
     </main>

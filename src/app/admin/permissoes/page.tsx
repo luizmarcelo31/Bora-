@@ -1,6 +1,6 @@
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { ROLE_PERMISSIONS, type Permission } from "@/lib/permissions";
 import type { Role } from "@prisma/client";
 
@@ -20,24 +20,24 @@ export default async function PermissoesPage() {
         description="Matriz role × permissão (somente leitura — definida em src/lib/permissions.ts)."
       />
       <Table>
-        <THead>
-          <TR>
-            <TH>Permissão</TH>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Permissão</TableHead>
             {ROLES.map((r) => (
-              <TH key={r}>{r}</TH>
+              <TableHead key={r}>{r}</TableHead>
             ))}
-          </TR>
-        </THead>
-        <TBody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {ALL_PERMS.map((perm) => (
-            <TR key={perm}>
-              <TD>{perm}</TD>
+            <TableRow key={perm}>
+              <TableCell>{perm}</TableCell>
               {ROLES.map((r) => (
-                <TD key={r}>{ROLE_PERMISSIONS[r].includes(perm) ? "✅" : "—"}</TD>
+                <TableCell key={r}>{ROLE_PERMISSIONS[r].includes(perm) ? "✅" : "—"}</TableCell>
               ))}
-            </TR>
+            </TableRow>
           ))}
-        </TBody>
+        </TableBody>
       </Table>
     </main>
   );
