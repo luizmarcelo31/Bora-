@@ -24,3 +24,9 @@ Next.js 16 App Router · Prisma · Supabase (Auth + Postgres) · Zod · Tailwind
 ## Depois de codar
 Código → testes → docs → `docs/changes/YYYY-MM-DD-<tarefa>.md` → atualizar `PROJECT_STATE.md`.
 Decisão estrutural → `docs/decisions/ADR-*.md` (nunca mudar ADR em silêncio).
+
+## Commits (regra permanente)
+- Todo commit é autorado pelo proprietário: **Luiz Marcelo <luizmarcelo31@gmail.com>**.
+- Identidade gravada no config LOCAL do repo (`.git/config`); nunca usar outra
+  identidade nem alterar o config global.
+- Nunca commitar segredos (`.env*`, senhas, chaves).
