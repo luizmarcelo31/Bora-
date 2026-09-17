@@ -29,9 +29,18 @@ export default async function DashboardPage() {
             <Link className={buttonVariants()} href="/dashboard/produtos">
               Produtos
             </Link>
-            <span className="inline-flex items-center text-xs">
-              Estoque, PDV e Financeiro entram na sequência do roadmap.
-            </span>
+            <Link className={buttonVariants({ variant: "outline" })} href="/dashboard/estoque">
+              Estoque
+            </Link>
+            <Link className={buttonVariants({ variant: "outline" })} href="/dashboard/pdv">
+              PDV
+            </Link>
+            <Link className={buttonVariants({ variant: "outline" })} href="/dashboard/caixa">
+              Caixa
+            </Link>
+            <Link className={buttonVariants({ variant: "outline" })} href="/dashboard/financeiro">
+              Financeiro
+            </Link>
           </div>
           <form action={logout}>
             <Button variant="outline" type="submit">

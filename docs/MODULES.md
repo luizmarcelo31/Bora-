@@ -18,16 +18,18 @@ Projeto, configuração, banco, ORM, contexto, Design System.
 - [x] Bootstrap via `scripts/bootstrap-admin.cjs`
 - [ ] Planos, assinaturas, configurações
 
-## Operação — 🟡 parcial
-- [x] Produtos: API + UI (`/dashboard/produtos` — lista, cadastro em R$, ativa/desativa)
-- [x] Estoque/movimentações (API) · [ ] UI
+## Operação — ✅ pronto
+- [x] Produtos: API + UI (`/dashboard/produtos`)
+- [x] Estoque: API + UI (`/dashboard/estoque` — saldo, ENTRADA/SAIDA/AJUSTE, histórico)
 - [ ] Categorias e imagens (Supabase Storage)
 
-## Financeiro — 🟡 APIs prontas, UI pendente
-Categorias, contas a pagar/receber, caixa, fluxo.
+## Financeiro — ✅ pronto
+- [x] Caixa: API + UI (`/dashboard/caixa` — abrir/fechar/histórico)
+- [x] Financeiro: API + UI (`/dashboard/financeiro` — lançar, resumo do mês)
+- [ ] Contas a pagar/receber com baixa (usar campo `paid`)
 
-## Conveniência — 🟡 APIs prontas, UI pendente
-PDV, vendas, pagamentos, fechamento de caixa.
+## Conveniência — ✅ pronto
+- [x] PDV: API + UI (`/dashboard/pdv` — carrinho, pagamento, caixa, vendas do dia)
 
 ## Finalização — ⬜ pendente
 Relatórios, auditoria, testes, segurança, polish UX.
