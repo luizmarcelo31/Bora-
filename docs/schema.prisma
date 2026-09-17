@@ -1,0 +1,482 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// CORE: TENANT (Empresa)
+// ============================================================
+
+model Tenant {
+  id        Int       @id @default(autoincrement())
+  name      String
+  type      String    @default("CONVENIENCE") // CONVENIENCE, RESTAURANT, RETAIL, SERVICE
+  email     String?
+  phone     String?
+  active    Boolean   @default(true)
+  suspended Boolean   @default(false)
+  
+  // Relacionamentos
+  users     User[]
+  products  Product[]
+  inventory Inventory[]
+  stockMovements StockMovement[]
+  sales     Sale[]
+  saleItems SaleItem[]
+  cashBoxes CashBox[]
+  financialMovements FinancialMovement[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([active])
+  @@index([suspended])
+}
+
+// ============================================================
+// CORE: USER (Usuário)
+// ============================================================
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  name      String
+  password  String?   // Se usar Supabase Auth, deixe NULL
+  role      Role      @default(STAFF)
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  active    Boolean   @default(true)
+  lastLogin DateTime?
+  
+  // Relações
+  createdSales Sale[] @relation("createdBy")
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([role])
+  @@index([active])
+}
+
+enum Role {
+  // Super Admin - Nível plataforma (não está vinculado a tenant)
+  SUPER_ADMIN
+  
+  // Tenant Roles
+  OWNER
+  MANAGER
+  FINANCIAL
+  STOCK
+  CASHIER
+  STAFF
+}
+
+// ============================================================
+// CORE: PRODUTO (Products)
+// ============================================================
+
+model Product {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name      String
+  sku       String?
+  barcode   String?
+  description String?
+  
+  // Preço em centavos: 1000 = R$ 10.00
+  price     Int       // Preço de venda
+  cost      Int?      // Preço de custo
+  margin    Float?    // Margem calculada
+  
+  category  String?
+  active    Boolean   @default(true)
+  
+  // Imagem
+  imageUrl  String?   // URL de imagem (Supabase Storage)
+  
+  // Relacionamentos
+  inventory Inventory?
+  saleItems SaleItem[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([tenantId, sku])
+  @@unique([tenantId, barcode])
+  @@index([tenantId])
+  @@index([active])
+  @@index([category])
+}
+
+// ============================================================
+// CORE: ESTOQUE (Inventory & Stock Movements)
+// ============================================================
+
+model Inventory {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  productId Int       @unique
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Quantidade atual
+  quantity  Int       @default(0)
+  
+  // Rastreamento
+  minimumStock Int    @default(0)
+  maximumStock Int?
+  
+  // Histórico
+  movements StockMovement[]
+  
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+  @@index([productId])
+}
+
+model StockMovement {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  inventoryId Int
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  
+  // Tipo de movimento
+  type      StockMovementType // ENTRADA, SAIDA, AJUSTE, VENDA, DEVOLUCAO
+  quantity  Int
+  reason    String?
+  
+  // Rastreamento
+  referenceId Int?    // ID da venda ou nota fiscal
+  referenceType String? // SALE, NOTE, RETURN, etc
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([tenantId])
+  @@index([inventoryId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum StockMovementType {
+  ENTRADA     // Compra/Entrada de estoque
+  SAIDA       // Saída manual
+  AJUSTE      // Ajuste de inventário
+  VENDA       // Venda (PDV)
+  DEVOLUCAO   // Devolução de venda
+  TRANSFERENCIA // Transferência entre locais (futuro)
+}
+
+// ============================================================
+// PDV (Point of Sale / Ponto de Venda)
+// ============================================================
+
+model Sale {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Vendedor
+  userId    Int
+  user      User      @relation("createdBy", fields: [userId], references: [id])
+  
+  // Caixa
+  cashBoxId Int?
+  cashBox   CashBox?  @relation(fields: [cashBoxId], references: [id])
+  
+  // Status
+  status    SaleStatus @default(COMPLETED) // PENDING, COMPLETED, CANCELLED
+  
+  // Valores (em centavos)
+  subtotal  Int       // Total sem desconto
+  discount  Int       @default(0) // Desconto
+  total     Int       // Total final
+  
+  // Pagamento
+  paymentMethod PaymentMethod @default(CASH) // CASH, CARD, TRANSFER, PIX
+  
+  // Cliente (opcional)
+  customerName String?
+  customerPhone String?
+  
+  // Rastreamento
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relacionamentos
+  items     SaleItem[]
+  
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SaleItem {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  saleId    Int
+  sale      Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  productId Int
+  product   Product   @relation(fields: [productId], references: [id])
+  
+  // Quantidade
+  quantity  Int
+  
+  // Preço (em centavos, pode ser diferente do produto)
+  unitPrice Int
+  discount  Int       @default(0)
+  total     Int       // quantity * unitPrice - discount
+  
+  @@index([tenantId])
+  @@index([saleId])
+  @@index([productId])
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  PIX
+  CHECK
+  OTHER
+}
+
+// ============================================================
+// CAIXA (Cash Box)
+// ============================================================
+
+model CashBox {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Nome/Identificação
+  name      String    // "Caixa 1", "PDV Principal", etc
+  
+  // Status
+  status    CashBoxStatus @default(CLOSED)
+  
+  // Valores (em centavos)
+  openingBalance Int   @default(0) // Valor inicial
+  currentBalance Int   @default(0) // Saldo atual
+  closingBalance Int?  // Saldo ao fechar
+  
+  // Responsável
+  operatorName String?
+  
+  // Datas
+  openedAt  DateTime?
+  closedAt  DateTime?
+  
+  // Relacionamentos
+  sales     Sale[]
+  financialMovements FinancialMovement[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+  @@index([status])
+}
+
+enum CashBoxStatus {
+  CLOSED
+  OPEN
+}
+
+// ============================================================
+// FINANCEIRO (Financial)
+// ============================================================
+
+model FinancialMovement {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Caixa (opcional, toda movimentação não é necessariamente de caixa)
+  cashBoxId Int?
+  cashBox   CashBox?  @relation(fields: [cashBoxId], references: [id])
+  
+  // Tipo
+  type      FinancialMovementType // RECEITA, DESPESA, TRANSFERENCIA
+  category  String    // "Vendas", "Aluguel", "Salários", etc
+  description String
+  
+  // Valores (em centavos)
+  amount    Int
+  
+  // Status de pagamento
+  paid      Boolean   @default(false)
+  paidAt    DateTime?
+  
+  // Data de movimento
+  movementDate DateTime // Data do movimento (pode ser diferente de hoje)
+  
+  // Relacionamentos
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+  @@index([type])
+  @@index([category])
+  @@index([paid])
+  @@index([movementDate])
+}
+
+enum FinancialMovementType {
+  RECEITA   // Receita (venda, outros)
+  DESPESA   // Despesa (compra, aluguel, etc)
+  TRANSFERENCIA // Transferência entre contas
+}
+
+// ============================================================
+// RELATÓRIOS (Reports) - Schema básico
+// ============================================================
+
+model DailyReport {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  
+  // Data do relatório
+  reportDate DateTime
+  
+  // Vendas
+  totalSales Int
+  totalItems Int
+  
+  // Financeiro
+  totalReceived Int
+  totalExpenses Int
+  
+  createdAt DateTime  @default(now())
+  
+  @@unique([tenantId, reportDate])
+  @@index([tenantId])
+}
+
+// ============================================================
+// AUDITORIA (Audit Log) - Opcional mas recomendado
+// ============================================================
+
+model AuditLog {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int       // Qual empresa
+  
+  // O que aconteceu
+  action    String    // "create", "update", "delete", etc
+  entity    String    // "product", "sale", "user", etc
+  entityId  Int       // ID da entidade
+  
+  // Quem fez
+  userId    Int?      // Quem fez a ação
+  userEmail String?   // Email do usuário (snapshot)
+  
+  // Dados
+  changes   String?   // JSON com as mudanças
+  details   String?   // Detalhes adicionais
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([tenantId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+// ============================================================
+// SETTINGS (Configurações da empresa)
+// ============================================================
+
+model TenantSettings {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int       @unique
+  
+  // Configurações de venda
+  enableDiscount Boolean @default(true)
+  maxDiscount Int?    // Desconto máximo em %
+  
+  // Configurações de estoque
+  enableStockControl Boolean @default(true)
+  allowNegativeStock Boolean @default(false)
+  
+  // Configurações de relatório
+  autoGenerateDailyReport Boolean @default(true)
+  
+  // Outras
+  companyLogoUrl String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+}
+
+// ============================================================
+// SCHEMA SUMMARY
+// ============================================================
+
+/*
+CORE MODULES:
+  - Tenant: Empresa (multi-tenancy)
+  - User: Usuário com roles
+  - Product: Produtos com SKU e código de barras
+  - Inventory: Estoque com histórico de movimentações
+  - StockMovement: Auditoria de movimentações
+
+PDV MODULE (específico de conveniência):
+  - Sale: Venda no PDV
+  - SaleItem: Itens da venda
+  - PaymentMethod: Formas de pagamento
+
+CASHIER MODULE:
+  - CashBox: Caixa aberto/fechado
+
+FINANCIAL MODULE (reutilizável):
+  - FinancialMovement: Receitas, despesas, transferências
+  - DailyReport: Relatório consolidado do dia
+
+AUDIT & SETTINGS:
+  - AuditLog: Rastreamento de ações
+  - TenantSettings: Configurações por empresa
+
+FEATURES:
+  ✅ Multi-tenancy completa
+  ✅ Isolamento de dados
+  ✅ Histórico de movimentações
+  ✅ Auditoria
+  ✅ Valores em centavos (sem problemas de float)
+  ✅ Status rastreáveis
+  ✅ Relacionamentos bem definidos
+  ✅ Índices para performance
+  ✅ Campos para validação e negócio
+  ✅ Preparado para escalar
+
+PRÓXIMOS MÓDULOS (não implementar no MVP):
+  - Restaurant: Mesas, cardápio, cozinha
+  - Retail: Categorias avançadas, promoções
+  - Service: Agendamentos, serviços
+*/

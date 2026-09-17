@@ -1,0 +1,389 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// CORE: TENANT (Empresa)
+// ============================================================
+
+model Tenant {
+  id        Int       @id @default(autoincrement())
+  name      String
+  type      String    @default("CONVENIENCE")
+  email     String?
+  phone     String?
+  active    Boolean   @default(true)
+  suspended Boolean   @default(false)
+  
+  users     User[]
+  products  Product[]
+  inventory Inventory[]
+  stockMovements StockMovement[]
+  sales     Sale[]
+  saleItems SaleItem[]
+  cashBoxes CashBox[]
+  financialMovements FinancialMovement[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([active])
+  @@index([suspended])
+}
+
+// ============================================================
+// CORE: USER (Usuario)
+// ============================================================
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  name      String
+  password  String?
+  role      Role      @default(STAFF)
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  active    Boolean   @default(true)
+  lastLogin DateTime?
+  
+  createdSales Sale[] @relation("createdBy")
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([role])
+  @@index([active])
+}
+
+enum Role {
+  SUPER_ADMIN
+  OWNER
+  MANAGER
+  FINANCIAL
+  STOCK
+  CASHIER
+  STAFF
+}
+
+// ============================================================
+// CORE: PRODUTO (Products)
+// ============================================================
+
+model Product {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name      String
+  sku       String?
+  barcode   String?
+  description String?
+  
+  price     Int
+  cost      Int?
+  margin    Float?
+  
+  category  String?
+  active    Boolean   @default(true)
+  
+  imageUrl  String?
+  
+  inventory Inventory?
+  saleItems SaleItem[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([tenantId, sku])
+  @@unique([tenantId, barcode])
+  @@index([tenantId])
+  @@index([active])
+  @@index([category])
+}
+
+// ============================================================
+// CORE: ESTOQUE (Inventory & Stock Movements)
+// ============================================================
+
+model Inventory {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  productId Int       @unique
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  quantity  Int       @default(0)
+  
+  minimumStock Int    @default(0)
+  maximumStock Int?
+  
+  movements StockMovement[]
+  
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+  @@index([productId])
+}
+
+model StockMovement {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  inventoryId Int
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  
+  type      StockMovementType
+  quantity  Int
+  reason    String?
+  
+  referenceId Int?
+  referenceType String?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([tenantId])
+  @@index([inventoryId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum StockMovementType {
+  ENTRADA
+  SAIDA
+  AJUSTE
+  VENDA
+  DEVOLUCAO
+  TRANSFERENCIA
+}
+
+// ============================================================
+// PDV (Point of Sale / Ponto de Venda)
+// ============================================================
+
+model Sale {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  userId    Int
+  user      User      @relation("createdBy", fields: [userId], references: [id])
+  
+  cashBoxId Int?
+  cashBox   CashBox?  @relation(fields: [cashBoxId], references: [id])
+  
+  status    SaleStatus @default(COMPLETED)
+  
+  subtotal  Int
+  discount  Int       @default(0)
+  total     Int
+  
+  paymentMethod PaymentMethod @default(CASH)
+  
+  customerName String?
+  customerPhone String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  items     SaleItem[]
+  
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SaleItem {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  saleId    Int
+  sale      Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  productId Int
+  product   Product   @relation(fields: [productId], references: [id])
+  
+  quantity  Int
+  
+  unitPrice Int
+  discount  Int       @default(0)
+  total     Int
+  
+  @@index([tenantId])
+  @@index([saleId])
+  @@index([productId])
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  PIX
+  CHECK
+  OTHER
+}
+
+// ============================================================
+// CAIXA (Cash Box)
+// ============================================================
+
+model CashBox {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name      String
+  
+  status    CashBoxStatus @default(CLOSED)
+  
+  openingBalance Int   @default(0)
+  currentBalance Int   @default(0)
+  closingBalance Int?
+  
+  operatorName String?
+  
+  openedAt  DateTime?
+  closedAt  DateTime?
+  
+  sales     Sale[]
+  financialMovements FinancialMovement[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+  @@index([status])
+}
+
+enum CashBoxStatus {
+  CLOSED
+  OPEN
+}
+
+// ============================================================
+// FINANCEIRO (Financial)
+// ============================================================
+
+model FinancialMovement {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  cashBoxId Int?
+  cashBox   CashBox?  @relation(fields: [cashBoxId], references: [id])
+  
+  type      FinancialMovementType
+  category  String
+  description String
+  
+  amount    Int
+  
+  paid      Boolean   @default(false)
+  paidAt    DateTime?
+  
+  movementDate DateTime
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+  @@index([type])
+  @@index([category])
+  @@index([paid])
+  @@index([movementDate])
+}
+
+enum FinancialMovementType {
+  RECEITA
+  DESPESA
+  TRANSFERENCIA
+}
+
+// ============================================================
+// RELATORIOS (Reports)
+// ============================================================
+
+model DailyReport {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  
+  reportDate DateTime
+  
+  totalSales Int
+  totalItems Int
+  
+  totalReceived Int
+  totalExpenses Int
+  
+  createdAt DateTime  @default(now())
+  
+  @@unique([tenantId, reportDate])
+  @@index([tenantId])
+}
+
+// ============================================================
+// AUDITORIA (Audit Log)
+// ============================================================
+
+model AuditLog {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  
+  action    String
+  entity    String
+  entityId  Int
+  
+  userId    Int?
+  userEmail String?
+  
+  changes   String?
+  details   String?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([tenantId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+// ============================================================
+// SETTINGS (Configuracoes da empresa)
+// ============================================================
+
+model TenantSettings {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int       @unique
+  
+  enableDiscount Boolean @default(true)
+  maxDiscount Int?
+  
+  enableStockControl Boolean @default(true)
+  allowNegativeStock Boolean @default(false)
+  
+  autoGenerateDailyReport Boolean @default(true)
+  
+  companyLogoUrl String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([tenantId])
+}
