@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/validators";
 import { createSaleAction } from "./actions";
+import { ProductGrid } from "./_components/product-grid";
+import { CartSheet } from "./_components/cart-sheet";
 
-export type PdvProduct = { id: number; name: string; price: number; stock: number };
+export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null };
 export type PdvCashbox = { id: number; name: string };
 
 const PAYMENTS: { value: string; label: string }[] = [
@@ -76,11 +78,27 @@ export function PdvClient({
     }
   }
 
+  async function confirmSale() {
+    if (pending || lines.length === 0) return;
+    setPending(true);
+    try {
+      const fd = new FormData();
+      fd.set("items", JSON.stringify(lines.map((l) => ({ productId: l.id, quantity: l.qty }))));
+      fd.set("paymentMethod", payment);
+      fd.set("cashBoxId", cashBoxId);
+      fd.set("discount", discount);
+      fd.set("customerName", customer);
+      await createSaleAction(fd);
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Card>
+    <div className="grid gap-6 lg:grid-cols-3">
+      <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Produtos</CardTitle>
+          <CardTitle>Catálogo</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <Input
@@ -88,44 +106,11 @@ export function PdvClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <ul className="flex max-h-96 flex-col gap-2 overflow-auto">
-            {filtered.map((p) => (
-              <li key={p.id} className="flex items-center gap-2 rounded-md border border-border p-2 text-sm">
-                <div className="flex-1">
-                  <p className="font-medium">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatCurrency(p.price)} · estoque {p.stock}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  disabled={p.stock <= 0}
-                  onClick={() => setQty(p.id, (cart[p.id] ?? 0) + 1)}
-                >
-                  +
-                </Button>
-                {cart[p.id] ? (
-                  <>
-                    <span className="w-8 text-center">{cart[p.id]}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      type="button"
-                      onClick={() => setQty(p.id, cart[p.id] - 1)}
-                    >
-                      −
-                    </Button>
-                  </>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+          <ProductGrid products={filtered.map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, category: (p as unknown as { category?: string | null }).category ?? null }))} cart={cart} onQty={setQty} />
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="lg:sticky lg:top-4 h-fit">
         <CardHeader>
           <CardTitle>Venda atual</CardTitle>
         </CardHeader>
@@ -187,9 +172,7 @@ export function PdvClient({
                 <Input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nome" />
               </label>
             </div>
-            <Button type="submit" disabled={lines.length === 0 || pending}>
-              {pending ? "Processando..." : "Finalizar venda"}
-            </Button>
+            <CartSheet lines={lines.map((l) => ({ id: l.id, name: l.name, qty: l.qty, total: l.total }))} subtotal={subtotal} discountRaw={discount} pending={pending} onConfirm={confirmSale} />
           </form>
         </CardContent>
       </Card>

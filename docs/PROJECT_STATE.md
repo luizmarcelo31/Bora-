@@ -1,6 +1,6 @@
 # PROJECT_STATE — fonte da verdade
 
-**Atualizado:** 18/09/2026 · **Fase:** Robustez CRUD concluída (ajuste e prevenção F5)
+**Atualizado:** 18/09/2026 · **Fase:** POC PDV visual isolada + Home Opção A (Fase 0 aprovada)
 
 ## Implementado ✅
 - Next.js 16 + TS + Tailwind v4 + shadcn radix-nova/Neutral (25 ui) + shared (PageHeader/MetricCard/EmptyState/BrandMark)
@@ -20,7 +20,9 @@
 - Relatórios: `/dashboard/relatorios` (filtro por data, vendas, financeiro, top produtos)
 - Configurações: `/dashboard/configuracoes` (TenantSettings)
 - Auditoria: `/dashboard/auditoria` + `src/lib/audit.ts` (trilha em todas as mutações)
-- Docs: PRD, ARCHITECTURE, DATABASE, AUTH, TENANCY, PERMISSIONS, DESIGN_SYSTEM, MODULES, ROADMAP, AI_RULES + ADR-001..004
+- Home: `/` → redirect inteligente (`/dashboard` se logado senão `/login`) — Opção A
+- POC PDV: `product-grid.tsx` + `cart-sheet.tsx` (grid 2 col + Sheet confirmação, sem novas deps, sem migração, regras intactas) — isolada em `_components`
+- Docs: PRD, ARCHITECTURE, DATABASE, AUTH, TENANCY, PERMISSIONS, DESIGN_SYSTEM, MODULES, ROADMAP, AI_RULES + ADR-001..004 + `mapping-branding-kit.md` (Fase 0)
 
 ## Em desenvolvimento 🟡
 - Nenhum.
@@ -29,10 +31,10 @@
 - Imagens de produto (Supabase Storage) · planos/assinaturas tenant · testes automatizados · logo oficial · dark toggle · presets alternativos.
 
 ## Bugs conhecidos
-- Nenhum registrado. Build verde (29 rotas, `npx next build --webpack`). Guards: /dashboard/* sem sessão → 307. PRG corrigido em todos os toggle/update (F5 não duplica). Sem `useEffect` com mutation, sem `GET` que escreve.
+- Nenhum registrado. Build verde (29 rotas, `npx next build --webpack`). Guards: `/ → 307 /login`, `/dashboard/* → 307` sem sessão. PRG + pending anti-duplo clique (F5 não duplica). Sheet é `radix-ui` puro, sem `vaul`. Sem migração nova. Sem `useEffect` com mutation, sem `GET` que escreve.
 - O 403 reportado em /admin com conta comum é o comportamento correto (só SUPER_ADMIN).
   Resolvido o vínculo: `luizmarcelo31@gmail.com` = OWNER da Conveniencia Centro;
   `luizmarcelodev@gmail.com` = Super Admin raiz (imutável, ver PERMISSIONS.md).
 
 ## Próxima tarefa
-1. Teste manual ponta-a-ponta em produção (produto → estoque limites → categoria edit/delete → venda → cancelamento com motivo → caixa preview → financeiro edit/delete pago → F5 em cada página → auditoria) ou polish de imagens/upload.
+1. Revisão da POC PDV (aprovar ou ajustar grid/Sheet/gráfico) — expandir para Produtos/Caixa somente após aprovação. Nenhuma alteração funcional será aplicada sem aprovação prévia.

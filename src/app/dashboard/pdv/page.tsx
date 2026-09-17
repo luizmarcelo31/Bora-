@@ -62,6 +62,7 @@ export default async function PdvPage({
           name: p.name,
           price: p.price,
           stock: p.inventory?.quantity ?? 0,
+          category: (p as { category?: string | null }).category ?? null,
         }))}
         cashboxes={cashboxes.map((c) => ({ id: c.id, name: c.name }))}
       />
