@@ -193,6 +193,8 @@ model Sale {
   customerName String?
   customerPhone String?
   
+  idempotencyKey String?
+  
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   
@@ -202,6 +204,7 @@ model Sale {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@unique([tenantId, idempotencyKey])
 }
 
 model SaleItem {

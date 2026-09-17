@@ -160,6 +160,7 @@ export const createSaleSchema = z.object({
     .regex(/^\d{10,15}$/, 'Telefone deve ter 10-15 digitos')
     .optional()
     .or(z.literal('')),
+  idempotencyKey: z.string().min(1).max(100).optional(),
 });
 
 export const cancelSaleSchema = z.object({

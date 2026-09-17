@@ -31,7 +31,7 @@
 - Imagens de produto (Supabase Storage) · planos/assinaturas tenant · testes automatizados · logo oficial · dark toggle · presets alternativos.
 
 ## Bugs conhecidos
-- Nenhum registrado. Build verde (29 rotas, `npx next build --webpack`). Guards: `/ → 307 /login`, `/dashboard/* → 307` sem sessão. PRG + pending anti-duplo clique (F5 não duplica). Sheet é `radix-ui` puro, sem `vaul`. Sem migração nova. Sem `useEffect` com mutation, sem `GET` que escreve.
+- Nenhum registrado. Build verde (29 rotas, `npx next build --webpack`). Guards: `/ → 307 /login`, `/dashboard/* → 307` sem sessão. PRG + `pending` + `idempotencyKey` (`Sale @@unique([tenantId, idempotencyKey])`, `cashBox increment`, `Financial` atômico) — F5/duplo clique validados (`docs/verify-anti-f5.md`: 2× paralelo com mesma key → 1 venda/1 RECEITA/1 decremento). Sheet é `radix-ui` puro, sem `vaul`. Migração `sale_idempotency` isolada. Sem `useEffect` com mutation, sem `GET` que escreve.
 - O 403 reportado em /admin com conta comum é o comportamento correto (só SUPER_ADMIN).
   Resolvido o vínculo: `luizmarcelo31@gmail.com` = OWNER da Conveniencia Centro;
   `luizmarcelodev@gmail.com` = Super Admin raiz (imutável, ver PERMISSIONS.md).

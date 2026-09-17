@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,11 @@ export function PdvClient({
   const [customer, setCustomer] = useState("");
   const [search, setSearch] = useState("");
   const [pending, setPending] = useState(false);
+  const idemRef = useRef<string | null>(null);
+  function getIdemKey() {
+    if (!idemRef.current) idemRef.current = crypto.randomUUID();
+    return idemRef.current;
+  }
 
   const lines = useMemo(
     () =>
@@ -72,7 +77,9 @@ export function PdvClient({
       formData.set("cashBoxId", cashBoxId);
       formData.set("discount", discount);
       formData.set("customerName", customer);
+      formData.set("idempotencyKey", getIdemKey());
       await createSaleAction(formData);
+      idemRef.current = null;
     } finally {
       setPending(false);
     }
@@ -88,7 +95,9 @@ export function PdvClient({
       fd.set("cashBoxId", cashBoxId);
       fd.set("discount", discount);
       fd.set("customerName", customer);
+      fd.set("idempotencyKey", getIdemKey());
       await createSaleAction(fd);
+      idemRef.current = null;
     } finally {
       setPending(false);
     }

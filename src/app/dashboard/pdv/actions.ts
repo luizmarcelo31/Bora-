@@ -51,6 +51,8 @@ export async function createSaleAction(formData: FormData) {
     items.push({ productId, quantity, unitPrice: product.price, discount: 0 });
   }
 
+  const idempotencyKey = String(formData.get("idempotencyKey") ?? "").trim() || undefined;
+
   try {
     const parsed = createSaleSchema.parse({
       userId: dbUser.id,
@@ -59,20 +61,9 @@ export async function createSaleAction(formData: FormData) {
       discount,
       paymentMethod,
       customerName: String(formData.get("customerName") ?? ""),
+      idempotencyKey,
     });
     const sale = await SaleService.createSale(tenant.id, parsed);
-    // PDV → Financeiro (§19 PRD): toda venda gera RECEITA automaticamente
-    if (sale.status === "COMPLETED") {
-      const { FinancialService } = await import("@/services");
-      await FinancialService.registerMovement(tenant.id, {
-        type: "RECEITA",
-        category: "Vendas PDV",
-        description: `Venda #${sale.id} — ${sale.paymentMethod}`,
-        amount: sale.total,
-        movementDate: sale.createdAt,
-        cashBoxId: sale.cashBoxId ?? undefined,
-      });
-    }
     const { logAudit } = await import("@/lib/audit");
     await logAudit({
       tenantId: tenant.id,
@@ -81,7 +72,7 @@ export async function createSaleAction(formData: FormData) {
       entityId: sale.id,
       userId: dbUser.id,
       userEmail: dbUser.email,
-      changes: { total: sale.total, items: sale.items?.length ?? items.length },
+      changes: { total: sale.total, items: sale.items?.length ?? items.length, idempotencyKey },
       details: `Venda #${sale.id} ${sale.paymentMethod} ${sale.total}`,
     });
     revalidatePath("/dashboard/pdv");

@@ -440,71 +440,107 @@ export class SaleService {
 
     const total = subtotal - data.discount;
 
-    const sale = await prisma.$transaction(async (tx) => {
-      const s = await tx.sale.create({
-        data: {
-          tenantId,
-          userId: data.userId,
-          cashBoxId: data.cashBoxId || null,
-          status: 'COMPLETED' as SaleStatus,
-          subtotal,
-          discount: data.discount,
-          total,
-          paymentMethod: data.paymentMethod,
-          customerName: data.customerName || null,
-          customerPhone: data.customerPhone || null,
-          items: {
-            create: processedItems.map((item) => ({
-              tenantId,
-              ...item,
-            })),
-          },
-        },
+    // Idempotência: se já existe venda com mesma chave para este tenant, retorna existente (evita duplicação por F5/duplo clique)
+    if (data.idempotencyKey) {
+      const existing = await prisma.sale.findFirst({
+        where: { tenantId, idempotencyKey: data.idempotencyKey },
         include: { items: true },
       });
+      if (existing) return existing;
+    }
 
-      for (const item of processedItems) {
-        const inventory = await tx.inventory.findFirst({
-          where: {
+    let sale: Sale & { items: import("@prisma/client").SaleItem[] };
+    try {
+      sale = await prisma.$transaction(async (tx) => {
+        const s = await tx.sale.create({
+          data: {
             tenantId,
-            productId: item.productId,
+            userId: data.userId,
+            cashBoxId: data.cashBoxId || null,
+            status: 'COMPLETED' as SaleStatus,
+            subtotal,
+            discount: data.discount,
+            total,
+            paymentMethod: data.paymentMethod,
+            customerName: data.customerName || null,
+            customerPhone: data.customerPhone || null,
+            idempotencyKey: data.idempotencyKey || null,
+            items: {
+              create: processedItems.map((item) => ({
+                tenantId,
+                ...item,
+              })),
+            },
           },
+          include: { items: true },
         });
 
-        if (inventory) {
-          await tx.stockMovement.create({
-            data: {
+        for (const item of processedItems) {
+          const inventory = await tx.inventory.findFirst({
+            where: {
               tenantId,
-              inventoryId: inventory.id,
-              type: 'VENDA',
-              quantity: item.quantity,
-              referenceId: s.id,
-              referenceType: 'SALE',
+              productId: item.productId,
             },
           });
 
-          await tx.inventory.update({
-            where: { id: inventory.id },
-            data: {
-              quantity: {
-                decrement: item.quantity,
+          if (inventory) {
+            await tx.stockMovement.create({
+              data: {
+                tenantId,
+                inventoryId: inventory.id,
+                type: 'VENDA',
+                quantity: item.quantity,
+                referenceId: s.id,
+                referenceType: 'SALE',
               },
+            });
+
+            await tx.inventory.update({
+              where: { id: inventory.id },
+              data: {
+                quantity: {
+                  decrement: item.quantity,
+                },
+              },
+            });
+          }
+        }
+
+        if (data.cashBoxId) {
+          await tx.cashBox.update({
+            where: { id: data.cashBoxId },
+            data: {
+              currentBalance: { increment: total },
             },
           });
         }
-      }
 
-      if (cashBox) {
-        await tx.cashBox.update({
-          where: { id: data.cashBoxId! },
+        // Financeiro atômico com a venda: RECEITA automaticamente (idempotente via venda)
+        await tx.financialMovement.create({
           data: {
-            currentBalance: cashBox.currentBalance + total,
+            tenantId,
+            type: "RECEITA",
+            category: "Vendas PDV",
+            description: `Venda #${s.id} — ${s.paymentMethod}`,
+            amount: s.total,
+            movementDate: s.createdAt,
+            cashBoxId: s.cashBoxId ?? null,
           },
         });
-      }
 
-      return s;
-    });
+        return s;
+      });
+    } catch (e) {
+      // Corrida: outra requisição criou com mesma idempotencyKey entre o findFirst inicial e o create
+      if (data.idempotencyKey && e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+        const existing = await prisma.sale.findFirst({
+          where: { tenantId, idempotencyKey: data.idempotencyKey },
+          include: { items: true },
+        });
+        if (existing) return existing;
+      }
+      throw e;
+    }
 
     return sale;
   }
