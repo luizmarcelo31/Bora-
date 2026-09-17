@@ -5,6 +5,7 @@
 ## Implementado ✅
 - Next.js 16 + TS + Tailwind v4 + shadcn radix-nova/Neutral (25 ui) + shared (PageHeader/MetricCard/EmptyState/BrandMark)
 - Shell admin (sidebar + header slim + NavUser) em /admin; /login e /signup no visual do kit (RHF + Zod v4 → actions Supabase)
+- Shell do tenant em /dashboard (sidebar Operação/Financeiro, header com empresa + role); /dashboard enxuto (navegação no sidebar)
 - Supabase clients (browser/server) + Auth UI + `src/proxy.ts`
 - Prisma schema completo + migration `20260917125414_init` + `src/lib/db.ts`
 - Validators (Zod v4) + Services (product, inventory, sale, cashbox, financial)
