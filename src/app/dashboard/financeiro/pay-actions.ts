@@ -38,4 +38,5 @@ export async function togglePaidAction(formData: FormData) {
     userEmail: dbUser.email,
   });
   revalidatePath("/dashboard/financeiro");
+  redirect("/dashboard/financeiro?ok=1");
 }

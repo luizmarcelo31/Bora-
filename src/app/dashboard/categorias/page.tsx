@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createCategoryAction, toggleCategoryAction } from "./actions";
+import { EditCategoryDialog, DeleteCategoryDialog } from "./category-dialogs";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos.",
@@ -96,12 +97,16 @@ export default async function CategoriasPage({
                 <TableCell>{c.kind === "PRODUCT" ? "Produto" : "Financeiro"}</TableCell>
                 <TableCell>{c.active ? "Ativa" : "Inativa"}</TableCell>
                 <TableCell>
-                  <form action={toggleCategoryAction}>
-                    <input type="hidden" name="id" value={c.id} />
-                    <Button variant="outline" size="sm" type="submit">
-                      {c.active ? "Desativar" : "Ativar"}
-                    </Button>
-                  </form>
+                  <div className="flex gap-2">
+                    <EditCategoryDialog id={c.id} name={c.name} />
+                    <form action={toggleCategoryAction}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <Button variant="outline" size="sm" type="submit">
+                        {c.active ? "Desativar" : "Ativar"}
+                      </Button>
+                    </form>
+                    <DeleteCategoryDialog id={c.id} name={c.name} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

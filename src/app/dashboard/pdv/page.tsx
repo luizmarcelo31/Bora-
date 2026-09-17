@@ -15,13 +15,16 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/validators";
-import { getPdvPageData, cancelSaleAction } from "./actions";
+import { getPdvPageData } from "./actions";
+import { CancelSaleDialog } from "./cancel-dialog";
 import { PdvClient } from "./pdv-client";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Venda inválida. Confira os itens.",
   empty: "Adicione ao menos um item.",
-  stock: "Não foi possível concluir (verifique estoque e caixa).",
+  stock: "Estoque insuficiente para um ou mais itens.",
+  discount: "Desconto acima do permitido ou maior que o subtotal.",
+  cashbox: "Caixa selecionado está fechado ou inexistente.",
   forbidden: "Seu role não tem permissão para esta ação.",
   cancel: "Não foi possível cancelar (venda já cancelada ou inexistente).",
 };
@@ -95,12 +98,7 @@ export default async function PdvPage({
                     <TableCell>{s.paymentMethod}</TableCell>
                     <TableCell>{formatCurrency(s.total)}</TableCell>
                     <TableCell>
-                      <form action={cancelSaleAction}>
-                        <input type="hidden" name="saleId" value={s.id} />
-                        <Button variant="outline" size="sm" type="submit">
-                          Cancelar
-                        </Button>
-                      </form>
+                      <CancelSaleDialog saleId={s.id} />
                     </TableCell>
                   </TableRow>
                 ))}

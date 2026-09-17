@@ -7,7 +7,7 @@ import { SaleService, ProductService } from "@/services";
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
-import { createSaleSchema } from "@/lib/validators";
+import { createSaleSchema, cancelSaleSchema, ValidationError } from "@/lib/validators";
 import { parseBRLToCents } from "@/lib/money";
 
 const PAYMENTS = ["CASH", "CARD", "TRANSFER", "PIX", "CHECK", "OTHER"] as const;
@@ -86,7 +86,12 @@ export async function createSaleAction(formData: FormData) {
     });
     revalidatePath("/dashboard/pdv");
     redirect(`/dashboard/pdv?ok=${sale.id}`);
-  } catch {
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      if (e.type === "INSUFFICIENT_STOCK") redirect("/dashboard/pdv?error=stock");
+      if (e.type === "INVALID_DISCOUNT") redirect("/dashboard/pdv?error=discount");
+      if (e.type === "CLOSED_CASHBOX") redirect("/dashboard/pdv?error=cashbox");
+    }
     redirect("/dashboard/pdv?error=stock");
   }
 }
@@ -99,7 +104,9 @@ export async function cancelSaleAction(formData: FormData) {
     redirect("/dashboard/pdv?error=forbidden");
   }
   const saleId = parseInt(String(formData.get("saleId") ?? "0"), 10);
-  if (!saleId) redirect("/dashboard/pdv?error=invalid");
+  const reasonRaw = String(formData.get("reason") ?? "").trim();
+  const reasonParsed = cancelSaleSchema.safeParse({ reason: reasonRaw });
+  if (!saleId || !reasonParsed.success) redirect("/dashboard/pdv?error=invalid");
   try {
     const saleBefore = await prisma.sale.findFirst({ where: { id: saleId, tenantId: tenant.id } });
     await SaleService.cancelSale(tenant.id, saleId);
@@ -109,7 +116,7 @@ export async function cancelSaleAction(formData: FormData) {
       await FinancialService2.registerMovement(tenant.id, {
         type: "DESPESA",
         category: "Estorno PDV",
-        description: `Estorno venda #${saleBefore.id}`,
+        description: `Estorno venda #${saleBefore.id} — ${reasonParsed.data.reason}`,
         amount: saleBefore.total,
         movementDate: new Date(),
         cashBoxId: saleBefore.cashBoxId ?? undefined,
@@ -123,6 +130,7 @@ export async function cancelSaleAction(formData: FormData) {
       entityId: saleId,
       userId: dbUser.id,
       userEmail: dbUser.email,
+      details: `Motivo: ${reasonParsed.data.reason}`,
     });
   } catch {
     redirect("/dashboard/pdv?error=cancel");

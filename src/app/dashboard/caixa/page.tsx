@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatCurrency } from "@/lib/validators";
-import { openCashBoxAction, closeCashBoxAction } from "./actions";
+import { openCashBoxAction } from "./actions";
+import { CloseCashBoxDialog } from "./close-dialog";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Confira nome e valores.",
@@ -78,35 +79,7 @@ export default async function CaixaPage({
             <CardTitle>Fechar caixa</CardTitle>
           </CardHeader>
           <CardContent>
-            {openBoxes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum caixa aberto.</p>
-            ) : (
-              <form action={closeCashBoxAction} className="flex flex-col gap-3">
-                <label className="flex flex-col gap-1 text-sm">
-                  Caixa*
-                  <select
-                    name="cashBoxId"
-                    required
-                    defaultValue=""
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    <option value="" disabled>
-                      Selecione...
-                    </option>
-                    {openBoxes.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} (saldo {formatCurrency(b.currentBalance)})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  Valor contado (R$)*
-                  <Input name="closingBalance" required inputMode="decimal" placeholder="0,00" />
-                </label>
-                <Button type="submit">Fechar</Button>
-              </form>
-            )}
+            <CloseCashBoxDialog openBoxes={openBoxes.map((b) => ({ id: b.id, name: b.name, currentBalance: b.currentBalance }))} />
           </CardContent>
         </Card>
       </div>

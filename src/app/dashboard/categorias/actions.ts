@@ -54,4 +54,87 @@ export async function toggleCategoryAction(formData: FormData) {
     userEmail: dbUser.email,
   });
   revalidatePath("/dashboard/categorias");
+  redirect("/dashboard/categorias?ok=1");
+}
+
+export async function updateCategoryAction(formData: FormData) {
+  const { tenant, dbUser } = await requireSessionTenant("/dashboard/categorias");
+  const id = parseInt(String(formData.get("id") ?? "0"), 10);
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id || !name || name.length > 100) redirect("/dashboard/categorias?error=invalid");
+  const cat = await prisma.category.findFirst({ where: { id, tenantId: tenant.id } });
+  if (!cat) redirect("/dashboard/categorias?error=invalid");
+  // permission: PRODUCT -> products.update, FINANCIAL -> financial.create
+  const { requirePermission: reqPerm } = await import("@/lib/permissions");
+  const needed = cat.kind === "PRODUCT" ? "products.update" : "financial.create";
+  try {
+    reqPerm(dbUser.role as import("@prisma/client").Role, needed as import("@/lib/permissions").Permission);
+  } catch {
+    redirect("/dashboard/categorias?error=unauthorized");
+  }
+  // uniqueness excluding self
+  const dup = await prisma.category.findFirst({ where: { tenantId: tenant.id, kind: cat.kind, name, NOT: { id } } });
+  if (dup) redirect("/dashboard/categorias?error=duplicate");
+  await prisma.category.update({ where: { id }, data: { name } });
+  const { logAudit } = await import("@/lib/audit");
+  await logAudit({
+    tenantId: tenant.id,
+    action: "update",
+    entity: "category",
+    entityId: id,
+    userId: dbUser.id,
+    userEmail: dbUser.email,
+    changes: { name },
+    details: `${cat.kind} ${cat.name} -> ${name}`,
+  });
+  revalidatePath("/dashboard/categorias");
+  redirect("/dashboard/categorias?ok=1");
+}
+
+export async function deleteCategoryAction(formData: FormData) {
+  const { tenant, dbUser } = await requireSessionTenant("/dashboard/categorias");
+  const id = parseInt(String(formData.get("id") ?? "0"), 10);
+  if (!id) redirect("/dashboard/categorias?error=invalid");
+  const cat = await prisma.category.findFirst({ where: { id, tenantId: tenant.id } });
+  if (!cat) redirect("/dashboard/categorias?error=invalid");
+  const needed = cat.kind === "PRODUCT" ? "products.delete" : "financial.create";
+  try {
+    const { requirePermission: reqPerm } = await import("@/lib/permissions");
+    reqPerm(dbUser.role as import("@prisma/client").Role, needed as import("@/lib/permissions").Permission);
+  } catch {
+    redirect("/dashboard/categorias?error=unauthorized");
+  }
+  // Check dependencies: products or financial movements using category string
+  const [prodCount, finCount] = await Promise.all([
+    prisma.product.count({ where: { tenantId: tenant.id, category: cat.name } }),
+    prisma.financialMovement.count({ where: { tenantId: tenant.id, category: cat.name } }),
+  ]);
+  if (prodCount > 0 || finCount > 0) {
+    // Soft-delete: inactivate instead of hard delete to preserve history
+    await prisma.category.update({ where: { id }, data: { active: false } });
+    const { logAudit } = await import("@/lib/audit");
+    await logAudit({
+      tenantId: tenant.id,
+      action: "soft_delete",
+      entity: "category",
+      entityId: id,
+      userId: dbUser.id,
+      userEmail: dbUser.email,
+      details: `Inativada por dependências: prod ${prodCount} fin ${finCount}`,
+    });
+  } else {
+    await prisma.category.delete({ where: { id } });
+    const { logAudit } = await import("@/lib/audit");
+    await logAudit({
+      tenantId: tenant.id,
+      action: "delete",
+      entity: "category",
+      entityId: id,
+      userId: dbUser.id,
+      userEmail: dbUser.email,
+      details: `${cat.kind} ${cat.name}`,
+    });
+  }
+  revalidatePath("/dashboard/categorias");
+  redirect("/dashboard/categorias?ok=1");
 }

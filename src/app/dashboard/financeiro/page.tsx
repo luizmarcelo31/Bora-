@@ -21,10 +21,13 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { formatCurrency } from "@/lib/validators";
 import { createFinancialAction } from "./actions";
 import { togglePaidAction } from "./pay-actions";
+import { EditFinancialDialog, DeleteFinancialDialog } from "./financial-dialogs";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Confira tipo, categoria, descrição, valor e data.",
-  forbidden: "Seu role não tem permissão para lançar no financeiro.",
+  forbidden: "Seu role não tem permissão para esta ação.",
+  paid_locked: "Lançamento pago não pode ser editado/excluído — desmarque o pago antes.",
+  not_found: "Lançamento não encontrado.",
 };
 
 export default async function FinanceiroPage({
@@ -190,13 +193,29 @@ export default async function FinanceiroPage({
                     <TableCell>{formatCurrency(m.amount)}</TableCell>
                     <TableCell>{m.paid ? "✅" : "—"}</TableCell>
                     <TableCell>
-                      <form action={togglePaidAction}>
-                        <input type="hidden" name="movementId" value={m.id} />
-                        <input type="hidden" name="paid" value={m.paid ? "false" : "true"} />
-                        <Button variant="outline" size="sm" type="submit">
-                          {m.paid ? "Desmarcar" : "Dar baixa"}
-                        </Button>
-                      </form>
+                      <div className="flex gap-2">
+                        <form action={togglePaidAction}>
+                          <input type="hidden" name="movementId" value={m.id} />
+                          <input type="hidden" name="paid" value={m.paid ? "false" : "true"} />
+                          <Button variant="outline" size="sm" type="submit">
+                            {m.paid ? "Desmarcar" : "Dar baixa"}
+                          </Button>
+                        </form>
+                        <EditFinancialDialog
+                          movement={{
+                            id: m.id,
+                            type: m.type,
+                            category: m.category,
+                            description: m.description,
+                            amount: m.amount,
+                            movementDate: m.movementDate.toISOString(),
+                            cashBoxId: m.cashBoxId,
+                          }}
+                          categories={finCategories}
+                          cashboxes={cashboxes}
+                        />
+                        <DeleteFinancialDialog id={m.id} />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

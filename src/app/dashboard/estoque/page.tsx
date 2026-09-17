@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { moveStockAction, getStockPageData } from "./actions";
+import { EditInventoryDialog } from "./edit-inventory-dialog";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Confira produto, tipo e quantidade.",
@@ -123,19 +124,31 @@ export default async function EstoquePage({
                   <TableHead>Produto</TableHead>
                   <TableHead>Quantidade</TableHead>
                   <TableHead>Mínimo</TableHead>
+                  <TableHead>Máximo</TableHead>
                   <TableHead>Situação</TableHead>
+                  <TableHead>Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {products.map((p) => {
                   const qty = p.inventory?.quantity ?? 0;
                   const min = p.inventory?.minimumStock ?? 0;
+                  const max = p.inventory?.maximumStock ?? null;
                   return (
                     <TableRow key={p.id}>
                       <TableCell>{p.name}</TableCell>
                       <TableCell>{qty}</TableCell>
                       <TableCell>{min}</TableCell>
+                      <TableCell>{max ?? "—"}</TableCell>
                       <TableCell>{qty <= min ? "⚠️ Baixo" : "OK"}</TableCell>
+                      <TableCell>
+                        <EditInventoryDialog
+                          productId={p.id}
+                          productName={p.name}
+                          minimumStock={min}
+                          maximumStock={max}
+                        />
+                      </TableCell>
                     </TableRow>
                   );
                 })}

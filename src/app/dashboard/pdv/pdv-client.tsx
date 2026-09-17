@@ -32,6 +32,7 @@ export function PdvClient({
   const [discount, setDiscount] = useState("");
   const [customer, setCustomer] = useState("");
   const [search, setSearch] = useState("");
+  const [pending, setPending] = useState(false);
 
   const lines = useMemo(
     () =>
@@ -61,12 +62,18 @@ export function PdvClient({
   );
 
   async function submit(formData: FormData) {
-    formData.set("items", JSON.stringify(lines.map((l) => ({ productId: l.id, quantity: l.qty }))));
-    formData.set("paymentMethod", payment);
-    formData.set("cashBoxId", cashBoxId);
-    formData.set("discount", discount);
-    formData.set("customerName", customer);
-    await createSaleAction(formData);
+    if (pending) return;
+    setPending(true);
+    try {
+      formData.set("items", JSON.stringify(lines.map((l) => ({ productId: l.id, quantity: l.qty }))));
+      formData.set("paymentMethod", payment);
+      formData.set("cashBoxId", cashBoxId);
+      formData.set("discount", discount);
+      formData.set("customerName", customer);
+      await createSaleAction(formData);
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -180,8 +187,8 @@ export function PdvClient({
                 <Input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nome" />
               </label>
             </div>
-            <Button type="submit" disabled={lines.length === 0}>
-              Finalizar venda
+            <Button type="submit" disabled={lines.length === 0 || pending}>
+              {pending ? "Processando..." : "Finalizar venda"}
             </Button>
           </form>
         </CardContent>

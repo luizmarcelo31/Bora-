@@ -16,17 +16,21 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatCurrency } from "@/lib/validators";
 import { createProductAction, toggleProductAction } from "./actions";
+import { EditProductDialog } from "./edit-dialog";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Verifique nome e preço.",
   price: "Preço inválido. Use o formato 12,99.",
   duplicate: "SKU ou código de barras já existe.",
+  duplicate_sku: "SKU já existe nesta empresa.",
+  duplicate_barcode: "Código de barras já existe nesta empresa.",
+  not_found: "Produto não encontrado.",
 };
 
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; field?: string }>;
 }) {
   const { tenant } = await requireSessionTenant("/dashboard/produtos");
   const params = await searchParams;
@@ -98,7 +102,11 @@ export default async function ProdutosPage({
             </label>
             {params.error ? (
               <p className="text-sm text-destructive sm:col-span-3">
-                {ERROR_MSG[params.error] ?? "Não foi possível criar."}
+                {params.field === "sku"
+                  ? ERROR_MSG.duplicate_sku
+                  : params.field === "barcode"
+                    ? ERROR_MSG.duplicate_barcode
+                    : (ERROR_MSG[params.error] ?? "Não foi possível criar.")}
               </p>
             ) : null}
             {params.ok ? (
@@ -136,12 +144,27 @@ export default async function ProdutosPage({
                 <TableCell>{p.inventory?.quantity ?? 0}</TableCell>
                 <TableCell>{p.active ? "Ativo" : "Inativo"}</TableCell>
                 <TableCell>
-                  <form action={toggleProductAction}>
-                    <input type="hidden" name="productId" value={p.id} />
-                    <Button variant="outline" size="sm" type="submit">
-                      {p.active ? "Desativar" : "Ativar"}
-                    </Button>
-                  </form>
+                  <div className="flex gap-2">
+                    <EditProductDialog
+                      product={{
+                        id: p.id,
+                        name: p.name,
+                        sku: p.sku,
+                        barcode: p.barcode,
+                        description: p.description,
+                        price: p.price,
+                        cost: p.cost,
+                        category: p.category,
+                      }}
+                      categories={productCategories}
+                    />
+                    <form action={toggleProductAction}>
+                      <input type="hidden" name="productId" value={p.id} />
+                      <Button variant="outline" size="sm" type="submit">
+                        {p.active ? "Desativar" : "Ativar"}
+                      </Button>
+                    </form>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
