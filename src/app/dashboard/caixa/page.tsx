@@ -16,6 +16,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { MetricCard } from "@/components/shared/MetricCard";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/validators";
 import { openCashBoxAction } from "./actions";
 import { CloseCashBoxDialog } from "./close-dialog";
@@ -44,10 +46,18 @@ export default async function CaixaPage({
     orderBy: { createdAt: "desc" },
   });
   const openBoxes = boxes.filter((b) => b.status === "OPEN");
+  const closedCount = boxes.length - openBoxes.length;
+  const saldoAbertos = openBoxes.reduce((s, b) => s + b.currentBalance, 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
-      <PageHeader title="Caixa" badge={tenant.name} description="Abertura, saldo e fechamento." />
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+      <PageHeader title="Caixa" badge={tenant.name} description="Abertura, saldo e fechamento — com preview de sobra/falta." />
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <MetricCard title="Abertos" value={String(openBoxes.length)} hint={`${closedCount} fechados`} />
+        <MetricCard title="Saldo em abertos" value={formatCurrency(saldoAbertos)} hint={`${openBoxes.length} caixa(s)`} />
+        <MetricCard title="Total caixas" value={String(boxes.length)} hint={boxes.length > 0 ? `Último: ${boxes[0].name}` : "Nenhum ainda"} />
+      </div>
 
       {params.error ? (
         <p className="text-sm text-destructive">{ERROR_MSG[params.error] ?? "Erro no caixa."}</p>
@@ -105,15 +115,24 @@ export default async function CaixaPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {boxes.map((b) => (
+                {boxes.map((b) => {
+                  const diff = b.closingBalance !== null ? b.closingBalance - b.currentBalance : null;
+                  return (
                   <TableRow key={b.id}>
-                    <TableCell>{b.name}</TableCell>
-                    <TableCell>{b.status === "OPEN" ? "Aberto" : "Fechado"}</TableCell>
-                    <TableCell>{formatCurrency(b.openingBalance)}</TableCell>
-                    <TableCell>{formatCurrency(b.currentBalance)}</TableCell>
-                    <TableCell>{b.closingBalance !== null ? formatCurrency(b.closingBalance) : "—"}</TableCell>
+                    <TableCell className="font-medium">{b.name}</TableCell>
+                    <TableCell>{b.status === "OPEN" ? <Badge>Aberto</Badge> : <Badge variant="secondary">Fechado</Badge>}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(b.openingBalance)}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(b.currentBalance)}</TableCell>
+                    <TableCell className="tabular-nums">
+                      {b.closingBalance !== null ? (
+                        <span className="flex flex-col">
+                          <span>{formatCurrency(b.closingBalance)}</span>
+                          {diff !== null && diff !== 0 ? <span className={`text-xs ${diff > 0 ? "text-emerald-600" : "text-destructive"}`}>{diff > 0 ? `Sobra ${formatCurrency(diff)}` : `Falta ${formatCurrency(Math.abs(diff))}`}</span> : null}
+                        </span>
+                      ) : "—"}
+                    </TableCell>
                   </TableRow>
-                ))}
+                )})}
               </TableBody>
             </Table>
           )}

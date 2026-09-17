@@ -1,6 +1,6 @@
 # PROJECT_STATE — fonte da verdade
 
-**Atualizado:** 18/09/2026 · **Fase:** POC PDV visual isolada + Home Opção A (Fase 0 aprovada)
+**Atualizado:** 18/09/2026 · **Fase:** Expansão visual Produtos + Caixa (POC aprovada)
 
 ## Implementado ✅
 - Next.js 16 + TS + Tailwind v4 + shadcn radix-nova/Neutral (25 ui) + shared (PageHeader/MetricCard/EmptyState/BrandMark)
@@ -11,17 +11,17 @@
 - Validators (Zod v4) + Services (product, inventory, sale, cashbox, financial)
 - APIs com sessão→tenant (`src/lib/api-context.ts`): `/api/tenants`, `/api/products`, `/api/users`, `/api/sales`, `/api/stock`, `/api/cashbox`, `/api/cashbox/[id]/close`, `/api/financial` (+ `/api/test` pública)
 - Super Admin: `requireSuperAdmin`, `/unauthorized`, `/admin` (métricas), `/admin/empresas`, `/admin/usuarios`, `/admin/permissoes`, bootstrap `scripts/bootstrap-admin.cjs`
-- Produtos: `/dashboard/produtos` — criar, listar, **editar (Dialog, SKU/barcode únicos, margem no servidor)**, ativa/desativa (PRG), audit
-- Estoque: `/dashboard/estoque` — movimentar, **editar limites min/max (sem alterar saldo)**, histórico imutável, audit
+- Produtos: `/dashboard/produtos` — criar, listar, **editar**, ativa/desativa + **métricas (total/ativos/baixo), filtros q/cat/status, Tabs, Badges estoque baixo** (PRG, audit)
+- Estoque: `/dashboard/estoque` — movimentar, **editar limites min/max**, histórico imutável, audit
 - Categorias: `/dashboard/categorias` — criar, **editar nome (unicidade), excluir com soft-delete se em uso**, toggle (PRG), ConfirmDialog, audit
 - Financeiro: `/dashboard/financeiro` — criar, **editar (bloqueia se paid), excluir (bloqueia se paid)**, toggle paid (PRG), dialogs, audit, baixa
 - PDV: `/dashboard/pdv` — vender (preço do banco), **cancelar com motivo validado (DESPESA estorno)**, mensagens específicas stock/discount/cashbox, pending anti-duplo clique, audit
-- Caixa: `/dashboard/caixa` — abrir/fechar, **preview diferença sobra/falta antes de confirmar (cálculo no servidor)**, Dialog, audit
+- Caixa: `/dashboard/caixa` — abrir/fechar, **métricas (abertos/fechados/saldo), preview diferença com cor, Badges status, histórico com sobra/falta**, Dialog, audit
 - Relatórios: `/dashboard/relatorios` (filtro por data, vendas, financeiro, top produtos)
 - Configurações: `/dashboard/configuracoes` (TenantSettings)
 - Auditoria: `/dashboard/auditoria` + `src/lib/audit.ts` (trilha em todas as mutações)
 - Home: `/` → redirect inteligente (`/dashboard` se logado senão `/login`) — Opção A
-- POC PDV: `product-grid.tsx` + `cart-sheet.tsx` (grid 2 col + Sheet confirmação, sem novas deps, sem migração, regras intactas) — isolada em `_components`
+- POC PDV: `product-grid.tsx` + `cart-sheet.tsx` (grid 2 col + Sheet confirmação, sem novas deps, sem migração, regras intactas) — isolada em `_components` + expandida para Produtos/Caixa (mesmo padrão visual, sem novas libs)
 - Docs: PRD, ARCHITECTURE, DATABASE, AUTH, TENANCY, PERMISSIONS, DESIGN_SYSTEM, MODULES, ROADMAP, AI_RULES + ADR-001..004 + `mapping-branding-kit.md` (Fase 0)
 
 ## Em desenvolvimento 🟡
@@ -37,4 +37,4 @@
   `luizmarcelodev@gmail.com` = Super Admin raiz (imutável, ver PERMISSIONS.md).
 
 ## Próxima tarefa
-1. Revisão da POC PDV (aprovar ou ajustar grid/Sheet/gráfico) — expandir para Produtos/Caixa somente após aprovação. Nenhuma alteração funcional será aplicada sem aprovação prévia.
+1. Validar expansão visual em produção (filtros Produtos, métricas Caixa, grid PDV) — sem novas migrações. Próxima expansão (Estoque/Financeiro) somente após aprovação.

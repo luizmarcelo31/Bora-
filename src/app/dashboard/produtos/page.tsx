@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableHeader,
@@ -14,6 +15,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { MetricCard } from "@/components/shared/MetricCard";
 import { formatCurrency } from "@/lib/validators";
 import { createProductAction, toggleProductAction } from "./actions";
 import { EditProductDialog } from "./edit-dialog";
@@ -30,12 +32,12 @@ const ERROR_MSG: Record<string, string> = {
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string; field?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; field?: string; q?: string; status?: string; cat?: string }>;
 }) {
   const { tenant } = await requireSessionTenant("/dashboard/produtos");
   const params = await searchParams;
 
-  const [products, productCategories] = await Promise.all([
+  const [allProducts, productCategories] = await Promise.all([
     ProductService.listProducts(tenant.id, { active: "all" }),
     prisma.category.findMany({
       where: { tenantId: tenant.id, kind: "PRODUCT", active: true },
@@ -43,13 +45,35 @@ export default async function ProdutosPage({
     }),
   ]);
 
+  const q = (params.q ?? "").toLowerCase().trim();
+  const status = params.status ?? "all";
+  const cat = params.cat ?? "all";
+
+  const products = allProducts.filter((p) => {
+    if (status === "active" && !p.active) return false;
+    if (status === "inactive" && p.active) return false;
+    if (cat !== "all" && (p.category ?? "") !== cat) return false;
+    if (q && !(`${p.name} ${p.sku ?? ""} ${p.barcode ?? ""}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  const total = allProducts.length;
+  const ativos = allProducts.filter((p) => p.active).length;
+  const baixo = allProducts.filter((p) => (p.inventory?.quantity ?? 0) <= (p.inventory?.minimumStock ?? 0)).length;
+
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         title="Produtos"
         badge={tenant.name}
-        description="Cadastro e catálogo da conveniência."
+        description="Catálogo, estoque e status — com filtros e edição inline."
       />
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <MetricCard title="Total" value={String(total)} hint={`${ativos} ativos`} />
+        <MetricCard title="Ativos" value={String(ativos)} hint={`${total - ativos} inativos`} />
+        <MetricCard title="Estoque baixo" value={String(baixo)} hint={baixo > 0 ? "Repor em breve" : "Tudo ok"} />
+      </div>
 
       <Card>
         <CardHeader>
@@ -121,8 +145,46 @@ export default async function ProdutosPage({
         </CardContent>
       </Card>
 
+      <Card>
+        <CardContent className="pt-6">
+          <form className="flex flex-wrap gap-3 items-end">
+            <label className="flex flex-col gap-1 text-sm">
+              Buscar
+              <Input name="q" defaultValue={params.q ?? ""} placeholder="Nome, SKU ou barras" className="w-56" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Categoria
+              <select name="cat" defaultValue={cat} className="flex h-9 rounded-md border border-input bg-background px-3 text-sm">
+                <option value="all">Todas</option>
+                {productCategories.map((c) => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))}
+                <option value="">Sem categoria</option>
+              </select>
+            </label>
+            <Button type="submit" variant="outline">Filtrar</Button>
+            {(q || status !== "all" || cat !== "all") ? <a href="/dashboard/produtos" className="text-sm text-muted-foreground underline">Limpar</a> : null}
+          </form>
+          <div className="mt-4 flex gap-2">
+            {[
+              { v: "all", label: "Todos" },
+              { v: "active", label: "Ativos" },
+              { v: "inactive", label: "Inativos" },
+            ].map((t) => (
+              <a
+                key={t.v}
+                href={`/dashboard/produtos?status=${t.v}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(cat)}`}
+                className={`rounded-md border px-3 py-1.5 text-sm ${status === t.v ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
+              >
+                {t.label}
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {products.length === 0 ? (
-        <EmptyState title="Nenhum produto" description="Cadastre o primeiro acima." />
+        <EmptyState title="Nenhum produto" description={q || cat !== "all" ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."} />
       ) : (
         <Table>
           <TableHeader>
@@ -136,13 +198,17 @@ export default async function ProdutosPage({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((p) => (
+            {products.map((p) => {
+              const qty = p.inventory?.quantity ?? 0;
+              const min = p.inventory?.minimumStock ?? 0;
+              const isLow = qty <= min;
+              return (
               <TableRow key={p.id}>
-                <TableCell>{p.name}</TableCell>
-                <TableCell>{p.category ?? "—"}</TableCell>
-                <TableCell>{formatCurrency(p.price)}</TableCell>
-                <TableCell>{p.inventory?.quantity ?? 0}</TableCell>
-                <TableCell>{p.active ? "Ativo" : "Inativo"}</TableCell>
+                <TableCell className="font-medium">{p.name}</TableCell>
+                <TableCell>{p.category ? <Badge variant="outline">{p.category}</Badge> : "—"}</TableCell>
+                <TableCell className="tabular-nums">{formatCurrency(p.price)}</TableCell>
+                <TableCell className={isLow ? "text-destructive font-medium" : "tabular-nums"}>{qty} {isLow ? <Badge variant="destructive" className="ml-1">Baixo</Badge> : null}</TableCell>
+                <TableCell>{p.active ? <Badge>Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <EditProductDialog
@@ -167,7 +233,7 @@ export default async function ProdutosPage({
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       )}
