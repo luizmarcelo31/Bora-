@@ -1,40 +1,30 @@
-import { ProductService } from '@/services';
-import { createProductSchema } from '@/lib/validators';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
+import { ProductService } from "@/services";
+import { createProductSchema } from "@/lib/validators";
+import { requireApiContext, toApiError } from "@/lib/api-context";
 
+// GET /api/products → produtos do tenant da sessão
 export async function GET(req: NextRequest) {
   try {
-    const tenantId = parseInt(req.nextUrl.searchParams.get('tenantId') || '1');
-    const products = await ProductService.listProducts(tenantId);
+    const ctx = await requireApiContext(req);
+    const products = await ProductService.listProducts(ctx.tenantId);
     return NextResponse.json(products);
   } catch (error) {
-    return NextResponse.json(
-      { error: String(error) },
-      { status: 500 }
-    );
+    return toApiError(error, "Failed to fetch products");
   }
 }
 
+// POST /api/products → criar produto no tenant da sessão
 export async function POST(req: NextRequest) {
   try {
+    const ctx = await requireApiContext(req);
     const body = await req.json();
-    const tenantId = parseInt(req.headers.get('X-Tenant-Id') || '1');
 
     const validated = createProductSchema.parse(body);
-    const product = await ProductService.createProduct(tenantId, validated);
+    const product = await ProductService.createProduct(ctx.tenantId, validated);
 
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Erro ao criar produto' },
-      { status: 500 }
-    );
+    return toApiError(error, "Erro ao criar produto");
   }
 }

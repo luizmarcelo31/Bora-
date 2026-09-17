@@ -5,15 +5,19 @@ Ordem oficial (PROJECT_FOUNDATION §13). Status em 17/09/2026:
 ## Fundação — ✅ pronta
 Projeto, configuração, banco, ORM, contexto, Design System.
 
-## Core — 🟡 parcial
+## Core — ✅ pronto
 - [x] Autenticação (login/signup/logout + proxy)
 - [x] Usuários (API + model)
 - [x] Tenants (API GET/POST + model)
-- [x] Roles + permissões (libs, sem UI)
-- [ ] Vincular sessão→tenant nas APIs (remover X-Tenant-Id manual)
+- [x] Roles + permissões (libs + página /admin/permissoes)
+- [x] Sessão→tenant nas APIs (`requireApiContext`, 401/403)
 
-## Super Admin — ⬜ pendente
-Dashboard, empresas, usuários, planos, assinaturas, configurações.
+## Super Admin — 🟡 parcial (visual atual, sem kit)
+- [x] Guarda `requireSuperAdmin` + `/unauthorized` + `/admin/*` no proxy
+- [x] Dashboard (/admin), empresas, usuários, permissões
+- [x] Bootstrap via `scripts/bootstrap-admin.cjs`
+- [ ] Re-skin com Studio Admin (Fase B)
+- [ ] Planos, assinaturas, configurações
 
 ## Operação — 🟡 APIs prontas, UI pendente
 - [x] Produtos (API) · [ ] UI

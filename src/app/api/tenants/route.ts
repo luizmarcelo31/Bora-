@@ -1,23 +1,33 @@
-import { prisma } from '@/lib/db';
-import { createTenantSchema } from '@/lib/validators';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { createTenantSchema } from "@/lib/validators";
+import { requireApiContext, toApiError } from "@/lib/api-context";
 
+// GET /api/tenants → super admin lista todos; usuário comum vê o próprio
 export async function GET(req: NextRequest) {
   try {
-    const tenants = await prisma.tenant.findMany({
-      orderBy: { name: 'asc' },
-    });
+    const ctx = await requireApiContext(req);
+
+    if (!ctx.superAdmin) {
+      const own = await prisma.tenant.findUnique({ where: { id: ctx.tenantId } });
+      return NextResponse.json(own ? [own] : []);
+    }
+
+    const tenants = await prisma.tenant.findMany({ orderBy: { name: "asc" } });
     return NextResponse.json(tenants);
   } catch (error) {
-    return NextResponse.json(
-      { error: String(error) },
-      { status: 500 }
-    );
+    return toApiError(error, "Failed to fetch tenants");
   }
 }
 
+// POST /api/tenants → criar empresa (somente SUPER_ADMIN)
 export async function POST(req: NextRequest) {
   try {
+    const ctx = await requireApiContext(req);
+    if (!ctx.superAdmin) {
+      return NextResponse.json({ error: "Forbidden: somente Super Admin" }, { status: 403 });
+    }
+
     const body = await req.json();
     const validated = createTenantSchema.parse(body);
 
@@ -32,16 +42,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(tenant, { status: 201 });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Erro ao criar tenant' },
-      { status: 500 }
-    );
+    return toApiError(error, "Erro ao criar tenant");
   }
 }
