@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createUserSchema } from "@/lib/validators";
 import { requireApiContext, toApiError } from "@/lib/api-context";
+import { assertMutableUser } from "@/lib/admin";
 
 // GET /api/users → usuários do tenant da sessão
 export async function GET(req: NextRequest) {
@@ -24,6 +25,11 @@ export async function POST(req: NextRequest) {
     const ctx = await requireApiContext(req);
     const body = await req.json();
     const validated = createUserSchema.parse(body);
+    try {
+      assertMutableUser(validated.email);
+    } catch (error) {
+      return toApiError(error, "Failed to create user");
+    }
 
     const existing = await prisma.user.findFirst({
       where: { tenantId: ctx.tenantId, email: validated.email },

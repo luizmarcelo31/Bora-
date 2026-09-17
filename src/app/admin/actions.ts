@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireSuperAdmin } from "@/lib/admin";
+import { requireSuperAdmin, assertMutableUser } from "@/lib/admin";
 import { createTenantSchema, createUserSchema } from "@/lib/validators";
 
 export async function createTenantAction(formData: FormData) {
@@ -42,6 +42,12 @@ export async function createUserAction(formData: FormData) {
     role: String(formData.get("role") ?? "STAFF"),
   });
   if (!parsed.success) redirect("/admin/usuarios?error=invalid");
+
+  try {
+    assertMutableUser(parsed.data.email);
+  } catch {
+    redirect("/admin/usuarios?error=root");
+  }
 
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) redirect("/admin/usuarios?error=tenant");

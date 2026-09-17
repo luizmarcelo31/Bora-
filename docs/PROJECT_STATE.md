@@ -21,6 +21,9 @@
 
 ## Bugs conhecidos
 - Nenhum registrado. Build verde (20 rotas). Gate produtos: /dashboard/produtos sem sessão → 307.
+- O 403 reportado em /admin com conta comum é o comportamento correto (só SUPER_ADMIN).
+  Resolvido o vínculo: `luizmarcelo31@gmail.com` = OWNER da Conveniencia Centro;
+  `luizmarcelodev@gmail.com` = Super Admin raiz (imutável, ver PERMISSIONS.md).
 
 ## Próxima tarefa
 1. Estoque UI (`/dashboard/estoque` — saldo + movimentar ENTRADA/SAIDA/AJUSTE) ou deploy Vercel da estrutura atual.

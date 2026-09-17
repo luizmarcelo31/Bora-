@@ -14,6 +14,7 @@ const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Verifique email, nome e role.",
   tenant: "Empresa inválida.",
   duplicate: "Este email já existe nesta empresa.",
+  root: "A conta raiz não pode ser duplicada nem alterada.",
 };
 
 export default async function UsuariosPage({
