@@ -12,6 +12,7 @@ export function RecentSalesTable({
     return <EmptyState title="Nenhuma venda hoje" description="As vendas aparecerão aqui ao longo do dia." />;
   }
   return (
+    <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -34,5 +35,6 @@ export function RecentSalesTable({
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }

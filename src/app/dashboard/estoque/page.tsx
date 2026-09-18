@@ -151,7 +151,7 @@ export default async function EstoquePage({
               <EmptyState title="Nenhum produto" description={q || filter !== "all" ? "Nenhum resultado para o filtro." : "Cadastre em Produtos primeiro."} icon={Package} />
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
@@ -187,7 +187,7 @@ export default async function EstoquePage({
                   );
                 })}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>
@@ -198,7 +198,7 @@ export default async function EstoquePage({
             <CardTitle>Últimas movimentações</CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-0">
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -219,7 +219,7 @@ export default async function EstoquePage({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       ) : null}

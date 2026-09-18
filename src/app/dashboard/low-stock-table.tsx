@@ -8,6 +8,7 @@ export function LowStockTable({
 }) {
   if (items.length === 0) return <EmptyState title="Estoque ok" description="Nenhum item crítico." />;
   return (
+    <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -28,5 +29,6 @@ export function LowStockTable({
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }

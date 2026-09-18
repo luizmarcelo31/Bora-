@@ -118,7 +118,7 @@ export default async function RelatoriosPage({
               <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
@@ -135,7 +135,7 @@ export default async function RelatoriosPage({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>
@@ -150,7 +150,7 @@ export default async function RelatoriosPage({
               <EmptyState title="Sem movimentações no período" description="Ajuste o intervalo acima." icon={BarChart3} />
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Categoria</TableHead>
@@ -167,7 +167,7 @@ export default async function RelatoriosPage({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

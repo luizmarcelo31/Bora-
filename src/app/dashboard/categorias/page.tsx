@@ -73,7 +73,7 @@ export default async function CategoriasPage() {
       {categories.length === 0 ? (
         <EmptyState title="Nenhuma categoria" description="Crie a primeira acima." icon={Tags} />
       ) : (
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -103,7 +103,7 @@ export default async function CategoriasPage() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       )}
     </main>
   );

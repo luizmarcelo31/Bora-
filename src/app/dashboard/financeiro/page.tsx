@@ -193,7 +193,7 @@ export default async function FinanceiroPage({
               <EmptyState title="Sem lançamentos" description="Registre o primeiro acima." icon={Wallet} />
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -242,7 +242,7 @@ export default async function FinanceiroPage({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

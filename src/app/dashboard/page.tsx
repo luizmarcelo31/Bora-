@@ -162,7 +162,7 @@ export default async function DashboardPage() {
               </Badge>
             </div>
             <p className="text-muted-foreground text-sm">
-              R {formatCurrency(financialResume.receitas)} / D {formatCurrency(financialResume.despesas)}
+              {formatCurrency(financialResume.receitas)} / {formatCurrency(financialResume.despesas)}
             </p>
           </CardContent>
         </Card>

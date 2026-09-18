@@ -97,7 +97,7 @@ export default async function CaixaPage() {
               <EmptyState title="Nenhum caixa" description="Abra o primeiro acima." icon={Wallet} />
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
@@ -127,7 +127,7 @@ export default async function CaixaPage() {
                   </TableRow>
                 )})}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

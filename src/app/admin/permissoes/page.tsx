@@ -19,7 +19,7 @@ export default async function PermissoesPage() {
         title="Permissões"
         description="Matriz role × permissão (somente leitura — definida em src/lib/permissions.ts)."
       />
-      <Table>
+      <div className="overflow-x-auto"><Table>
         <TableHeader>
           <TableRow>
             <TableHead>Permissão</TableHead>
@@ -38,7 +38,7 @@ export default async function PermissoesPage() {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </Table></div>
     </main>
   );
 }

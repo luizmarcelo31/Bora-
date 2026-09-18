@@ -72,7 +72,7 @@ export default async function PdvPage() {
               <EmptyState title="Nenhuma venda hoje" description="Finalize a primeira acima." icon={ShoppingCart} />
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>#</TableHead>
@@ -99,7 +99,7 @@ export default async function PdvPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

@@ -67,7 +67,7 @@ export default async function EmpresasPage({
       {tenants.length === 0 ? (
         <EmptyState title="Nenhuma empresa" description="Crie a primeira acima." />
       ) : (
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
@@ -92,7 +92,7 @@ export default async function EmpresasPage({
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       )}
     </main>
   );

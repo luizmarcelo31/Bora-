@@ -38,7 +38,7 @@ export default async function AuditoriaPage() {
           icon={ShieldCheck}
         />
       ) : (
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Data</TableHead>
@@ -46,7 +46,7 @@ export default async function AuditoriaPage() {
               <TableHead>Entidade</TableHead>
               <TableHead>ID</TableHead>
               <TableHead>Usuário</TableHead>
-              <TableHead>Detalhes</TableHead>
+                <TableHead className="hidden md:table-cell">Detalhes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -57,11 +57,11 @@ export default async function AuditoriaPage() {
                 <TableCell><Badge variant="outline">{auditEntityLabel(l.entity)}</Badge></TableCell>
                 <TableCell className="tabular-nums">#{l.entityId}</TableCell>
                 <TableCell>{l.userEmail ?? `#${l.userId ?? "—"}`}</TableCell>
-                <TableCell className="max-w-xs truncate">{l.details ?? "—"}</TableCell>
+                <TableCell className="hidden max-w-xs truncate md:table-cell">{l.details ?? "—"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       )}
     </main>
   );

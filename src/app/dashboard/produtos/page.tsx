@@ -170,7 +170,7 @@ export default async function ProdutosPage({
       {products.length === 0 ? (
         <EmptyState title="Nenhum produto" description={q || cat !== "all" ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."} icon={Package} />
       ) : (
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -219,7 +219,7 @@ export default async function ProdutosPage({
               </TableRow>
             )})}
           </TableBody>
-        </Table>
+        </Table></div>
       )}
     </main>
   );

@@ -104,7 +104,7 @@ export default async function UsuariosPage({
       {users.length === 0 ? (
         <EmptyState title="Nenhum usuário" description="Crie o primeiro acima." />
       ) : (
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -125,7 +125,7 @@ export default async function UsuariosPage({
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       )}
     </main>
   );
