@@ -10,6 +10,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ReportActions } from "@/components/shared/ReportActions";
 import { Badge } from "@/components/ui/badge";
 import { auditActionLabel, auditActionVariant, auditEntityLabel } from "@/lib/audit-labels";
 import { ShieldCheck } from "lucide-react";
@@ -29,6 +30,21 @@ export default async function AuditoriaPage() {
         title="Auditoria"
         badge={tenant.name}
         description="Últimas 100 ações registradas."
+      />
+      <ReportActions
+        title="Relatório de auditoria (LOG)"
+        subtitle={`${tenant.name} — gerado em ${new Date().toLocaleString("pt-BR")}`}
+        columns={["Data", "Ação", "Entidade", "ID", "Usuário", "Detalhes"]}
+        rows={logs.map((l) => [
+          new Date(l.createdAt).toLocaleString("pt-BR"),
+          auditActionLabel(l.action),
+          auditEntityLabel(l.entity),
+          `#${l.entityId}`,
+          l.userEmail ?? `#${l.userId ?? "—"}`,
+          l.details ?? "—",
+        ])}
+        fileName={`auditoria-${tenant.id}-${new Date().toISOString().slice(0, 10)}`}
+        orientation="landscape"
       />
 
       {logs.length === 0 ? (

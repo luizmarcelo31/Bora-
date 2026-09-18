@@ -6,6 +6,8 @@ import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ReportActions } from "@/components/shared/ReportActions";
+import { paymentLabel } from "@/lib/payments";
 import { BarChart3 } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +68,24 @@ export default async function RelatoriosPage({
     take: 10,
   });
 
+  const periodSales = await prisma.sale.findMany({
+    where: {
+      tenantId: tenant.id,
+      status: "COMPLETED",
+      createdAt: { gte: startDate, lte: endInclusive },
+    },
+    select: {
+      id: true,
+      createdAt: true,
+      paymentMethod: true,
+      total: true,
+      items: { select: { quantity: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  const salesTotal = periodSales.reduce((s, v) => s + v.total, 0);
+
   const productIds = topProducts.map((r) => r.productId);
   const productsMap = new Map(
     productIds.length
@@ -107,6 +127,58 @@ export default async function RelatoriosPage({
         <MetricCard title="Faturado (vendas)" value={formatCurrency(salesResume.totalReceived)} hint={`Descontos ${formatCurrency(salesResume.totalDiscount)}`} />
         <MetricCard title="Saldo financeiro" value={formatCurrency(financialResume.saldo)} hint={`Receitas ${formatCurrency(financialResume.receitas)} / Despesas ${formatCurrency(financialResume.despesas)}`} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Vendas no período</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <ReportActions
+            title="Relatório de vendas"
+            subtitle={`${tenant.name} — ${startStr} a ${endStr} · ${periodSales.length} vendas · ${formatCurrency(salesTotal)}`}
+            columns={["Data", "#", "Itens", "Pagamento", "Total"]}
+            rows={periodSales.map((s) => [
+              new Date(s.createdAt).toLocaleString("pt-BR"),
+              `#${s.id}`,
+              String(s.items.reduce((n, i) => n + i.quantity, 0)),
+              paymentLabel(s.paymentMethod),
+              formatCurrency(s.total),
+            ])}
+            footer={["", "Total", `${periodSales.length} vendas`, "", formatCurrency(salesTotal)]}
+            fileName={`vendas-${tenant.id}-${startStr}_${endStr}`}
+          />
+        </CardContent>
+        <CardContent className="px-0 pb-0">
+          {periodSales.length === 0 ? (
+            <div className="px-6 pb-6">
+              <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
+            </div>
+          ) : (
+            <div className="overflow-x-auto"><Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>#</TableHead>
+                  <TableHead>Itens</TableHead>
+                  <TableHead>Pagamento</TableHead>
+                  <TableHead>Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {periodSales.map((s) => (
+                  <TableRow key={s.id}>
+                    <TableCell className="tabular-nums">{new Date(s.createdAt).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="tabular-nums">#{s.id}</TableCell>
+                    <TableCell className="tabular-nums">{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
+                    <TableCell>{paymentLabel(s.paymentMethod)}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(s.total)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table></div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

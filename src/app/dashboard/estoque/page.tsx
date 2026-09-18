@@ -15,6 +15,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ReportActions } from "@/components/shared/ReportActions";
 import { FilterTabs } from "@/components/shared/FilterTabs";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Package } from "lucide-react";
@@ -124,6 +125,19 @@ export default async function EstoquePage({
           <CardTitle>Saldo atual</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          <ReportActions
+            title="Relatório de estoque"
+            subtitle={`${tenant.name} — ${products.length} produtos · ${totalUnidades} unidades · ${baixo} em baixo estoque`}
+            columns={["Produto", "Quantidade", "Mínimo", "Máximo", "Situação"]}
+            rows={products.map((p) => {
+              const qty = p.inventory?.quantity ?? 0;
+              const min = p.inventory?.minimumStock ?? 0;
+              const max = p.inventory?.maximumStock ?? null;
+              return [p.name, String(qty), String(min), max === null ? "—" : String(max), qty <= min ? "Baixo" : "Ok"];
+            })}
+            footer={["Total", String(totalUnidades), "", "", `${baixo} em baixo`]}
+            fileName={`estoque-${tenant.id}-${new Date().toISOString().slice(0, 10)}`}
+          />
           <form className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm">
               Buscar

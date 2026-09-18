@@ -19,6 +19,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ReportActions } from "@/components/shared/ReportActions";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Badge } from "@/components/ui/badge";
 import { SelectField } from "@/components/ui/select-field";
@@ -165,6 +166,22 @@ export default async function FinanceiroPage({
           <CardTitle>Últimos lançamentos</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          <ReportActions
+            title="Relatório financeiro"
+            subtitle={`${tenant.name} — mês atual · receitas ${formatCurrency(resume.receitas)} · despesas ${formatCurrency(resume.despesas)} · saldo ${formatCurrency(resume.saldo)}`}
+            columns={["Data", "Tipo", "Categoria", "Descrição", "Valor", "Pago"]}
+            rows={movements.map((m) => [
+              new Date(m.movementDate).toLocaleDateString("pt-BR"),
+              m.type,
+              m.category,
+              m.description,
+              formatCurrency(m.amount),
+              m.paid ? "Pago" : "Pendente",
+            ])}
+            footer={["", "", "", "Saldo", formatCurrency(resume.saldo), ""]}
+            fileName={`financeiro-${tenant.id}-${now.toISOString().slice(0, 10)}`}
+            orientation="landscape"
+          />
           <form className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm">
               Tipo
