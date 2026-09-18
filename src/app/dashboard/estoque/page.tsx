@@ -101,7 +101,7 @@ export default async function EstoquePage({
                 options={[
                   { value: "ENTRADA", label: "Entrada" },
                   { value: "SAIDA", label: "Saída" },
-                  { value: "AJUSTE", label: "Ajuste (baixa)" },
+                  { value: "AJUSTE", label: "Ajuste de baixa" },
                 ]}
               />
             </label>

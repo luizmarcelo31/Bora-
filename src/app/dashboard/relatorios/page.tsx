@@ -85,6 +85,13 @@ export default async function RelatoriosPage({
     take: 200,
   });
   const salesTotal = periodSales.reduce((s, v) => s + v.total, 0);
+  const salesCount = await prisma.sale.count({
+    where: {
+      tenantId: tenant.id,
+      status: "COMPLETED",
+      createdAt: { gte: startDate, lte: endInclusive },
+    },
+  });
 
   const productIds = topProducts.map((r) => r.productId);
   const productsMap = new Map(
@@ -131,6 +138,11 @@ export default async function RelatoriosPage({
       <Card>
         <CardHeader>
           <CardTitle>Vendas no período</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {salesCount === 0
+              ? "Nenhuma venda no intervalo."
+              : `Mostrando ${periodSales.length} de ${salesCount} vendas.`}
+          </p>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <ReportActions

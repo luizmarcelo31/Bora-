@@ -192,16 +192,19 @@ export class ProductService {
       }
     }
 
+    // Parcial de verdade: só toca nos campos enviados (antes, omitidos viravam NULL).
     return prisma.product.update({
       where: { id: productId },
       data: {
-        ...data,
-        sku: data.sku || null,
-        barcode: data.barcode || null,
-        description: data.description || null,
-        category: data.category || null,
-        imageUrl: data.imageUrl || null,
-        margin,
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.sku !== undefined ? { sku: data.sku || null } : {}),
+        ...(data.barcode !== undefined ? { barcode: data.barcode || null } : {}),
+        ...(data.description !== undefined ? { description: data.description || null } : {}),
+        ...(data.price !== undefined ? { price: data.price } : {}),
+        ...(data.cost !== undefined ? { cost: data.cost || null } : {}),
+        ...(data.category !== undefined ? { category: data.category || null } : {}),
+        ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl || null } : {}),
+        ...(margin !== undefined ? { margin } : {}),
       },
       include: {
         inventory: true,

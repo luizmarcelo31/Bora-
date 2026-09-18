@@ -10,7 +10,6 @@ import { formatCurrency } from "@/lib/validators";
 import { createSaleAction } from "./actions";
 import { ProductGrid } from "./_components/product-grid";
 import { CartSheet } from "./_components/cart-sheet";
-import { PdvCommandPalette } from "./_components/pdv-command-palette";
 import { ControlledSelect } from "@/components/ui/controlled-select";
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
 
@@ -42,6 +41,7 @@ export function PdvClient({
   const [customer, setCustomer] = useState("");
   const [search, setSearch] = useState("");
   const [pending, setPending] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const idemRef = useRef<string | null>(null);
   function getIdemKey() {
     if (!idemRef.current) idemRef.current = crypto.randomUUID();
@@ -81,6 +81,7 @@ export function PdvClient({
       setCart({});
       setDiscount("");
       setCustomer("");
+      setCartOpen(false);
       idemRef.current = null;
     } else {
       toast.error(SALE_ERROR_MSG[res.error] ?? SALE_ERROR_MSG.sale);
@@ -132,7 +133,6 @@ export function PdvClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <PdvCommandPalette products={products} cart={cart} onQty={setQty} />
           <ProductGrid products={filtered.map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, category: (p as unknown as { category?: string | null }).category ?? null }))} cart={cart} onQty={setQty} />
         </CardContent>
       </Card>
@@ -192,7 +192,7 @@ export function PdvClient({
                 <Input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nome" />
               </label>
             </div>
-            <CartSheet lines={lines.map((l) => ({ id: l.id, name: l.name, qty: l.qty, total: l.total }))} subtotal={subtotal} discountRaw={discount} pending={pending} onConfirm={confirmSale} />
+            <CartSheet lines={lines.map((l) => ({ id: l.id, name: l.name, qty: l.qty, total: l.total }))} subtotal={subtotal} discountRaw={discount} pending={pending} onConfirm={confirmSale} open={cartOpen} onOpenChange={setCartOpen} />
           </form>
         </CardContent>
       </Card>

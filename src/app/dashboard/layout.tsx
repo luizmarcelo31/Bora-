@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { TenantSidebar } from "@/components/tenant/tenant-sidebar";
+import { GlobalSearch } from "@/components/shared/GlobalSearch";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard");
@@ -23,8 +24,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <div className="flex w-full items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mx-2 h-4" />
-            <span className="text-sm text-muted-foreground">{tenant.name}</span>
-            <Badge className="ml-auto">{dbUser.role}</Badge>
+            <span className="truncate text-sm text-muted-foreground">{tenant.name}</span>
+            <div className="ml-auto flex items-center gap-2">
+              <GlobalSearch tenantId={tenant.id} />
+              <Badge className="hidden sm:inline-flex">{dbUser.role}</Badge>
+            </div>
           </div>
         </header>
         <div className="flex-1">{children}</div>

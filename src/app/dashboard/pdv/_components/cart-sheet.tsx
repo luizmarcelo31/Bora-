@@ -15,12 +15,16 @@ export function CartSheet({
   discountRaw,
   pending,
   onConfirm,
+  open,
+  onOpenChange,
 }: {
   lines: CartLine[];
   subtotal: number;
   discountRaw: string;
   pending: boolean;
   onConfirm: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   function parseDiscount(raw: string): number {
     const n = raw.replace(/\./g, "").replace(",", ".").trim();
@@ -32,7 +36,7 @@ export function CartSheet({
   const total = Math.max(0, subtotal - discountCents);
 
   return (
-    <Drawer.Root direction="right">
+    <Drawer.Root direction="right" open={open} onOpenChange={onOpenChange}>
       <Drawer.Trigger asChild>
         <Button type="button" disabled={lines.length === 0 || pending} className="w-full">
           <ShoppingCart className="size-4" /> Revisar e finalizar ({lines.length})
