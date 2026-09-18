@@ -28,6 +28,7 @@ const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Confira nome e valores.",
   close: "Não foi possível fechar (caixa já fechada ou inexistente).",
   forbidden: "Seu role não tem permissão para operar o caixa.",
+  fail: "Não foi possível concluir. Tente novamente.",
 };
 
 export default async function CaixaPage() {

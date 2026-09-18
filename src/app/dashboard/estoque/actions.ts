@@ -48,8 +48,16 @@ export async function moveStockAction(formData: FormData) {
       userEmail: dbUser.email,
       changes: parsed,
     });
-  } catch {
-    redirect("/dashboard/estoque?error=stock");
+  } catch (e) {
+    if ((e as { type?: string }).type === "INSUFFICIENT_STOCK") {
+      redirect("/dashboard/estoque?error=stock");
+    }
+    console.error("[moveStockAction] falha inesperada", {
+      tenantId: tenant.id,
+      productId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/estoque?error=fail");
   }
 
   revalidatePath("/dashboard/estoque");
@@ -94,10 +102,19 @@ export async function updateInventorySettingsAction(formData: FormData) {
   const inventory = await prisma.inventory.findFirst({ where: { tenantId: tenant.id, productId } });
   if (!inventory) redirect("/dashboard/estoque?error=invalid");
 
-  await prisma.inventory.update({
-    where: { id: inventory.id },
-    data: { minimumStock, maximumStock: maximumStock ?? null },
-  });
+  try {
+    await prisma.inventory.update({
+      where: { id: inventory.id },
+      data: { minimumStock, maximumStock: maximumStock ?? null },
+    });
+  } catch (e) {
+    console.error("[updateInventorySettingsAction] falha inesperada", {
+      tenantId: tenant.id,
+      productId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/estoque?error=fail");
+  }
 
   const { logAudit } = await import("@/lib/audit");
   await logAudit({

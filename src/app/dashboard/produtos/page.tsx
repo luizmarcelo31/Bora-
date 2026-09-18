@@ -32,6 +32,8 @@ const ERROR_MSG: Record<string, string> = {
   duplicate_sku: "SKU já existe nesta empresa.",
   duplicate_barcode: "Código de barras já existe nesta empresa.",
   not_found: "Produto não encontrado.",
+  forbidden: "Seu role não tem permissão para esta ação.",
+  fail: "Não foi possível concluir. Tente novamente.",
 };
 
 export default async function ProdutosPage({

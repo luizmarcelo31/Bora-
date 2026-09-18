@@ -23,6 +23,7 @@ import { SelectField } from "@/components/ui/select-field";
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos.",
   duplicate: "Já existe uma categoria com esse nome e tipo.",
+  fail: "Não foi possível concluir. Tente novamente.",
 };
 
 export default async function CategoriasPage() {

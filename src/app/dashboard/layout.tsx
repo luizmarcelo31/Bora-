@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <TenantSidebar user={{ name: dbUser.name, email: dbUser.email }} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b">
           <div className="flex w-full items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -31,7 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
           </div>
         </header>
-        <div className="flex-1">{children}</div>
+        <div className="min-w-0 flex-1">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

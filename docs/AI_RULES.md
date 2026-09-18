@@ -21,9 +21,14 @@ Next.js 16 App Router · Prisma · Supabase (Auth + Postgres) · Zod · Tailwind
 - Não misturar escopos: uma tarefa = um módulo. Problema fora do escopo: registrar, não refatorar junto.
 - Bug: reproduzir → isolar → teste → corrigir → regressão → documentar.
 
-## Depois de codar
-Código → testes → docs → `docs/changes/YYYY-MM-DD-<tarefa>.md` → atualizar `PROJECT_STATE.md`.
-Decisão estrutural → `docs/decisions/ADR-*.md` (nunca mudar ADR em silêncio).
+## Depois de codar (obrigatório — parte do "done", sem exceção)
+Ordem: código → testes → docs → commit. Nenhuma tarefa está concluída sem docs.
+Checklist de docs por lote entregue:
+1. `docs/changes/YYYY-MM-DD-<tarefa>.md` — o que mudou, por quê, arquivos, testes, riscos.
+2. `docs/PROJECT_STATE.md` — data em "Atualizado", fase, recursos, pendings, bugs conhecidos.
+3. `docs/ROADMAP.md` — marcar checkboxes concluídos; mover próximos.
+4. Decisão estrutural → `docs/decisions/ADR-*.md` (nunca mudar ADR em silêncio).
+Proibido commitar lote com docs desatualizados.
 
 ## Commits (regra permanente)
 - Todo commit é autorado pelo proprietário: **Luiz Marcelo <luizmarcelo31@gmail.com>**.

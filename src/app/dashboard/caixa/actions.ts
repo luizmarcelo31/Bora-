@@ -20,7 +20,17 @@ export async function openCashBoxAction(formData: FormData) {
   const openingBalance = parseBRLToCents(formData.get("openingBalance")) ?? 0;
   if (!name) redirect("/dashboard/caixa?error=invalid");
 
-  const box = await CashBoxService.openCashBox(tenant.id, name, openingBalance);
+  let box;
+  try {
+    box = await CashBoxService.openCashBox(tenant.id, name, openingBalance);
+  } catch (e) {
+    console.error("[openCashBoxAction] falha inesperada", {
+      tenantId: tenant.id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/caixa?error=fail");
+    throw e;
+  }
   const { logAudit } = await import("@/lib/audit");
   await logAudit({
     tenantId: tenant.id,
@@ -73,7 +83,12 @@ export async function closeCashBoxAction(formData: FormData) {
       details: `Fechar ${result.name} diferença ${diff}`,
     });
     // Item 2 — baixa: marcar como pagas as pendências do caixa (opcional p/ consulta)
-  } catch {
+  } catch (e) {
+    console.error("[closeCashBoxAction] falha inesperada", {
+      tenantId: tenant.id,
+      cashBoxId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
     redirect("/dashboard/caixa?error=close");
   }
   revalidatePath("/dashboard/caixa");

@@ -6,7 +6,7 @@ import type { Role } from "@prisma/client";
 import { ProductService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
-import { createProductSchema, reaisToCents } from "@/lib/validators";
+import { createProductSchema, reaisToCents, ValidationError } from "@/lib/validators";
 
 function toCents(raw: FormDataEntryValue | null): number | undefined {
   if (raw === null) return undefined;
@@ -39,8 +39,16 @@ export async function createProductAction(formData: FormData) {
   try {
     const p = await ProductService.createProduct(tenant.id, parsed.data);
     productId = p.id;
-  } catch {
-    redirect("/dashboard/produtos?error=duplicate");
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      if (e.type === "DUPLICATE_SKU") redirect("/dashboard/produtos?error=duplicate_sku");
+      if (e.type === "DUPLICATE_BARCODE") redirect("/dashboard/produtos?error=duplicate_barcode");
+    }
+    console.error("[createProductAction] falha inesperada", {
+      tenantId: tenant.id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/produtos?error=fail");
   }
 
   const { logAudit } = await import("@/lib/audit");
@@ -61,12 +69,25 @@ export async function createProductAction(formData: FormData) {
 
 export async function toggleProductAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/produtos");
-  requirePermission(dbUser.role as Role, "products.update");
+  try {
+    requirePermission(dbUser.role as Role, "products.update");
+  } catch {
+    redirect("/dashboard/produtos?error=forbidden");
+  }
 
   const productId = parseInt(String(formData.get("productId") ?? "0"), 10);
   if (!productId) redirect("/dashboard/produtos?error=invalid");
 
-  await ProductService.toggleProduct(tenant.id, productId);
+  try {
+    await ProductService.toggleProduct(tenant.id, productId);
+  } catch (e) {
+    console.error("[toggleProductAction] falha inesperada", {
+      tenantId: tenant.id,
+      productId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/produtos?error=fail");
+  }
   const { logAudit: logAudit2 } = await import("@/lib/audit");
   await logAudit2({
     tenantId: tenant.id,
@@ -82,7 +103,11 @@ export async function toggleProductAction(formData: FormData) {
 
 export async function updateProductAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/produtos");
-  requirePermission(dbUser.role as Role, "products.update");
+  try {
+    requirePermission(dbUser.role as Role, "products.update");
+  } catch {
+    redirect("/dashboard/produtos?error=forbidden");
+  }
 
   const productId = parseInt(String(formData.get("productId") ?? "0"), 10);
   if (!productId) redirect("/dashboard/produtos?error=invalid");
@@ -132,9 +157,18 @@ export async function updateProductAction(formData: FormData) {
       details: `Produto ${updated.name} atualizado`,
     });
   } catch (e) {
+    if (e instanceof ValidationError) {
+      if (e.type === "DUPLICATE_SKU") redirect("/dashboard/produtos?error=duplicate_sku");
+      if (e.type === "DUPLICATE_BARCODE") redirect("/dashboard/produtos?error=duplicate_barcode");
+    }
     if (e instanceof Error && e.message.includes("SKU")) redirect("/dashboard/produtos?error=duplicate_sku");
     if (e instanceof Error && e.message.includes("barras")) redirect("/dashboard/produtos?error=duplicate_barcode");
-    redirect("/dashboard/produtos?error=invalid");
+    console.error("[updateProductAction] falha inesperada", {
+      tenantId: tenant.id,
+      productId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/produtos?error=fail");
   }
 
   revalidatePath("/dashboard/produtos");

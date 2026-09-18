@@ -27,7 +27,14 @@ export async function logAudit(params: {
         details: params.details ?? null,
       },
     });
-  } catch {
-    // best-effort
+  } catch (e) {
+    // best-effort: nunca quebra a operação, mas registra para observabilidade
+    console.error("[audit] falha ao registrar", {
+      tenantId: params.tenantId,
+      action: params.action,
+      entity: params.entity,
+      entityId: params.entityId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
   }
 }

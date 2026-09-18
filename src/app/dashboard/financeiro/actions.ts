@@ -40,7 +40,17 @@ export async function createFinancialAction(formData: FormData) {
   });
   if (!parsed.success) redirect("/dashboard/financeiro?error=invalid");
 
-  const movement = await FinancialService.registerMovement(tenant.id, parsed.data);
+  let movement: { id: number };
+  try {
+    movement = await FinancialService.registerMovement(tenant.id, parsed.data);
+  } catch (e) {
+    console.error("[createFinancialAction] falha inesperada", {
+      tenantId: tenant.id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/financeiro?error=fail");
+    throw e;
+  }
   const { logAudit } = await import("@/lib/audit");
   await logAudit({
     tenantId: tenant.id,
@@ -86,17 +96,26 @@ export async function updateFinancialAction(formData: FormData) {
   });
   if (!parsed.success) redirect("/dashboard/financeiro?error=invalid");
 
-  await (await import("@/lib/db")).prisma.financialMovement.update({
-    where: { id },
-    data: {
-      type: parsed.data.type as import("@prisma/client").FinancialMovementType,
-      category: parsed.data.category,
-      description: parsed.data.description,
-      amount: parsed.data.amount,
-      movementDate: parsed.data.movementDate,
-      cashBoxId: parsed.data.cashBoxId ?? null,
-    },
-  });
+  try {
+    await (await import("@/lib/db")).prisma.financialMovement.update({
+      where: { id },
+      data: {
+        type: parsed.data.type as import("@prisma/client").FinancialMovementType,
+        category: parsed.data.category,
+        description: parsed.data.description,
+        amount: parsed.data.amount,
+        movementDate: parsed.data.movementDate,
+        cashBoxId: parsed.data.cashBoxId ?? null,
+      },
+    });
+  } catch (e) {
+    console.error("[updateFinancialAction] falha inesperada", {
+      tenantId: tenant.id,
+      id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/financeiro?error=fail");
+  }
   const { logAudit } = await import("@/lib/audit");
   await logAudit({
     tenantId: tenant.id,
@@ -126,7 +145,16 @@ export async function deleteFinancialAction(formData: FormData) {
   if (!existing) redirect("/dashboard/financeiro?error=not_found");
   if (existing.paid) redirect("/dashboard/financeiro?error=paid_locked");
   // Preserve paid history already handled; for unpaid allow hard delete (no active flag exists)
-  await (await import("@/lib/db")).prisma.financialMovement.delete({ where: { id } });
+  try {
+    await (await import("@/lib/db")).prisma.financialMovement.delete({ where: { id } });
+  } catch (e) {
+    console.error("[deleteFinancialAction] falha inesperada", {
+      tenantId: tenant.id,
+      id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/financeiro?error=fail");
+  }
   const { logAudit } = await import("@/lib/audit");
   await logAudit({
     tenantId: tenant.id,

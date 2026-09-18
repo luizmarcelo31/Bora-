@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AdminSidebar user={{ name: admin.name, email: admin.email }} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b">
           <div className="flex w-full items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Badge className="ml-auto">Super Admin</Badge>
           </div>
         </header>
-        <div className="flex-1 p-4 md:p-6">{children}</div>
+        <div className="min-w-0 flex-1 p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

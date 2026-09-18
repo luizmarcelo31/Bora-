@@ -27,11 +27,19 @@ export async function updateSettingsAction(formData: FormData) {
   const parsed = updateTenantSettingsSchema.safeParse(raw);
   if (!parsed.success) redirect("/dashboard/configuracoes?error=invalid");
 
-  await prisma.tenantSettings.upsert({
-    where: { tenantId: tenant.id },
-    update: parsed.data,
-    create: { tenantId: tenant.id, ...parsed.data },
-  });
+  try {
+    await prisma.tenantSettings.upsert({
+      where: { tenantId: tenant.id },
+      update: parsed.data,
+      create: { tenantId: tenant.id, ...parsed.data },
+    });
+  } catch (e) {
+    console.error("[updateSettingsAction] falha inesperada", {
+      tenantId: tenant.id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/configuracoes?error=fail");
+  }
 
   const { logAudit } = await import("@/lib/audit");
   await logAudit({

@@ -491,6 +491,17 @@ export class SaleService {
           });
 
           if (inventory) {
+            // Revalida dentro da tx: fecha a corrida entre o check pré-tx e o decremento.
+            if (
+              settings?.enableStockControl &&
+              inventory.quantity < item.quantity &&
+              !settings?.allowNegativeStock
+            ) {
+              throw new ValidationError(
+                ValidationErrorType.INSUFFICIENT_STOCK,
+                `Estoque insuficiente para o produto ID ${item.productId}. Disponivel: ${inventory.quantity}`
+              );
+            }
             await tx.stockMovement.create({
               data: {
                 tenantId,
@@ -514,12 +525,19 @@ export class SaleService {
         }
 
         if (data.cashBoxId) {
-          await tx.cashBox.update({
-            where: { id: data.cashBoxId },
+          // Condicional: se o caixa fechou entre o check e a escrita, ninguém vence em silêncio.
+          const updated = await tx.cashBox.updateMany({
+            where: { id: data.cashBoxId, tenantId, status: 'OPEN' },
             data: {
               currentBalance: { increment: total },
             },
           });
+          if (updated.count === 0) {
+            throw new ValidationError(
+              ValidationErrorType.CLOSED_CASHBOX,
+              'Caixa esta fechada'
+            );
+          }
         }
 
         // Financeiro atômico com a venda: RECEITA automaticamente (idempotente via venda)
@@ -566,6 +584,7 @@ export class SaleService {
       throw new Error('Apenas vendas completadas podem ser canceladas');
     }
 
+    let cashboxAdjusted = false;
     await prisma.$transaction(async (tx) => {
       await tx.sale.update({
         where: { id: saleId },
@@ -603,19 +622,22 @@ export class SaleService {
         }
       }
 
+      // Caixa fechada não tem o saldo alterado (fechamento é registro imutável);
+      // o estorno segue no financeiro via DESPESA "Estorno PDV".
       if (sale.cashBoxId) {
-        await tx.cashBox.update({
-          where: { id: sale.cashBoxId },
+        const res = await tx.cashBox.updateMany({
+          where: { id: sale.cashBoxId, tenantId, status: 'OPEN' },
           data: {
             currentBalance: {
               decrement: sale.total,
             },
           },
         });
+        cashboxAdjusted = res.count > 0;
       }
     });
 
-    return { success: true, message: 'Venda cancelada com sucesso' };
+    return { success: true, message: 'Venda cancelada com sucesso', cashboxAdjusted };
   }
 
   static async getTodaysSales(tenantId: number) {
@@ -717,14 +739,18 @@ export class CashBoxService {
 
     const difference = closingBalance - cashBox.currentBalance;
 
-    return prisma.cashBox.update({
-      where: { id: cashBoxId },
+    // Condicional: só um fechamento concorrente vence (evita duplo lançamento de diferença).
+    const updated = await prisma.cashBox.updateMany({
+      where: { id: cashBoxId, tenantId, status: 'OPEN' },
       data: {
         status: 'CLOSED',
         closingBalance,
         closedAt: new Date(),
       },
     });
+    if (updated.count === 0) throw new Error('Caixa ja esta fechada');
+
+    return { ...cashBox, status: 'CLOSED' as const, closingBalance, closedAt: new Date(), difference };
   }
 }
 

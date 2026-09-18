@@ -24,10 +24,19 @@ export async function togglePaidAction(formData: FormData) {
   });
   if (!m) redirect("/dashboard/financeiro?error=invalid");
 
-  await prisma.financialMovement.update({
-    where: { id: movementId },
-    data: { paid, paidAt: paid ? new Date() : null },
-  });
+  try {
+    await prisma.financialMovement.update({
+      where: { id: movementId },
+      data: { paid, paidAt: paid ? new Date() : null },
+    });
+  } catch (e) {
+    console.error("[togglePaidAction] falha inesperada", {
+      tenantId: tenant.id,
+      movementId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/financeiro?error=fail");
+  }
   const { logAudit } = await import("@/lib/audit");
   await logAudit({
     tenantId: tenant.id,

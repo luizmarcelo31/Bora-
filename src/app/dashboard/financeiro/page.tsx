@@ -34,6 +34,7 @@ const ERROR_MSG: Record<string, string> = {
   forbidden: "Seu role não tem permissão para esta ação.",
   paid_locked: "Lançamento pago não pode ser editado/excluído — desmarque o pago antes.",
   not_found: "Lançamento não encontrado.",
+  fail: "Não foi possível concluir. Tente novamente.",
 };
 
 export default async function FinanceiroPage({

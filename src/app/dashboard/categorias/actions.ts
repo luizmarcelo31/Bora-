@@ -20,8 +20,13 @@ export async function createCategoryAction(formData: FormData) {
       data: { tenantId: tenant.id, name: parsed.data.name, kind: parsed.data.kind },
     });
     catId = cat.id;
-  } catch {
-    redirect("/dashboard/categorias?error=duplicate");
+  } catch (e) {
+    if ((e as { code?: string }).code === "P2002") redirect("/dashboard/categorias?error=duplicate");
+    console.error("[createCategoryAction] falha inesperada", {
+      tenantId: tenant.id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/categorias?error=fail");
   }
   const { logAudit } = await import("@/lib/audit");
   await logAudit({
@@ -43,7 +48,16 @@ export async function toggleCategoryAction(formData: FormData) {
   if (!id) redirect("/dashboard/categorias?error=invalid");
   const cat = await prisma.category.findFirst({ where: { id, tenantId: tenant.id } });
   if (!cat) redirect("/dashboard/categorias?error=invalid");
-  await prisma.category.update({ where: { id }, data: { active: !cat.active } });
+  try {
+    await prisma.category.update({ where: { id }, data: { active: !cat.active } });
+  } catch (e) {
+    console.error("[toggleCategoryAction] falha inesperada", {
+      tenantId: tenant.id,
+      id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/categorias?error=fail");
+  }
   const { logAudit: logAudit2 } = await import("@/lib/audit");
   await logAudit2({
     tenantId: tenant.id,
@@ -75,7 +89,16 @@ export async function updateCategoryAction(formData: FormData) {
   // uniqueness excluding self
   const dup = await prisma.category.findFirst({ where: { tenantId: tenant.id, kind: cat.kind, name, NOT: { id } } });
   if (dup) redirect("/dashboard/categorias?error=duplicate");
-  await prisma.category.update({ where: { id }, data: { name } });
+  try {
+    await prisma.category.update({ where: { id }, data: { name } });
+  } catch (e) {
+    console.error("[updateCategoryAction] falha inesperada", {
+      tenantId: tenant.id,
+      id,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/categorias?error=fail");
+  }
   const { logAudit } = await import("@/lib/audit");
   await logAudit({
     tenantId: tenant.id,
@@ -111,7 +134,16 @@ export async function deleteCategoryAction(formData: FormData) {
   ]);
   if (prodCount > 0 || finCount > 0) {
     // Soft-delete: inactivate instead of hard delete to preserve history
-    await prisma.category.update({ where: { id }, data: { active: false } });
+    try {
+      await prisma.category.update({ where: { id }, data: { active: false } });
+    } catch (e) {
+      console.error("[deleteCategoryAction] falha inesperada (soft)", {
+        tenantId: tenant.id,
+        id,
+        cause: e instanceof Error ? e.message : String(e),
+      });
+      redirect("/dashboard/categorias?error=fail");
+    }
     const { logAudit } = await import("@/lib/audit");
     await logAudit({
       tenantId: tenant.id,
@@ -123,7 +155,16 @@ export async function deleteCategoryAction(formData: FormData) {
       details: `Inativada por dependências: prod ${prodCount} fin ${finCount}`,
     });
   } else {
-    await prisma.category.delete({ where: { id } });
+    try {
+      await prisma.category.delete({ where: { id } });
+    } catch (e) {
+      console.error("[deleteCategoryAction] falha inesperada (hard)", {
+        tenantId: tenant.id,
+        id,
+        cause: e instanceof Error ? e.message : String(e),
+      });
+      redirect("/dashboard/categorias?error=fail");
+    }
     const { logAudit } = await import("@/lib/audit");
     await logAudit({
       tenantId: tenant.id,

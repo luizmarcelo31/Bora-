@@ -10,7 +10,13 @@
 - [x] Produtos + Categorias + Estoque + PDV (c/ cancelar) + Caixa (c/ diferença) + Financeiro (c/ baixa)
 - [x] Relatórios + Configurações + Auditoria (com trilha)
 
+## Feito desde 18/09 (ver `docs/changes/2026-09-18-*.md`)
+- [x] Kit UI em 10 rotas + toasts + Tabs + Empty/Item/Badge
+- [x] PDV robusto (erro honesto, carrinho preservado) + pagamentos PT + auditoria PT-BR
+- [x] E2E 50/50 (fora do repo) · cache sem staleness · mobile 390px · impressão por tipo · busca global
+
 ## Próximo
 8. Imagens de produto (Supabase Storage) + planos/assinaturas (se necessário).
-9. Testes (Vitest unit + Playwright E2E nos fluxos críticos).
+9. Testes no repo — [x] Vitest 23/23 + Playwright versionado (E2E 50/50 fora do repo como base).
 10. Domínio + backup + polish.
+11. Robustez C — [x] concluído (ver changes).

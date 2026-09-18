@@ -29,6 +29,7 @@ const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Confira produto, tipo e quantidade.",
   stock: "Não foi possível movimentar (verifique o saldo).",
   forbidden: "Seu role não tem permissão para movimentar estoque.",
+  fail: "Não foi possível concluir. Tente novamente.",
 };
 
 export default async function EstoquePage({

@@ -125,7 +125,7 @@ export async function cancelSaleAction(formData: FormData) {
   if (!saleId || !reasonParsed.success) redirect("/dashboard/pdv?error=invalid");
   try {
     const saleBefore = await prisma.sale.findFirst({ where: { id: saleId, tenantId: tenant.id } });
-    await SaleService.cancelSale(tenant.id, saleId);
+    const result = await SaleService.cancelSale(tenant.id, saleId);
     // Estorno financeiro: se havia RECEITA, criar DESPESA de estorno
     const { FinancialService: FinancialService2 } = await import("@/services");
     if (saleBefore) {
@@ -146,7 +146,7 @@ export async function cancelSaleAction(formData: FormData) {
       entityId: saleId,
       userId: dbUser.id,
       userEmail: dbUser.email,
-      details: `Motivo: ${reasonParsed.data.reason}`,
+      details: `Motivo: ${reasonParsed.data.reason}${result.cashboxAdjusted ? "" : " (caixa fechado — saldo preservado)"}`,
     });
   } catch {
     redirect("/dashboard/pdv?error=cancel");

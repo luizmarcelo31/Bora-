@@ -15,6 +15,7 @@ import { updateSettingsAction } from "./actions";
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos.",
   forbidden: "Seu role não tem permissão para alterar configurações.",
+  fail: "Não foi possível salvar. Tente novamente.",
 };
 
 export default async function ConfiguracoesPage() {
