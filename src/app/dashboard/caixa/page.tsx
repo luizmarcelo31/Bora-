@@ -16,6 +16,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { Wallet } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/validators";
@@ -28,18 +30,13 @@ const ERROR_MSG: Record<string, string> = {
   forbidden: "Seu role não tem permissão para operar o caixa.",
 };
 
-export default async function CaixaPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
-}) {
+export default async function CaixaPage() {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/caixa");
   try {
     requirePermission(dbUser.role as Role, "cashbox.view");
   } catch {
     redirect("/unauthorized");
   }
-  const params = await searchParams;
 
   const boxes = await prisma.cashBox.findMany({
     where: { tenantId: tenant.id },
@@ -52,17 +49,13 @@ export default async function CaixaPage({
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader title="Caixa" badge={tenant.name} description="Abertura, saldo e fechamento — com preview de sobra/falta." />
+      <SearchParamToast okText="Operação registrada." errorMap={ERROR_MSG} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="Abertos" value={String(openBoxes.length)} hint={`${closedCount} fechados`} />
         <MetricCard title="Saldo em abertos" value={formatCurrency(saldoAbertos)} hint={`${openBoxes.length} caixa(s)`} />
         <MetricCard title="Total caixas" value={String(boxes.length)} hint={boxes.length > 0 ? `Último: ${boxes[0].name}` : "Nenhum ainda"} />
       </div>
-
-      {params.error ? (
-        <p className="text-sm text-destructive">{ERROR_MSG[params.error] ?? "Erro no caixa."}</p>
-      ) : null}
-      {params.ok ? <p className="text-sm text-muted-foreground">Operação registrada.</p> : null}
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
@@ -101,7 +94,7 @@ export default async function CaixaPage({
         <CardContent className="px-0 pb-0">
           {boxes.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Nenhum caixa" description="Abra o primeiro acima." />
+              <EmptyState title="Nenhum caixa" description="Abra o primeiro acima." icon={Wallet} />
             </div>
           ) : (
             <Table>

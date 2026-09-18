@@ -13,6 +13,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/validators";
 import { getPdvPageData } from "./actions";
@@ -29,32 +31,23 @@ const ERROR_MSG: Record<string, string> = {
   cancel: "Não foi possível cancelar (venda já cancelada ou inexistente).",
 };
 
-export default async function PdvPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
-}) {
+export default async function PdvPage() {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/pdv");
   try {
     requirePermission(dbUser.role as Role, "sales.create");
   } catch {
     redirect("/unauthorized");
   }
-  const params = await searchParams;
   const { products, cashboxes, todaysSales } = await getPdvPageData(tenant.id);
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-12">
       <PageHeader title="PDV" badge={tenant.name} description="Ponto de venda da conveniência." />
-
-      {params.error ? (
-        <p className="text-sm text-destructive">{ERROR_MSG[params.error] ?? "Erro na venda."}</p>
-      ) : null}
-      {params.ok === "cancel" ? (
-        <p className="text-sm text-muted-foreground">Venda cancelada e estoque/financeiro estornados.</p>
-      ) : params.ok ? (
-        <p className="text-sm text-muted-foreground">Venda #{params.ok} registrada com sucesso.</p>
-      ) : null}
+      <SearchParamToast
+        okText="Venda #{v} registrada com sucesso."
+        okMap={{ cancel: "Venda cancelada e estoque/financeiro estornados." }}
+        errorMap={ERROR_MSG}
+      />
 
       <PdvClient
         products={products.map((p) => ({
@@ -74,7 +67,7 @@ export default async function PdvPage({
         <CardContent className="px-0 pb-0">
           {todaysSales.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Nenhuma venda hoje" description="Finalize a primeira acima." />
+              <EmptyState title="Nenhuma venda hoje" description="Finalize a primeira acima." icon={ShoppingCart} />
             </div>
           ) : (
             <Table>

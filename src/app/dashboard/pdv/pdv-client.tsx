@@ -8,7 +8,9 @@ import { formatCurrency } from "@/lib/validators";
 import { createSaleAction } from "./actions";
 import { ProductGrid } from "./_components/product-grid";
 import { CartSheet } from "./_components/cart-sheet";
-import { SelectField } from "@/components/ui/select-field";
+import { PdvCommandPalette } from "./_components/pdv-command-palette";
+import { ControlledSelect } from "@/components/ui/controlled-select";
+import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
 
 export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null };
 export type PdvCashbox = { id: number; name: string };
@@ -116,6 +118,7 @@ export function PdvClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <PdvCommandPalette products={products} cart={cart} onQty={setQty} />
           <ProductGrid products={filtered.map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, category: (p as unknown as { category?: string | null }).category ?? null }))} cart={cart} onQty={setQty} />
         </CardContent>
       </Card>
@@ -129,47 +132,40 @@ export function PdvClient({
             {lines.length === 0 ? (
               <p className="text-sm text-muted-foreground">Carrinho vazio.</p>
             ) : (
-              <ul className="flex flex-col gap-1 text-sm">
+              <ItemGroup className="gap-1.5">
                 {lines.map((l) => (
-                  <li key={l.id} className="flex justify-between gap-2">
-                    <span>
-                      {l.qty}× {l.name}
-                    </span>
-                    <span>{formatCurrency(l.total)}</span>
-                  </li>
+                  <Item key={l.id} variant="outline" size="sm">
+                    <ItemContent>
+                      <ItemTitle>
+                        {l.qty}× {l.name}
+                      </ItemTitle>
+                    </ItemContent>
+                    <span className="text-sm tabular-nums">{formatCurrency(l.total)}</span>
+                  </Item>
                 ))}
-              </ul>
+              </ItemGroup>
             )}
             <p className="text-base font-semibold">Subtotal: {formatCurrency(subtotal)}</p>
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 Pagamento
-                <select
+                <ControlledSelect
                   value={payment}
-                  onChange={(e) => setPayment(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  {PAYMENTS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setPayment}
+                  options={PAYMENTS}
+                />
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 Caixa (opcional)
-                <select
+                <ControlledSelect
                   value={cashBoxId}
-                  onChange={(e) => setCashBoxId(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">Sem caixa</option>
-                  {cashboxes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setCashBoxId}
+                  placeholder="Sem caixa"
+                  options={[
+                    { value: "", label: "Sem caixa" },
+                    ...cashboxes.map((c) => ({ value: String(c.id), label: c.name })),
+                  ]}
+                />
               </label>
             </div>
             <div className="grid grid-cols-2 gap-3">

@@ -1,20 +1,34 @@
-import { Card, CardContent } from "@/components/ui/card";
+import type { LucideIcon } from "lucide-react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export function EmptyState({
   title,
   description,
+  icon: Icon,
 }: {
   title: string;
   description?: string;
+  icon?: LucideIcon;
 }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
-        <p className="font-medium">{title}</p>
-        {description ? (
-          <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
+    <Empty>
+      <EmptyHeader>
+        {Icon ? (
+          <EmptyMedia variant="icon">
+            <Icon />
+          </EmptyMedia>
         ) : null}
-      </CardContent>
-    </Card>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description ? (
+          <EmptyDescription>{description}</EmptyDescription>
+        ) : null}
+      </EmptyHeader>
+    </Empty>
   );
 }

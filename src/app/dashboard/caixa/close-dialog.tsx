@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { closeCashBoxAction } from "./actions";
+import { ControlledSelect } from "@/components/ui/controlled-select";
 import { formatCurrency } from "@/lib/validators";
 
 type Box = { id: number; name: string; currentBalance: number };
@@ -59,19 +60,16 @@ export function CloseCashBoxDialog({ openBoxes }: { openBoxes: Box[] }) {
         >
           <label className="flex flex-col gap-1 text-sm">
             Caixa*
-            <select
+            <ControlledSelect
               name="cashBoxId"
               required
               value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              {openBoxes.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} (saldo {formatCurrency(b.currentBalance)})
-                </option>
-              ))}
-            </select>
+              onValueChange={setSelectedId}
+              options={openBoxes.map((b) => ({
+                value: String(b.id),
+                label: `${b.name} (saldo ${formatCurrency(b.currentBalance)})`,
+              }))}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             Valor contado (R$)*

@@ -19,8 +19,11 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { Badge } from "@/components/ui/badge";
 import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
+import { Wallet } from "lucide-react";
 import { createFinancialAction } from "./actions";
 import { togglePaidAction } from "./pay-actions";
 import { EditFinancialDialog, DeleteFinancialDialog } from "./financial-dialogs";
@@ -88,6 +91,7 @@ export default async function FinanceiroPage({
         badge={tenant.name}
         description="Receitas, despesas e resultado — com filtros e baixa."
       />
+      <SearchParamToast okText="Lançamento registrado." errorMap={ERROR_MSG} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="Receitas (mês)" value={formatCurrency(resume.receitas)} hint={`${resume.totalMovimentos} lançamentos`} />
@@ -149,14 +153,6 @@ export default async function FinanceiroPage({
                 options={[{ value: "", label: "Nenhum" }, ...cashboxes.map((c) => ({ value: String(c.id), label: c.name }))]}
               />
             </label>
-            {params.error ? (
-              <p className="text-sm text-destructive sm:col-span-3">
-                {ERROR_MSG[params.error] ?? "Não foi possível lançar."}
-              </p>
-            ) : null}
-            {params.ok ? (
-              <p className="text-sm text-muted-foreground sm:col-span-3">Lançamento registrado.</p>
-            ) : null}
             <div className="sm:col-span-3">
               <Button type="submit">Lançar</Button>
             </div>
@@ -172,12 +168,16 @@ export default async function FinanceiroPage({
           <form className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm">
               Tipo
-              <select name="type" defaultValue={typeFilterRaw} className="flex h-9 rounded-md border border-input bg-background px-3 text-sm">
-                <option value="all">Todos</option>
-                <option value="RECEITA">Receita</option>
-                <option value="DESPESA">Despesa</option>
-                <option value="TRANSFERENCIA">Transferência</option>
-              </select>
+              <SelectField
+                name="type"
+                defaultValue={typeFilterRaw}
+                options={[
+                  { value: "all", label: "Todos" },
+                  { value: "RECEITA", label: "Receita" },
+                  { value: "DESPESA", label: "Despesa" },
+                  { value: "TRANSFERENCIA", label: "Transferência" },
+                ]}
+              />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Buscar
@@ -190,7 +190,7 @@ export default async function FinanceiroPage({
         <CardContent className="px-0 pb-0">
           {movements.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Sem lançamentos" description="Registre o primeiro acima." />
+              <EmptyState title="Sem lançamentos" description="Registre o primeiro acima." icon={Wallet} />
             </div>
           ) : (
             <Table>
@@ -209,11 +209,11 @@ export default async function FinanceiroPage({
                 {movements.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell>{new Date(m.movementDate).toLocaleDateString("pt-BR")}</TableCell>
-                    <TableCell><span className={`rounded-full border px-2 py-0.5 text-xs ${m.type === "RECEITA" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : m.type === "DESPESA" ? "border-red-200 bg-red-50 text-red-700" : "border-border"}`}>{m.type}</span></TableCell>
+                    <TableCell><Badge variant={m.type === "RECEITA" ? "default" : m.type === "DESPESA" ? "destructive" : "secondary"}>{m.type}</Badge></TableCell>
                     <TableCell>{m.category}</TableCell>
                     <TableCell className="max-w-xs truncate">{m.description}</TableCell>
                     <TableCell className="tabular-nums">{formatCurrency(m.amount)}</TableCell>
-                    <TableCell>{m.paid ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">Pago</span> : <span className="rounded-full border px-2 py-0.5 text-xs">Pendente</span>}</TableCell>
+                    <TableCell><Badge variant={m.paid ? "default" : "outline"}>{m.paid ? "Pago" : "Pendente"}</Badge></TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <form action={togglePaidAction}>

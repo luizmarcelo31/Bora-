@@ -10,6 +10,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ShieldCheck } from "lucide-react";
 
 export default async function AuditoriaPage() {
   const { tenant } = await requireSessionTenant("/dashboard/auditoria");
@@ -32,6 +33,7 @@ export default async function AuditoriaPage() {
         <EmptyState
           title="Sem registros"
           description="Ações como criar produto, movimentar estoque e vendas aparecerão aqui."
+          icon={ShieldCheck}
         />
       ) : (
         <Table>

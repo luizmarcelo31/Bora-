@@ -13,6 +13,9 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { Badge } from "@/components/ui/badge";
+import { Tags } from "lucide-react";
 import { createCategoryAction, toggleCategoryAction } from "./actions";
 import { EditCategoryDialog, DeleteCategoryDialog } from "./category-dialogs";
 import { SelectField } from "@/components/ui/select-field";
@@ -22,13 +25,8 @@ const ERROR_MSG: Record<string, string> = {
   duplicate: "Já existe uma categoria com esse nome e tipo.",
 };
 
-export default async function CategoriasPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
-}) {
+export default async function CategoriasPage() {
   const { tenant } = await requireSessionTenant("/dashboard/categorias");
-  const params = await searchParams;
   const categories = await prisma.category.findMany({
     where: { tenantId: tenant.id },
     orderBy: [{ kind: "asc" }, { name: "asc" }],
@@ -41,6 +39,7 @@ export default async function CategoriasPage({
         badge={tenant.name}
         description="Organize produtos e lançamentos financeiros."
       />
+      <SearchParamToast okText="Categoria criada." errorMap={ERROR_MSG} />
 
       <Card>
         <CardHeader>
@@ -64,14 +63,6 @@ export default async function CategoriasPage({
                 ]}
               />
             </label>
-            {params.error ? (
-              <p className="text-sm text-destructive sm:col-span-3">
-                {ERROR_MSG[params.error] ?? "Não foi possível criar."}
-              </p>
-            ) : null}
-            {params.ok ? (
-              <p className="text-sm text-muted-foreground sm:col-span-3">Categoria criada.</p>
-            ) : null}
             <div className="sm:col-span-3">
               <Button type="submit">Criar</Button>
             </div>
@@ -80,7 +71,7 @@ export default async function CategoriasPage({
       </Card>
 
       {categories.length === 0 ? (
-        <EmptyState title="Nenhuma categoria" description="Crie a primeira acima." />
+        <EmptyState title="Nenhuma categoria" description="Crie a primeira acima." icon={Tags} />
       ) : (
         <Table>
           <TableHeader>
@@ -94,9 +85,9 @@ export default async function CategoriasPage({
           <TableBody>
             {categories.map((c) => (
               <TableRow key={c.id}>
-                <TableCell>{c.name}</TableCell>
-                <TableCell>{c.kind === "PRODUCT" ? "Produto" : "Financeiro"}</TableCell>
-                <TableCell>{c.active ? "Ativa" : "Inativa"}</TableCell>
+                <TableCell className="font-medium">{c.name}</TableCell>
+                <TableCell><Badge variant="outline">{c.kind === "PRODUCT" ? "Produto" : "Financeiro"}</Badge></TableCell>
+                <TableCell>{c.active ? <Badge>Ativa</Badge> : <Badge variant="secondary">Inativa</Badge>}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <EditCategoryDialog id={c.id} name={c.name} />

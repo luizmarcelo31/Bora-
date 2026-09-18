@@ -16,6 +16,9 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { FilterTabs } from "@/components/shared/FilterTabs";
+import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { Package } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
@@ -34,7 +37,7 @@ const ERROR_MSG: Record<string, string> = {
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string; field?: string; q?: string; status?: string; cat?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; q?: string; status?: string; cat?: string }>;
 }) {
   const { tenant } = await requireSessionTenant("/dashboard/produtos");
   const params = await searchParams;
@@ -70,6 +73,7 @@ export default async function ProdutosPage({
         badge={tenant.name}
         description="Catálogo, estoque e status — com filtros e edição inline."
       />
+      <SearchParamToast okText="Produto criado com estoque zerado." errorMap={ERROR_MSG} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="Total" value={String(total)} hint={`${ativos} ativos`} />
@@ -120,20 +124,6 @@ export default async function ProdutosPage({
               Descrição
               <Textarea name="description" placeholder="Opcional" rows={2} />
             </label>
-            {params.error ? (
-              <p className="text-sm text-destructive sm:col-span-3">
-                {params.field === "sku"
-                  ? ERROR_MSG.duplicate_sku
-                  : params.field === "barcode"
-                    ? ERROR_MSG.duplicate_barcode
-                    : (ERROR_MSG[params.error] ?? "Não foi possível criar.")}
-              </p>
-            ) : null}
-            {params.ok ? (
-              <p className="text-sm text-muted-foreground sm:col-span-3">
-                Produto criado com estoque zerado.
-              </p>
-            ) : null}
             <div className="sm:col-span-3">
               <Button type="submit">Cadastrar produto</Button>
             </div>
@@ -160,26 +150,25 @@ export default async function ProdutosPage({
             <Button type="submit" variant="outline">Filtrar</Button>
             {(q || status !== "all" || cat !== "all") ? <a href="/dashboard/produtos" className="text-sm text-muted-foreground underline">Limpar</a> : null}
           </form>
-          <div className="mt-4 flex gap-2">
-            {[
-              { v: "all", label: "Todos" },
-              { v: "active", label: "Ativos" },
-              { v: "inactive", label: "Inativos" },
-            ].map((t) => (
-              <a
-                key={t.v}
-                href={`/dashboard/produtos?status=${t.v}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(cat)}`}
-                className={`rounded-md border px-3 py-1.5 text-sm ${status === t.v ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
-              >
-                {t.label}
-              </a>
-            ))}
+          <div className="mt-4">
+            <FilterTabs
+              value={status}
+              options={[
+                { v: "all", label: "Todos" },
+                { v: "active", label: "Ativos" },
+                { v: "inactive", label: "Inativos" },
+              ].map((t) => ({
+                value: t.v,
+                label: t.label,
+                href: `/dashboard/produtos?status=${t.v}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(cat)}`,
+              }))}
+            />
           </div>
         </CardContent>
       </Card>
 
       {products.length === 0 ? (
-        <EmptyState title="Nenhum produto" description={q || cat !== "all" ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."} />
+        <EmptyState title="Nenhum produto" description={q || cat !== "all" ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."} icon={Package} />
       ) : (
         <Table>
           <TableHeader>

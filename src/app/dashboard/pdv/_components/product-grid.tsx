@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { formatCurrency } from "@/lib/validators";
 import { Package, Plus, Minus } from "lucide-react";
 
@@ -18,7 +19,7 @@ export function ProductGrid({
   onQty: (id: number, qty: number) => void;
 }) {
   if (products.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nenhum produto ativo. Cadastre em Produtos.</p>;
+    return <EmptyState title="Nenhum produto" description="Nenhum produto ativo. Cadastre em Produtos." icon={Package} />;
   }
   return (
     <div className="grid gap-3 sm:grid-cols-2">

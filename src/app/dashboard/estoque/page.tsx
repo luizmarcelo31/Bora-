@@ -15,6 +15,9 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { FilterTabs } from "@/components/shared/FilterTabs";
+import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { Package } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Badge } from "@/components/ui/badge";
 import { SelectField } from "@/components/ui/select-field";
@@ -64,6 +67,7 @@ export default async function EstoquePage({
         badge={tenant.name}
         description="Saldo, limites e histórico — com alertas de baixo estoque."
       />
+      <SearchParamToast okText="Movimentação registrada." errorMap={ERROR_MSG} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="Produtos" value={String(total)} hint={`${baixo} em baixo estoque`} />
@@ -108,16 +112,6 @@ export default async function EstoquePage({
               Motivo
               <Input name="reason" placeholder="Ex.: compra fornecedor" />
             </label>
-            {params.error ? (
-              <p className="text-sm text-destructive sm:col-span-4">
-                {ERROR_MSG[params.error] ?? "Não foi possível movimentar."}
-              </p>
-            ) : null}
-            {params.ok ? (
-              <p className="text-sm text-muted-foreground sm:col-span-4">
-                Movimentação registrada.
-              </p>
-            ) : null}
             <div className="sm:col-span-4">
               <Button type="submit">Registrar</Button>
             </div>
@@ -138,26 +132,23 @@ export default async function EstoquePage({
             <Button type="submit" variant="outline">Filtrar</Button>
             {(q || filter !== "all") ? <a href="/dashboard/estoque" className="text-sm text-muted-foreground underline">Limpar</a> : null}
           </form>
-          <div className="flex gap-2">
-            {[
+          <FilterTabs
+            value={filter}
+            options={[
               { v: "all", label: "Todos" },
               { v: "low", label: "Baixo" },
               { v: "ok", label: "Ok" },
-            ].map((t) => (
-              <a
-                key={t.v}
-                href={`/dashboard/estoque?filter=${t.v}&q=${encodeURIComponent(q)}`}
-                className={`rounded-md border px-3 py-1.5 text-sm ${filter === t.v ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
-              >
-                {t.label}
-              </a>
-            ))}
-          </div>
+            ].map((t) => ({
+              value: t.v,
+              label: t.label,
+              href: `/dashboard/estoque?filter=${t.v}&q=${encodeURIComponent(q)}`,
+            }))}
+          />
         </CardContent>
         <CardContent className="px-0 pb-0">
           {products.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Nenhum produto" description={q || filter !== "all" ? "Nenhum resultado para o filtro." : "Cadastre em Produtos primeiro."} />
+              <EmptyState title="Nenhum produto" description={q || filter !== "all" ? "Nenhum resultado para o filtro." : "Cadastre em Produtos primeiro."} icon={Package} />
             </div>
           ) : (
             <Table>

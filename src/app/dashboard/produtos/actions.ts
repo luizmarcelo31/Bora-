@@ -132,8 +132,8 @@ export async function updateProductAction(formData: FormData) {
       details: `Produto ${updated.name} atualizado`,
     });
   } catch (e) {
-    if (e instanceof Error && e.message.includes("SKU")) redirect("/dashboard/produtos?error=duplicate&field=sku");
-    if (e instanceof Error && e.message.includes("barras")) redirect("/dashboard/produtos?error=duplicate&field=barcode");
+    if (e instanceof Error && e.message.includes("SKU")) redirect("/dashboard/produtos?error=duplicate_sku");
+    if (e instanceof Error && e.message.includes("barras")) redirect("/dashboard/produtos?error=duplicate_barcode");
     redirect("/dashboard/produtos?error=invalid");
   }
 

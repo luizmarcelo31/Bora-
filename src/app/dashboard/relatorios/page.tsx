@@ -5,6 +5,8 @@ import { SaleService, FinancialService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { BarChart3 } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -112,7 +114,9 @@ export default async function RelatoriosPage({
         </CardHeader>
         <CardContent className="px-0 pb-0">
           {topProducts.length === 0 ? (
-            <p className="px-6 pb-6 text-sm text-muted-foreground">Sem vendas no período.</p>
+            <div className="px-6 pb-6">
+              <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -142,7 +146,9 @@ export default async function RelatoriosPage({
         </CardHeader>
         <CardContent className="px-0 pb-0">
           {Object.keys(financialResume.movementsByCategory).length === 0 ? (
-            <p className="px-6 pb-6 text-sm text-muted-foreground">Sem movimentações no período.</p>
+            <div className="px-6 pb-6">
+              <EmptyState title="Sem movimentações no período" description="Ajuste o intervalo acima." icon={BarChart3} />
+            </div>
           ) : (
             <Table>
               <TableHeader>
