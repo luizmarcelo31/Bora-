@@ -10,6 +10,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Badge } from "@/components/ui/badge";
+import { auditActionLabel, auditActionVariant, auditEntityLabel } from "@/lib/audit-labels";
 import { ShieldCheck } from "lucide-react";
 
 export default async function AuditoriaPage() {
@@ -50,10 +52,10 @@ export default async function AuditoriaPage() {
           <TableBody>
             {logs.map((l) => (
               <TableRow key={l.id}>
-                <TableCell>{new Date(l.createdAt).toLocaleString("pt-BR")}</TableCell>
-                <TableCell>{l.action}</TableCell>
-                <TableCell>{l.entity}</TableCell>
-                <TableCell>{l.entityId}</TableCell>
+                <TableCell className="tabular-nums">{new Date(l.createdAt).toLocaleString("pt-BR")}</TableCell>
+                <TableCell><Badge variant={auditActionVariant(l.action)}>{auditActionLabel(l.action)}</Badge></TableCell>
+                <TableCell><Badge variant="outline">{auditEntityLabel(l.entity)}</Badge></TableCell>
+                <TableCell className="tabular-nums">#{l.entityId}</TableCell>
                 <TableCell>{l.userEmail ?? `#${l.userId ?? "—"}`}</TableCell>
                 <TableCell className="max-w-xs truncate">{l.details ?? "—"}</TableCell>
               </TableRow>
