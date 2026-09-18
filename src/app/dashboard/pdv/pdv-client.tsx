@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/validators";
 import { createSaleAction } from "./actions";
 import { ProductGrid } from "./_components/product-grid";
 import { CartSheet } from "./_components/cart-sheet";
+import { SelectField } from "@/components/ui/select-field";
 
 export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null };
 export type PdvCashbox = { id: number; name: string };

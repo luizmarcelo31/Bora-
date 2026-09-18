@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { updateProductAction } from "./actions";
 import { centsToReais } from "@/lib/validators";
+import { SelectField } from "@/components/ui/select-field";
 
 type ProductLike = {
   id: number;
@@ -66,18 +68,12 @@ export function EditProductDialog({
           <label className="flex flex-col gap-1 text-sm">
             Categoria
             {categories.length > 0 ? (
-              <select
+              <SelectField
                 name="category"
                 defaultValue={product.category ?? ""}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="">Sem categoria</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Sem categoria"
+                options={[{ value: "", label: "Sem categoria" }, ...categories.map((c) => ({ value: c.name, label: c.name }))]}
+              />
             ) : (
               <Input name="category" defaultValue={product.category ?? ""} placeholder="Bebidas" />
             )}
@@ -105,7 +101,7 @@ export function EditProductDialog({
           </label>
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
             Descrição
-            <Input name="description" defaultValue={product.description ?? ""} placeholder="Opcional" />
+            <Textarea name="description" defaultValue={product.description ?? ""} placeholder="Opcional" rows={2} />
           </label>
           <div className="sm:col-span-2 flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>

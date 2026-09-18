@@ -15,6 +15,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createCategoryAction, toggleCategoryAction } from "./actions";
 import { EditCategoryDialog, DeleteCategoryDialog } from "./category-dialogs";
+import { SelectField } from "@/components/ui/select-field";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos.",
@@ -53,15 +54,15 @@ export default async function CategoriasPage({
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Tipo*
-              <select
+              <SelectField
                 name="kind"
-                required
                 defaultValue="PRODUCT"
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="PRODUCT">Produto</option>
-                <option value="FINANCIAL">Financeiro</option>
-              </select>
+                required
+                options={[
+                  { value: "PRODUCT", label: "Produto" },
+                  { value: "FINANCIAL", label: "Financeiro" },
+                ]}
+              />
             </label>
             {params.error ? (
               <p className="text-sm text-destructive sm:col-span-3">

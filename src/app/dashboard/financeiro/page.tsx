@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,6 +19,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
 import { createFinancialAction } from "./actions";
 import { togglePaidAction } from "./pay-actions";
@@ -96,35 +98,27 @@ export default async function FinanceiroPage({
           <form action={createFinancialAction} className="grid gap-3 sm:grid-cols-3">
             <label className="flex flex-col gap-1 text-sm">
               Tipo*
-              <select
+              <SelectField
                 name="type"
-                required
                 defaultValue="DESPESA"
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="RECEITA">Receita</option>
-                <option value="DESPESA">Despesa</option>
-                <option value="TRANSFERENCIA">Transferência</option>
-              </select>
+                required
+                options={[
+                  { value: "RECEITA", label: "Receita" },
+                  { value: "DESPESA", label: "Despesa" },
+                  { value: "TRANSFERENCIA", label: "Transferência" },
+                ]}
+              />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Categoria*
               {finCategories.length > 0 ? (
-                <select
+                <SelectField
                   name="category"
-                  required
                   defaultValue=""
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="" disabled>
-                    Selecione...
-                  </option>
-                  {finCategories.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Selecione..."
+                  required
+                  options={finCategories.map((c) => ({ value: c.name, label: c.name }))}
+                />
               ) : (
                 <Input name="category" required placeholder="Ex.: Aluguel (crie em Categorias)" />
               )}
@@ -135,7 +129,7 @@ export default async function FinanceiroPage({
             </label>
             <label className="flex flex-col gap-1 text-sm sm:col-span-2">
               Descrição*
-              <Input name="description" required placeholder="Detalhe o lançamento" />
+              <Textarea name="description" required placeholder="Detalhe o lançamento" rows={2} />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Data*
@@ -143,18 +137,12 @@ export default async function FinanceiroPage({
             </label>
             <label className="flex flex-col gap-1 text-sm sm:col-span-3">
               Caixa (opcional)
-              <select
+              <SelectField
                 name="cashBoxId"
                 defaultValue=""
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="">Nenhum</option>
-                {cashboxes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Nenhum"
+                options={[{ value: "", label: "Nenhum" }, ...cashboxes.map((c) => ({ value: String(c.id), label: c.name }))]}
+              />
             </label>
             {params.error ? (
               <p className="text-sm text-destructive sm:col-span-3">

@@ -4,6 +4,7 @@ import { requireSessionTenant } from "@/lib/tenant";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MetricCard } from "@/components/shared/MetricCard";
+import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
 import { createProductAction, toggleProductAction } from "./actions";
 import { EditProductDialog } from "./edit-dialog";
@@ -88,18 +90,12 @@ export default async function ProdutosPage({
             <label className="flex flex-col gap-1 text-sm">
               Categoria
               {productCategories.length > 0 ? (
-                <select
+                <SelectField
                   name="category"
                   defaultValue=""
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">Sem categoria</option>
-                  {productCategories.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Sem categoria"
+                  options={[{ value: "", label: "Sem categoria" }, ...productCategories.map((c) => ({ value: c.name, label: c.name }))]}
+                />
               ) : (
                 <Input name="category" placeholder="Bebidas (crie em Categorias)" />
               )}
@@ -122,7 +118,7 @@ export default async function ProdutosPage({
             </label>
             <label className="flex flex-col gap-1 text-sm sm:col-span-2">
               Descrição
-              <Input name="description" placeholder="Opcional" />
+              <Textarea name="description" placeholder="Opcional" rows={2} />
             </label>
             {params.error ? (
               <p className="text-sm text-destructive sm:col-span-3">
@@ -154,13 +150,12 @@ export default async function ProdutosPage({
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Categoria
-              <select name="cat" defaultValue={cat} className="flex h-9 rounded-md border border-input bg-background px-3 text-sm">
-                <option value="all">Todas</option>
-                {productCategories.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-                <option value="">Sem categoria</option>
-              </select>
+              <SelectField
+                name="cat"
+                defaultValue={cat}
+                placeholder="Todas"
+                options={[{ value: "all", label: "Todas" }, ...productCategories.map((c) => ({ value: c.name, label: c.name })), { value: "", label: "Sem categoria" }]}
+              />
             </label>
             <Button type="submit" variant="outline">Filtrar</Button>
             {(q || status !== "all" || cat !== "all") ? <a href="/dashboard/produtos" className="text-sm text-muted-foreground underline">Limpar</a> : null}

@@ -17,6 +17,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Badge } from "@/components/ui/badge";
+import { SelectField } from "@/components/ui/select-field";
 import { moveStockAction, getStockPageData } from "./actions";
 import { EditInventoryDialog } from "./edit-inventory-dialog";
 
@@ -78,34 +79,26 @@ export default async function EstoquePage({
           <form action={moveStockAction} className="grid gap-3 sm:grid-cols-4">
             <label className="flex flex-col gap-1 text-sm sm:col-span-2">
               Produto*
-              <select
+              <SelectField
                 name="productId"
-                required
                 defaultValue=""
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="" disabled>
-                  Selecione...
-                </option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} (atual: {p.inventory?.quantity ?? 0})
-                  </option>
-                ))}
-              </select>
+                placeholder="Selecione..."
+                required
+                options={products.map((p) => ({ value: String(p.id), label: `${p.name} (atual: ${p.inventory?.quantity ?? 0})` }))}
+              />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Tipo*
-              <select
+              <SelectField
                 name="type"
-                required
                 defaultValue="ENTRADA"
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="ENTRADA">Entrada</option>
-                <option value="SAIDA">Saída</option>
-                <option value="AJUSTE">Ajuste (baixa)</option>
-              </select>
+                required
+                options={[
+                  { value: "ENTRADA", label: "Entrada" },
+                  { value: "SAIDA", label: "Saída" },
+                  { value: "AJUSTE", label: "Ajuste (baixa)" },
+                ]}
+              />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Quantidade*

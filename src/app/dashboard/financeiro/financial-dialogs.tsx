@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { updateFinancialAction, deleteFinancialAction } from "./actions";
 import { centsToReais } from "@/lib/validators";
+import { SelectField } from "@/components/ui/select-field";
 
 export function EditFinancialDialog({
   movement,
@@ -57,20 +59,24 @@ export function EditFinancialDialog({
           <input type="hidden" name="id" value={movement.id} />
           <label className="flex flex-col gap-1 text-sm">
             Tipo*
-            <select name="type" defaultValue={movement.type} className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
-              <option value="RECEITA">Receita</option>
-              <option value="DESPESA">Despesa</option>
-              <option value="TRANSFERENCIA">Transferência</option>
-            </select>
+            <SelectField
+              name="type"
+              defaultValue={movement.type}
+              options={[
+                { value: "RECEITA", label: "Receita" },
+                { value: "DESPESA", label: "Despesa" },
+                { value: "TRANSFERENCIA", label: "Transferência" },
+              ]}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             Categoria*
             {categories.length > 0 ? (
-              <select name="category" defaultValue={movement.category} className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
-                {categories.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
+              <SelectField
+                name="category"
+                defaultValue={movement.category}
+                options={categories.map((c) => ({ value: c.name, label: c.name }))}
+              />
             ) : (
               <Input name="category" defaultValue={movement.category} required />
             )}
@@ -85,16 +91,16 @@ export function EditFinancialDialog({
           </label>
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
             Descrição*
-            <Input name="description" defaultValue={movement.description} required />
+            <Textarea name="description" defaultValue={movement.description} required rows={2} />
           </label>
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
             Caixa (opcional)
-            <select name="cashBoxId" defaultValue={movement.cashBoxId ?? ""} className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
-              <option value="">Nenhum</option>
-              {cashboxes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <SelectField
+              name="cashBoxId"
+              defaultValue={movement.cashBoxId ? String(movement.cashBoxId) : ""}
+              placeholder="Nenhum"
+              options={[{ value: "", label: "Nenhum" }, ...cashboxes.map((c) => ({ value: String(c.id), label: c.name }))]}
+            />
           </label>
           <div className="sm:col-span-2 flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>Cancelar</Button>
