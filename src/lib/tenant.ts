@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -21,21 +22,21 @@ export async function getTenantIdFromHeaders(
   throw new Error("Tenant não informado (header X-Tenant-Id)");
 }
 
-export async function requireTenant(tenantId: number) {
+export const requireTenant = cache(async (tenantId: number) => {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) throw new Error("Tenant não encontrado");
   if (!tenant.active || tenant.suspended) throw new Error("Tenant inativo");
   return tenant;
-}
+});
 
 /** Busca o vínculo usuário ↔ tenant pelo email (ponte Supabase Auth → banco local). */
-export async function getUserContextByEmail(email: string) {
+export const getUserContextByEmail = cache(async (email: string) => {
   const user = await prisma.user.findFirst({
     where: { email },
     include: { tenant: true },
   });
   return user;
-}
+});
 
 /**
  * Contexto do tenant para Server Components/Actions da área do tenant.

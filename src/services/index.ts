@@ -349,19 +349,18 @@ export class InventoryService {
 
 export class SaleService {
   static async createSale(tenantId: number, data: CreateSaleInput) {
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-    });
+    // Independentes em paralelo (eram 4 round-trips sequenciais).
+    const [tenant, cashBox, user, settings] = await Promise.all([
+      prisma.tenant.findUnique({ where: { id: tenantId } }),
+      data.cashBoxId
+        ? prisma.cashBox.findFirst({ where: { id: data.cashBoxId, tenantId } })
+        : Promise.resolve(null),
+      prisma.user.findFirst({ where: { id: data.userId, tenantId } }),
+      getSettingsWithDefaults(tenantId),
+    ]);
     if (!tenant) throw new Error('Tenant nao encontrado');
 
-    let cashBox = null;
     if (data.cashBoxId) {
-      cashBox = await prisma.cashBox.findFirst({
-        where: {
-          id: data.cashBoxId,
-          tenantId,
-        },
-      });
       if (!cashBox) throw new Error('Caixa nao encontrada');
       if (cashBox.status === 'CLOSED') {
         throw new ValidationError(
@@ -371,16 +370,15 @@ export class SaleService {
       }
     }
 
-    const user = await prisma.user.findFirst({
-      where: {
-        id: data.userId,
-        tenantId,
-      },
-    });
     if (!user) throw new Error('Usuario nao encontrado');
 
-    // Defaults iguais aos da tela de Configurações quando ainda não há linha salva.
-    const settings = await getSettingsWithDefaults(tenantId);
+    // 1 query batch com estoque (era N findFirst no loop).
+    const ids = [...new Set(data.items.map((i) => i.productId))];
+    const dbProducts = await prisma.product.findMany({
+      where: { tenantId, id: { in: ids } },
+      include: { inventory: true },
+    });
+    const byId = new Map(dbProducts.map((p) => [p.id, p]));
 
     const processedItems: {
       productId: number;
@@ -392,13 +390,7 @@ export class SaleService {
     let subtotal = 0;
 
     for (const item of data.items) {
-      const product = await prisma.product.findFirst({
-        where: {
-          id: item.productId,
-          tenantId,
-        },
-        include: { inventory: true },
-      });
+      const product = byId.get(item.productId);
 
       if (!product) {
         throw new ValidationError(
@@ -419,13 +411,15 @@ export class SaleService {
         }
       }
 
-      const itemTotal = item.quantity * item.unitPrice - item.discount;
+      // Preço autoritativo do banco (ignora o que veio no input).
+      const unitPrice = product.price;
+      const itemTotal = item.quantity * unitPrice - item.discount;
       subtotal += itemTotal;
 
       processedItems.push({
         productId: item.productId,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
+        unitPrice,
         discount: item.discount,
         total: itemTotal,
       });
@@ -628,6 +622,7 @@ export class SaleService {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    // Select enxuto: as tabelas usam id/data/itens/pagamento/total (antes: product + user inteiros).
     return prisma.sale.findMany({
       where: {
         tenantId,
@@ -637,38 +632,38 @@ export class SaleService {
         },
         status: 'COMPLETED',
       },
-      include: {
-        items: {
-          include: { product: true },
-        },
-        user: true,
+      select: {
+        id: true,
+        createdAt: true,
+        paymentMethod: true,
+        total: true,
+        items: { select: { quantity: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   static async getSalesResume(tenantId: number, startDate: Date, endDate: Date) {
-    const sales = await prisma.sale.findMany({
-      where: {
-        tenantId,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-        status: 'COMPLETED',
-      },
-    });
+    // Agregação no SQL (antes: findMany de tudo + reduce em JS).
+    const where = {
+      tenantId,
+      createdAt: { gte: startDate, lte: endDate },
+      status: 'COMPLETED' as const,
+    };
+    const [agg, byPayment] = await Promise.all([
+      prisma.sale.aggregate({
+        where,
+        _count: true,
+        _sum: { total: true, discount: true },
+      }),
+      prisma.sale.groupBy({ by: ['paymentMethod'], where, _count: true }),
+    ]);
 
-    const totalSales = sales.length;
-    const totalReceived = sales.reduce((sum, sale) => sum + sale.total, 0);
-    const totalDiscount = sales.reduce((sum, sale) => sum + sale.discount, 0);
-    const paymentMethods = sales.reduce(
-      (acc, sale) => {
-        acc[sale.paymentMethod] = (acc[sale.paymentMethod] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    const totalSales = agg._count;
+    const totalReceived = agg._sum.total ?? 0;
+    const totalDiscount = agg._sum.discount ?? 0;
+    const paymentMethods: Record<string, number> = {};
+    for (const g of byPayment) paymentMethods[g.paymentMethod] = g._count;
 
     return {
       period: { startDate, endDate },
@@ -757,43 +752,45 @@ export class FinancialService {
     startDate: Date,
     endDate: Date
   ) {
-    const movements = await prisma.financialMovement.findMany({
-      where: {
-        tenantId,
-        movementDate: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-    });
+    // Agregação no SQL (antes: findMany de tudo + reduce em JS).
+    const where = {
+      tenantId,
+      movementDate: { gte: startDate, lte: endDate },
+    };
+    const [byType, byCategory] = await Promise.all([
+      prisma.financialMovement.groupBy({
+        by: ['type'],
+        where,
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.financialMovement.groupBy({
+        by: ['category', 'type'],
+        where,
+        _sum: { amount: true },
+      }),
+    ]);
 
-    const receitas = movements
-      .filter((m) => m.type === 'RECEITA')
-      .reduce((sum, m) => sum + m.amount, 0);
+    const sumOf = (t: string) =>
+      byType.find((g) => g.type === t)?._sum.amount ?? 0;
+    const receitas = sumOf('RECEITA');
+    const despesas = sumOf('DESPESA');
+    const totalMovimentos = byType.reduce((s, g) => s + g._count, 0);
 
-    const despesas = movements
-      .filter((m) => m.type === 'DESPESA')
-      .reduce((sum, m) => sum + m.amount, 0);
-
-    const transferencias = movements
-      .filter((m) => m.type === 'TRANSFERENCIA')
-      .reduce((sum, m) => sum + m.amount, 0);
+    const movementsByCategory: Record<string, { receita: number; despesa: number }> = {};
+    for (const g of byCategory) {
+      movementsByCategory[g.category] ??= { receita: 0, despesa: 0 };
+      if (g.type === 'RECEITA') movementsByCategory[g.category].receita += g._sum.amount ?? 0;
+      else if (g.type === 'DESPESA') movementsByCategory[g.category].despesa += g._sum.amount ?? 0;
+    }
 
     return {
       period: { startDate, endDate },
       receitas,
       despesas,
       saldo: receitas - despesas,
-      totalMovimentos: movements.length,
-      movementsByCategory: movements.reduce(
-        (acc, m) => {
-          if (!acc[m.category]) acc[m.category] = { receita: 0, despesa: 0 };
-          if (m.type === 'RECEITA') acc[m.category].receita += m.amount;
-          else if (m.type === 'DESPESA') acc[m.category].despesa += m.amount;
-          return acc;
-        },
-        {} as Record<string, { receita: number; despesa: number }>
-      ),
+      totalMovimentos,
+      movementsByCategory,
     };
   }
 }

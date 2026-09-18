@@ -47,15 +47,25 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
   const cashBoxId = cashBoxRaw ? parseInt(cashBoxRaw, 10) : undefined;
   const discount = parseBRLToCents(formData.get("discount")) ?? 0;
 
-  // Preço sempre do banco (nunca do cliente) + ownership por tenant
+  // Preço sempre do banco (nunca do cliente) + ownership por tenant.
+  // 1 query batch em vez de N getProduct (dedup por request via React.cache não cobre loops).
+  const wanted = rawItems.map((entry) => ({
+    productId: Number(entry.productId),
+    quantity: Number(entry.quantity),
+  }));
+  if (wanted.some((w) => !w.productId || !w.quantity || w.quantity <= 0)) {
+    return { error: "invalid" };
+  }
+  const dbProducts = await prisma.product.findMany({
+    where: { tenantId: tenant.id, id: { in: [...new Set(wanted.map((w) => w.productId))] } },
+    select: { id: true, price: true, active: true },
+  });
+  const priceById = new Map(dbProducts.map((p) => [p.id, p]));
   const items = [];
-  for (const entry of rawItems) {
-    const productId = Number(entry.productId);
-    const quantity = Number(entry.quantity);
-    if (!productId || !quantity || quantity <= 0) return { error: "invalid" };
-    const product = await ProductService.getProduct(tenant.id, productId).catch(() => null);
+  for (const w of wanted) {
+    const product = priceById.get(w.productId);
     if (!product || !product.active) return { error: "invalid" };
-    items.push({ productId, quantity, unitPrice: product.price, discount: 0 });
+    items.push({ productId: w.productId, quantity: w.quantity, unitPrice: product.price, discount: 0 });
   }
 
   const idempotencyKey = String(formData.get("idempotencyKey") ?? "").trim() || undefined;
