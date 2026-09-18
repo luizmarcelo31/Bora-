@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { PAYMENT_OPTIONS } from "@/lib/payments";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,14 +17,16 @@ import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
 export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null };
 export type PdvCashbox = { id: number; name: string };
 
-const PAYMENTS: { value: string; label: string }[] = [
-  { value: "CASH", label: "Dinheiro" },
-  { value: "PIX", label: "Pix" },
-  { value: "CARD", label: "Cartão" },
-  { value: "TRANSFER", label: "Transferência" },
-  { value: "CHECK", label: "Cheque" },
-  { value: "OTHER", label: "Outro" },
-];
+const PAYMENTS = PAYMENT_OPTIONS;
+
+const SALE_ERROR_MSG: Record<string, string> = {
+  invalid: "Venda inválida. Confira os itens.",
+  empty: "Adicione ao menos um item.",
+  stock: "Estoque insuficiente para um ou mais itens.",
+  discount: "Desconto acima do permitido ou maior que o subtotal.",
+  cashbox: "Caixa selecionado está fechado ou inexistente.",
+  sale: "Não foi possível concluir a venda. Tente novamente.",
+};
 
 export function PdvClient({
   products,
@@ -71,6 +75,18 @@ export function PdvClient({
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  function handleSaleResult(res: { ok: number } | { error: string }) {
+    if ("ok" in res) {
+      toast.success(`Venda #${res.ok} registrada com sucesso.`);
+      setCart({});
+      setDiscount("");
+      setCustomer("");
+      idemRef.current = null;
+    } else {
+      toast.error(SALE_ERROR_MSG[res.error] ?? SALE_ERROR_MSG.sale);
+    }
+  }
+
   async function submit(formData: FormData) {
     if (pending) return;
     setPending(true);
@@ -81,8 +97,7 @@ export function PdvClient({
       formData.set("discount", discount);
       formData.set("customerName", customer);
       formData.set("idempotencyKey", getIdemKey());
-      await createSaleAction(formData);
-      idemRef.current = null;
+      handleSaleResult(await createSaleAction(formData));
     } finally {
       setPending(false);
     }
@@ -99,8 +114,7 @@ export function PdvClient({
       fd.set("discount", discount);
       fd.set("customerName", customer);
       fd.set("idempotencyKey", getIdemKey());
-      await createSaleAction(fd);
-      idemRef.current = null;
+      handleSaleResult(await createSaleAction(fd));
     } finally {
       setPending(false);
     }

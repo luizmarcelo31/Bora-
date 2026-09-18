@@ -242,6 +242,8 @@ enum PaymentMethod {
   PIX
   CHECK
   OTHER
+  CREDIT
+  DEBIT
 }
 
 // ============================================================

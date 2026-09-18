@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { paymentLabel } from '@/lib/payments';
 import { Prisma, Sale, SaleStatus, StockMovement } from '@prisma/client';
 import {
   CreateProductInput,
@@ -10,6 +11,18 @@ import {
   calculateMargin,
   centsToReais,
 } from '@/lib/validators';
+
+// Defaults iguais aos da tela de Configurações quando ainda não há linha salva.
+async function getSettingsWithDefaults(tenantId: number) {
+  return (
+    (await prisma.tenantSettings.findUnique({ where: { tenantId } })) ?? {
+      enableDiscount: true,
+      maxDiscount: null as number | null,
+      enableStockControl: true,
+      allowNegativeStock: false,
+    }
+  );
+}
 
 // ============================================================
 // PRODUCT SERVICE
@@ -266,9 +279,7 @@ export class InventoryService {
       );
     }
 
-    const settings = await prisma.tenantSettings.findUnique({
-      where: { tenantId },
-    });
+    const settings = await getSettingsWithDefaults(tenantId);
 
     const currentQuantity = inventory.quantity;
     let newQuantity: number;
@@ -368,9 +379,8 @@ export class SaleService {
     });
     if (!user) throw new Error('Usuario nao encontrado');
 
-    const settings = await prisma.tenantSettings.findUnique({
-      where: { tenantId },
-    });
+    // Defaults iguais aos da tela de Configurações quando ainda não há linha salva.
+    const settings = await getSettingsWithDefaults(tenantId);
 
     const processedItems: {
       productId: number;
@@ -521,7 +531,7 @@ export class SaleService {
             tenantId,
             type: "RECEITA",
             category: "Vendas PDV",
-            description: `Venda #${s.id} — ${s.paymentMethod}`,
+            description: `Venda #${s.id} — ${paymentLabel(s.paymentMethod)}`,
             amount: s.total,
             movementDate: s.createdAt,
             cashBoxId: s.cashBoxId ?? null,

@@ -9,10 +9,17 @@ import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { createSaleSchema, cancelSaleSchema, ValidationError } from "@/lib/validators";
 import { parseBRLToCents } from "@/lib/money";
+import { paymentLabel } from "@/lib/payments";
 
-const PAYMENTS = ["CASH", "CARD", "TRANSFER", "PIX", "CHECK", "OTHER"] as const;
+const PAYMENTS = ["CASH", "PIX", "CREDIT", "DEBIT"] as const;
 
-export async function createSaleAction(formData: FormData) {
+export type CreateSaleResult = { ok: number } | { error: string };
+
+/**
+ * Retorna o resultado em vez de redirect: o carrinho (estado client)
+ * é preservado no erro e limpo só no sucesso.
+ */
+export async function createSaleAction(formData: FormData): Promise<CreateSaleResult> {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/pdv");
 
   try {
@@ -25,15 +32,15 @@ export async function createSaleAction(formData: FormData) {
   try {
     rawItems = JSON.parse(String(formData.get("items") ?? "[]"));
   } catch {
-    redirect("/dashboard/pdv?error=invalid");
+    return { error: "invalid" };
   }
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
-    redirect("/dashboard/pdv?error=empty");
+    return { error: "empty" };
   }
 
   const paymentMethod = String(formData.get("paymentMethod") ?? "CASH");
   if (!PAYMENTS.includes(paymentMethod as (typeof PAYMENTS)[number])) {
-    redirect("/dashboard/pdv?error=invalid");
+    return { error: "invalid" };
   }
 
   const cashBoxRaw = String(formData.get("cashBoxId") ?? "");
@@ -45,9 +52,9 @@ export async function createSaleAction(formData: FormData) {
   for (const entry of rawItems) {
     const productId = Number(entry.productId);
     const quantity = Number(entry.quantity);
-    if (!productId || !quantity || quantity <= 0) redirect("/dashboard/pdv?error=invalid");
+    if (!productId || !quantity || quantity <= 0) return { error: "invalid" };
     const product = await ProductService.getProduct(tenant.id, productId).catch(() => null);
-    if (!product || !product.active) redirect("/dashboard/pdv?error=invalid");
+    if (!product || !product.active) return { error: "invalid" };
     items.push({ productId, quantity, unitPrice: product.price, discount: 0 });
   }
 
@@ -73,17 +80,25 @@ export async function createSaleAction(formData: FormData) {
       userId: dbUser.id,
       userEmail: dbUser.email,
       changes: { total: sale.total, items: sale.items?.length ?? items.length, idempotencyKey },
-      details: `Venda #${sale.id} ${sale.paymentMethod} ${sale.total}`,
+      details: `Venda #${sale.id} ${paymentLabel(sale.paymentMethod)} ${sale.total}`,
     });
     revalidatePath("/dashboard/pdv");
-    redirect(`/dashboard/pdv?ok=${sale.id}`);
+    return { ok: sale.id };
   } catch (e) {
     if (e instanceof ValidationError) {
-      if (e.type === "INSUFFICIENT_STOCK") redirect("/dashboard/pdv?error=stock");
-      if (e.type === "INVALID_DISCOUNT") redirect("/dashboard/pdv?error=discount");
-      if (e.type === "CLOSED_CASHBOX") redirect("/dashboard/pdv?error=cashbox");
+      if (e.type === "INSUFFICIENT_STOCK") return { error: "stock" };
+      if (e.type === "INVALID_DISCOUNT") return { error: "discount" };
+      if (e.type === "CLOSED_CASHBOX") return { error: "cashbox" };
+      return { error: "invalid" };
     }
-    redirect("/dashboard/pdv?error=stock");
+    console.error("[createSaleAction] falha inesperada", {
+      tenantId: tenant.id,
+      items: rawItems,
+      paymentMethod,
+      cashBoxId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    return { error: "sale" };
   }
 }
 

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { paymentLabel } from "@/lib/payments";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/validators";
@@ -29,6 +30,7 @@ const ERROR_MSG: Record<string, string> = {
   cashbox: "Caixa selecionado está fechado ou inexistente.",
   forbidden: "Seu role não tem permissão para esta ação.",
   cancel: "Não foi possível cancelar (venda já cancelada ou inexistente).",
+  sale: "Não foi possível concluir a venda. Tente novamente.",
 };
 
 export default async function PdvPage() {
@@ -89,7 +91,7 @@ export default async function PdvPage() {
                       {new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </TableCell>
                     <TableCell>{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
-                    <TableCell>{s.paymentMethod}</TableCell>
+                    <TableCell>{paymentLabel(s.paymentMethod)}</TableCell>
                     <TableCell>{formatCurrency(s.total)}</TableCell>
                     <TableCell>
                       <CancelSaleDialog saleId={s.id} />
