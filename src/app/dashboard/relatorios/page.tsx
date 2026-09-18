@@ -32,7 +32,7 @@ function parseDateParam(v: string | undefined, fallback: Date): Date {
 export default async function RelatoriosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ start?: string; end?: string }>;
+  searchParams: Promise<{ start?: string; end?: string; vendasPage?: string }>;
 }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/relatorios");
   try {
@@ -68,30 +68,44 @@ export default async function RelatoriosPage({
     take: 10,
   });
 
-  const periodSales = await prisma.sale.findMany({
-    where: {
-      tenantId: tenant.id,
-      status: "COMPLETED",
-      createdAt: { gte: startDate, lte: endInclusive },
-    },
-    select: {
-      id: true,
-      createdAt: true,
-      paymentMethod: true,
-      total: true,
-      items: { select: { quantity: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
+  const PAGE_SIZE = 50;
+  const vendasPage = Math.max(1, parseInt(params.vendasPage ?? "1", 10) || 1);
+  const salesWhere = {
+    tenantId: tenant.id,
+    status: "COMPLETED" as const,
+    createdAt: { gte: startDate, lte: endInclusive },
+  };
+  const [periodSales, printSales] = await Promise.all([
+    prisma.sale.findMany({
+      where: salesWhere,
+      select: {
+        id: true,
+        createdAt: true,
+        paymentMethod: true,
+        total: true,
+        items: { select: { quantity: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (vendasPage - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    // Exportação: até 500 linhas do filtro atual (nota no subtitle do PDF).
+    prisma.sale.findMany({
+      where: salesWhere,
+      select: {
+        id: true,
+        createdAt: true,
+        paymentMethod: true,
+        total: true,
+        items: { select: { quantity: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 500,
+    }),
+  ]);
   const salesTotal = periodSales.reduce((s, v) => s + v.total, 0);
-  const salesCount = await prisma.sale.count({
-    where: {
-      tenantId: tenant.id,
-      status: "COMPLETED",
-      createdAt: { gte: startDate, lte: endInclusive },
-    },
-  });
+  const salesCount = await prisma.sale.count({ where: salesWhere });
+  const totalPages = Math.max(1, Math.ceil(salesCount / PAGE_SIZE));
 
   const productIds = topProducts.map((r) => r.productId);
   const productsMap = new Map(
@@ -141,22 +155,22 @@ export default async function RelatoriosPage({
           <p className="text-sm text-muted-foreground">
             {salesCount === 0
               ? "Nenhuma venda no intervalo."
-              : `Mostrando ${periodSales.length} de ${salesCount} vendas.`}
+              : `Página ${vendasPage} de ${totalPages} · ${salesCount} vendas.`}
           </p>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <ReportActions
             title="Relatório de vendas"
-            subtitle={`${tenant.name} — ${startStr} a ${endStr} · ${periodSales.length} vendas · ${formatCurrency(salesTotal)}`}
+            subtitle={`${tenant.name} — ${startStr} a ${endStr} · ${salesCount} vendas no filtro (exporta até ${printSales.length})`}
             columns={["Data", "#", "Itens", "Pagamento", "Total"]}
-            rows={periodSales.map((s) => [
+            rows={printSales.map((s) => [
               new Date(s.createdAt).toLocaleString("pt-BR"),
               `#${s.id}`,
               String(s.items.reduce((n, i) => n + i.quantity, 0)),
               paymentLabel(s.paymentMethod),
               formatCurrency(s.total),
             ])}
-            footer={["", "Total", `${periodSales.length} vendas`, "", formatCurrency(salesTotal)]}
+            footer={["", "Total", `${printSales.length} vendas`, "", formatCurrency(printSales.reduce((t, s) => t + s.total, 0))]}
             fileName={`vendas-${tenant.id}-${startStr}_${endStr}`}
           />
         </CardContent>
@@ -190,6 +204,33 @@ export default async function RelatoriosPage({
             </Table></div>
           )}
         </CardContent>
+        {totalPages > 1 ? (
+          <CardContent className="flex items-center justify-between pt-0">
+            {vendasPage > 1 ? (
+              <a
+                href={`/dashboard/relatorios?start=${startStr}&end=${endStr}&vendasPage=${vendasPage - 1}`}
+                className="text-sm text-muted-foreground underline"
+              >
+                ← Anterior
+              </a>
+            ) : (
+              <span />
+            )}
+            <span className="text-sm text-muted-foreground">
+              Página {vendasPage} de {totalPages}
+            </span>
+            {vendasPage < totalPages ? (
+              <a
+                href={`/dashboard/relatorios?start=${startStr}&end=${endStr}&vendasPage=${vendasPage + 1}`}
+                className="text-sm text-muted-foreground underline"
+              >
+                Próxima →
+              </a>
+            ) : (
+              <span />
+            )}
+          </CardContent>
+        ) : null}
       </Card>
 
       <Card>

@@ -10,6 +10,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
+  // Dev local é o gargalo: 1 worker evita timeouts por contenção.
+  workers: 1,
   retries: 0,
   reporter: "list",
   // Dev local compila por rota (5–15s); timeout folgado para CI/dev.

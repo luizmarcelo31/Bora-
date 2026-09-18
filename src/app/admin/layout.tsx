@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireSuperAdmin();
@@ -24,7 +25,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mx-2 h-4" />
             <span className="text-sm text-muted-foreground">Administração da plataforma</span>
-            <Badge className="ml-auto">Super Admin</Badge>
+            <div className="ml-auto flex items-center gap-2">
+              <ThemeToggle />
+              <Badge>Super Admin</Badge>
+            </div>
           </div>
         </header>
         <div className="min-w-0 flex-1 p-4 md:p-6">{children}</div>

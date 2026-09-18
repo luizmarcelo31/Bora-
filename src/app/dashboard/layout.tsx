@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { TenantSidebar } from "@/components/tenant/tenant-sidebar";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard");
@@ -25,8 +26,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mx-2 h-4" />
             <span className="truncate text-sm text-muted-foreground">{tenant.name}</span>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-1 sm:gap-2">
               <GlobalSearch tenantId={tenant.id} />
+              <ThemeToggle />
               <Badge className="hidden sm:inline-flex">{dbUser.role}</Badge>
             </div>
           </div>

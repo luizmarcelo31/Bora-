@@ -20,7 +20,7 @@
 - E2E 50/50 no tenant 3 (scripts fora do repo — credencial; pendente versionar)
 
 ## Em desenvolvimento 🟡
-- Nenhum.
+- Nenhum. Item 8 (imagens/planos) adiado por decisão; 10A/10B ignorados.
 
 ## Concluído em 18/09 ✅
 - Robustez C: erros honestos + `fail` em 6 rotas, audit best-effort com log,

@@ -18,5 +18,5 @@
 ## Próximo
 8. Imagens de produto (Supabase Storage) + planos/assinaturas (se necessário).
 9. Testes no repo — [x] Vitest 23/23 + Playwright versionado (E2E 50/50 fora do repo como base).
-10. Domínio + backup + polish.
+10. Domínio (ignorado: sem domínio registrado; guia futuro em `docs/deploy/`) + backup (ignorado) + polish [x] (VENDAS paginada, rate-limit /api, dark toggle, auth negativa).
 11. Robustez C — [x] concluído (ver changes).

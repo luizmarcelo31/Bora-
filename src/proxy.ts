@@ -7,7 +7,38 @@ import { NextResponse, type NextRequest } from "next/server";
  * - Protege páginas privadas (/dashboard, /admin, /pdv...).
  * - APIs (/api/*) passam direto: authz é verificada por rota.
  */
+const RATE_LIMIT = 60;
+const RATE_WINDOW_MS = 60_000;
+const rateBuckets = new Map<string, { count: number; reset: number }>();
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const bucket = rateBuckets.get(ip);
+  if (!bucket || now >= bucket.reset) {
+    rateBuckets.set(ip, { count: 1, reset: now + RATE_WINDOW_MS });
+    if (rateBuckets.size > 5000) {
+      const oldest = rateBuckets.keys().next();
+      if (!oldest.done) rateBuckets.delete(oldest.value);
+    }
+    return false;
+  }
+  bucket.count += 1;
+  return bucket.count > RATE_LIMIT;
+}
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Rate-limit básico só para APIs (páginas e assets passam direto).
+  if (pathname.startsWith("/api/")) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    if (rateLimited(ip)) {
+      return NextResponse.json({ error: "Muitas requisições. Tente em instantes." }, { status: 429 });
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -36,7 +67,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
   const isPublicPage =
     pathname === "/" ||
     pathname === "/login" ||
