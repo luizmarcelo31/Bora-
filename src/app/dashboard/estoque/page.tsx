@@ -15,6 +15,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { MetricCard } from "@/components/shared/MetricCard";
+import { Badge } from "@/components/ui/badge";
 import { moveStockAction, getStockPageData } from "./actions";
 import { EditInventoryDialog } from "./edit-inventory-dialog";
 
@@ -27,7 +29,7 @@ const ERROR_MSG: Record<string, string> = {
 export default async function EstoquePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; q?: string; filter?: string }>;
 }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/estoque");
   try {
@@ -36,15 +38,37 @@ export default async function EstoquePage({
     redirect("/unauthorized");
   }
   const params = await searchParams;
-  const { products, history } = await getStockPageData(tenant.id);
+  const { products: allProducts, history } = await getStockPageData(tenant.id);
+
+  const q = (params.q ?? "").toLowerCase().trim();
+  const filter = params.filter ?? "all";
+  const products = allProducts.filter((p) => {
+    const qty = p.inventory?.quantity ?? 0;
+    const min = p.inventory?.minimumStock ?? 0;
+    const isLow = qty <= min;
+    if (filter === "low" && !isLow) return false;
+    if (filter === "ok" && isLow) return false;
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const total = allProducts.length;
+  const baixo = allProducts.filter((p) => (p.inventory?.quantity ?? 0) <= (p.inventory?.minimumStock ?? 0)).length;
+  const totalUnidades = allProducts.reduce((s, p) => s + (p.inventory?.quantity ?? 0), 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         title="Estoque"
         badge={tenant.name}
-        description="Saldo por produto e movimentações."
+        description="Saldo, limites e histórico — com alertas de baixo estoque."
       />
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <MetricCard title="Produtos" value={String(total)} hint={`${baixo} em baixo estoque`} />
+        <MetricCard title="Unidades em estoque" value={String(totalUnidades)} hint={total > 0 ? `Média ${(totalUnidades/total).toFixed(1)} por produto` : "—"} />
+        <MetricCard title="Alertas" value={String(baixo)} hint={baixo > 0 ? "Repor em breve" : "Tudo ok"} />
+      </div>
 
       <Card>
         <CardHeader>
@@ -112,10 +136,35 @@ export default async function EstoquePage({
         <CardHeader>
           <CardTitle>Saldo atual</CardTitle>
         </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <form className="flex flex-wrap gap-3 items-end">
+            <label className="flex flex-col gap-1 text-sm">
+              Buscar
+              <Input name="q" defaultValue={params.q ?? ""} placeholder="Nome do produto" className="w-56" />
+            </label>
+            <Button type="submit" variant="outline">Filtrar</Button>
+            {(q || filter !== "all") ? <a href="/dashboard/estoque" className="text-sm text-muted-foreground underline">Limpar</a> : null}
+          </form>
+          <div className="flex gap-2">
+            {[
+              { v: "all", label: "Todos" },
+              { v: "low", label: "Baixo" },
+              { v: "ok", label: "Ok" },
+            ].map((t) => (
+              <a
+                key={t.v}
+                href={`/dashboard/estoque?filter=${t.v}&q=${encodeURIComponent(q)}`}
+                className={`rounded-md border px-3 py-1.5 text-sm ${filter === t.v ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
+              >
+                {t.label}
+              </a>
+            ))}
+          </div>
+        </CardContent>
         <CardContent className="px-0 pb-0">
           {products.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Nenhum produto" description="Cadastre em Produtos primeiro." />
+              <EmptyState title="Nenhum produto" description={q || filter !== "all" ? "Nenhum resultado para o filtro." : "Cadastre em Produtos primeiro."} />
             </div>
           ) : (
             <Table>
@@ -134,13 +183,14 @@ export default async function EstoquePage({
                   const qty = p.inventory?.quantity ?? 0;
                   const min = p.inventory?.minimumStock ?? 0;
                   const max = p.inventory?.maximumStock ?? null;
+                  const isLow = qty <= min;
                   return (
                     <TableRow key={p.id}>
-                      <TableCell>{p.name}</TableCell>
-                      <TableCell>{qty}</TableCell>
-                      <TableCell>{min}</TableCell>
-                      <TableCell>{max ?? "—"}</TableCell>
-                      <TableCell>{qty <= min ? "⚠️ Baixo" : "OK"}</TableCell>
+                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell className={isLow ? "text-destructive font-medium tabular-nums" : "tabular-nums"}>{qty}</TableCell>
+                      <TableCell className="tabular-nums">{min}</TableCell>
+                      <TableCell className="tabular-nums">{max ?? "—"}</TableCell>
+                      <TableCell>{isLow ? <Badge variant="destructive">Baixo</Badge> : <Badge variant="outline">Ok</Badge>}</TableCell>
                       <TableCell>
                         <EditInventoryDialog
                           productId={p.id}
@@ -177,10 +227,10 @@ export default async function EstoquePage({
               <TableBody>
                 {history.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell>{new Date(m.createdAt).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="tabular-nums">{new Date(m.createdAt).toLocaleString("pt-BR")}</TableCell>
                     <TableCell>{m.inventory.product.name}</TableCell>
-                    <TableCell>{m.type}</TableCell>
-                    <TableCell>{m.quantity}</TableCell>
+                    <TableCell><Badge variant="outline">{m.type}</Badge></TableCell>
+                    <TableCell className="tabular-nums">{m.quantity}</TableCell>
                     <TableCell>{m.reason ?? "—"}</TableCell>
                   </TableRow>
                 ))}

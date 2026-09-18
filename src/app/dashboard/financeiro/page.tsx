@@ -33,7 +33,7 @@ const ERROR_MSG: Record<string, string> = {
 export default async function FinanceiroPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; type?: string; q?: string }>;
 }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/financeiro");
   try {
@@ -45,12 +45,17 @@ export default async function FinanceiroPage({
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const [resume, movements, cashboxes, finCategories] = await Promise.all([
+  const typeFilter = (params.type ?? "all").toUpperCase();
+  const q = (params.q ?? "").toLowerCase().trim();
+
+  const whereType = typeFilter === "all" ? {} : { type: typeFilter as import("@prisma/client").FinancialMovementType };
+
+  const [resume, allMovements, cashboxes, finCategories] = await Promise.all([
     FinancialService.getFinancialResume(tenant.id, monthStart, now),
     prisma.financialMovement.findMany({
-      where: { tenantId: tenant.id },
+      where: { tenantId: tenant.id, ...whereType },
       orderBy: { movementDate: "desc" },
-      take: 30,
+      take: 50,
     }),
     prisma.cashBox.findMany({
       where: { tenantId: tenant.id, status: "OPEN" },
@@ -62,20 +67,25 @@ export default async function FinanceiroPage({
     }),
   ]);
 
+  const movements = allMovements.filter((m) => {
+    if (!q) return true;
+    return `${m.category} ${m.description}`.toLowerCase().includes(q);
+  });
+
   const today = now.toISOString().slice(0, 10);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         title="Financeiro"
         badge={tenant.name}
-        description="Receitas, despesas e resultado do mês."
+        description="Receitas, despesas e resultado — com filtros e baixa."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard title="Receitas (mês)" value={formatCurrency(resume.receitas)} />
-        <MetricCard title="Despesas (mês)" value={formatCurrency(resume.despesas)} />
-        <MetricCard title="Saldo (mês)" value={formatCurrency(resume.saldo)} />
+        <MetricCard title="Receitas (mês)" value={formatCurrency(resume.receitas)} hint={`${resume.totalMovimentos} lançamentos`} />
+        <MetricCard title="Despesas (mês)" value={formatCurrency(resume.despesas)} hint={`Saldo ${formatCurrency(resume.saldo)}`} />
+        <MetricCard title="Saldo (mês)" value={formatCurrency(resume.saldo)} hint={resume.saldo >= 0 ? "Positivo" : "Negativo"} />
       </div>
 
       <Card>
@@ -165,6 +175,25 @@ export default async function FinanceiroPage({
         <CardHeader>
           <CardTitle>Últimos lançamentos</CardTitle>
         </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <form className="flex flex-wrap gap-3 items-end">
+            <label className="flex flex-col gap-1 text-sm">
+              Tipo
+              <select name="type" defaultValue={typeFilter} className="flex h-9 rounded-md border border-input bg-background px-3 text-sm">
+                <option value="all">Todos</option>
+                <option value="RECEITA">Receita</option>
+                <option value="DESPESA">Despesa</option>
+                <option value="TRANSFERENCIA">Transferência</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Buscar
+              <Input name="q" defaultValue={params.q ?? ""} placeholder="Categoria ou descrição" className="w-56" />
+            </label>
+            <Button type="submit" variant="outline">Filtrar</Button>
+            {(q || typeFilter !== "all") ? <a href="/dashboard/financeiro" className="text-sm text-muted-foreground underline">Limpar</a> : null}
+          </form>
+        </CardContent>
         <CardContent className="px-0 pb-0">
           {movements.length === 0 ? (
             <div className="px-6 pb-6">
@@ -187,11 +216,11 @@ export default async function FinanceiroPage({
                 {movements.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell>{new Date(m.movementDate).toLocaleDateString("pt-BR")}</TableCell>
-                    <TableCell>{m.type}</TableCell>
+                    <TableCell><span className={`rounded-full border px-2 py-0.5 text-xs ${m.type === "RECEITA" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : m.type === "DESPESA" ? "border-red-200 bg-red-50 text-red-700" : "border-border"}`}>{m.type}</span></TableCell>
                     <TableCell>{m.category}</TableCell>
-                    <TableCell>{m.description}</TableCell>
-                    <TableCell>{formatCurrency(m.amount)}</TableCell>
-                    <TableCell>{m.paid ? "✅" : "—"}</TableCell>
+                    <TableCell className="max-w-xs truncate">{m.description}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(m.amount)}</TableCell>
+                    <TableCell>{m.paid ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">Pago</span> : <span className="rounded-full border px-2 py-0.5 text-xs">Pendente</span>}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <form action={togglePaidAction}>
