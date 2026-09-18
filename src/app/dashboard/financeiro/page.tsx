@@ -47,10 +47,15 @@ export default async function FinanceiroPage({
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const typeFilter = (params.type ?? "all").toUpperCase();
+  const typeFilterRaw = params.type ?? "all";
+  const typeFilter = typeFilterRaw.toUpperCase();
   const q = (params.q ?? "").toLowerCase().trim();
 
-  const whereType = typeFilter === "all" ? {} : { type: typeFilter as import("@prisma/client").FinancialMovementType };
+  const allowed = ["RECEITA", "DESPESA", "TRANSFERENCIA"] as const;
+  const whereType =
+    typeFilter === "ALL" || !allowed.includes(typeFilter as (typeof allowed)[number])
+      ? {}
+      : { type: typeFilter as import("@prisma/client").FinancialMovementType };
 
   const [resume, allMovements, cashboxes, finCategories] = await Promise.all([
     FinancialService.getFinancialResume(tenant.id, monthStart, now),
@@ -167,7 +172,7 @@ export default async function FinanceiroPage({
           <form className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm">
               Tipo
-              <select name="type" defaultValue={typeFilter} className="flex h-9 rounded-md border border-input bg-background px-3 text-sm">
+              <select name="type" defaultValue={typeFilterRaw} className="flex h-9 rounded-md border border-input bg-background px-3 text-sm">
                 <option value="all">Todos</option>
                 <option value="RECEITA">Receita</option>
                 <option value="DESPESA">Despesa</option>
@@ -179,7 +184,7 @@ export default async function FinanceiroPage({
               <Input name="q" defaultValue={params.q ?? ""} placeholder="Categoria ou descrição" className="w-56" />
             </label>
             <Button type="submit" variant="outline">Filtrar</Button>
-            {(q || typeFilter !== "all") ? <a href="/dashboard/financeiro" className="text-sm text-muted-foreground underline">Limpar</a> : null}
+            {(q || typeFilterRaw !== "all") ? <a href="/dashboard/financeiro" className="text-sm text-muted-foreground underline">Limpar</a> : null}
           </form>
         </CardContent>
         <CardContent className="px-0 pb-0">
