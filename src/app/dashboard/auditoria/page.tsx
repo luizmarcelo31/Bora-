@@ -54,7 +54,7 @@ export default async function AuditoriaPage() {
           icon={ShieldCheck}
         />
       ) : (
-        <div className="overflow-x-auto"><Table>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Data</TableHead>
@@ -77,7 +77,7 @@ export default async function AuditoriaPage() {
               </TableRow>
             ))}
           </TableBody>
-        </Table></div>
+        </Table>
       )}
     </main>
   );

@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createUserAction } from "@/app/admin/actions";
@@ -34,7 +35,7 @@ export default async function UsuariosPage({
   ]);
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader title="Usuários" description="Todos os usuários da plataforma." />
 
       <Card>
@@ -104,7 +105,7 @@ export default async function UsuariosPage({
       {users.length === 0 ? (
         <EmptyState title="Nenhum usuário" description="Crie o primeiro acima." />
       ) : (
-        <div className="overflow-x-auto"><Table>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -121,11 +122,13 @@ export default async function UsuariosPage({
                 <TableCell>{u.email}</TableCell>
                 <TableCell>{u.tenant.name}</TableCell>
                 <TableCell>{u.role}</TableCell>
-                <TableCell>{u.active ? "Ativo" : "Inativo"}</TableCell>
+                <TableCell>
+                  <StatusBadge status={u.active ? "active" : "inactive"} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
-        </Table></div>
+        </Table>
       )}
     </main>
   );

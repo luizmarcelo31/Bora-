@@ -8,7 +8,6 @@ export function LowStockTable({
 }) {
   if (items.length === 0) return <EmptyState title="Estoque ok" description="Nenhum item crítico." />;
   return (
-    <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -21,14 +20,13 @@ export function LowStockTable({
         {items.map((i) => (
           <TableRow key={i.id}>
             <TableCell>{i.product.name}</TableCell>
-            <TableCell className={i.quantity <= i.minimumStock ? "text-destructive font-medium" : ""}>
+            <TableCell className={i.quantity <= i.minimumStock ? "text-destructive font-medium tabular-nums" : "tabular-nums"}>
               {i.quantity}
             </TableCell>
-            <TableCell>{i.minimumStock}</TableCell>
+            <TableCell className="tabular-nums">{i.minimumStock}</TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
-    </div>
   );
 }

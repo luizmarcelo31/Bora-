@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   Table,
   TableHeader,
@@ -21,7 +22,6 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportActions } from "@/components/shared/ReportActions";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
-import { Badge } from "@/components/ui/badge";
 import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
 import { Wallet } from "lucide-react";
@@ -211,7 +211,7 @@ export default async function FinanceiroPage({
               <EmptyState title="Sem lançamentos" description="Registre o primeiro acima." icon={Wallet} />
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -227,11 +227,17 @@ export default async function FinanceiroPage({
                 {movements.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell>{new Date(m.movementDate).toLocaleDateString("pt-BR")}</TableCell>
-                    <TableCell><Badge variant={m.type === "RECEITA" ? "default" : m.type === "DESPESA" ? "destructive" : "secondary"}>{m.type}</Badge></TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        status={m.type === "RECEITA" ? "income" : m.type === "DESPESA" ? "expense" : "transfer"}
+                      />
+                    </TableCell>
                     <TableCell>{m.category}</TableCell>
                     <TableCell className="max-w-xs truncate">{m.description}</TableCell>
                     <TableCell className="tabular-nums">{formatCurrency(m.amount)}</TableCell>
-                    <TableCell><Badge variant={m.paid ? "default" : "outline"}>{m.paid ? "Pago" : "Pendente"}</Badge></TableCell>
+                    <TableCell>
+                      <StatusBadge status={m.paid ? "paid" : "pending"} />
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <form action={togglePaidAction}>
@@ -260,7 +266,7 @@ export default async function FinanceiroPage({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table></div>
+            </Table>
           )}
         </CardContent>
       </Card>

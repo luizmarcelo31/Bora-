@@ -20,7 +20,7 @@ import { FilterTabs } from "@/components/shared/FilterTabs";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Package } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, getStockStatus, getStockStatusLabel } from "@/components/shared/StatusBadge";
 import { SelectField } from "@/components/ui/select-field";
 import { moveStockAction, getStockPageData } from "./actions";
 import { EditInventoryDialog } from "./edit-inventory-dialog";
@@ -139,14 +139,14 @@ export default async function EstoquePage({
             footer={["Total", String(totalUnidades), "", "", `${baixo} em baixo`]}
             fileName={`estoque-${tenant.id}-${new Date().toISOString().slice(0, 10)}`}
           />
-          <form className="flex flex-wrap gap-3 items-end">
+          <div className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm">
               Buscar
               <Input name="q" defaultValue={params.q ?? ""} placeholder="Nome do produto" className="w-56" />
             </label>
             <Button type="submit" variant="outline">Filtrar</Button>
             {(q || filter !== "all") ? <a href="/dashboard/estoque" className="text-sm text-muted-foreground underline">Limpar</a> : null}
-          </form>
+          </div>
           <FilterTabs
             value={filter}
             options={[
@@ -166,7 +166,7 @@ export default async function EstoquePage({
               <EmptyState title="Nenhum produto" description={q || filter !== "all" ? "Nenhum resultado para o filtro." : "Cadastre em Produtos primeiro."} icon={Package} />
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
@@ -182,14 +182,16 @@ export default async function EstoquePage({
                   const qty = p.inventory?.quantity ?? 0;
                   const min = p.inventory?.minimumStock ?? 0;
                   const max = p.inventory?.maximumStock ?? null;
-                  const isLow = qty <= min;
+                  const status = getStockStatus(qty, min);
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell className={isLow ? "text-destructive font-medium tabular-nums" : "tabular-nums"}>{qty}</TableCell>
+                      <TableCell className="tabular-nums">{qty}</TableCell>
                       <TableCell className="tabular-nums">{min}</TableCell>
                       <TableCell className="tabular-nums">{max ?? "—"}</TableCell>
-                      <TableCell>{isLow ? <Badge variant="destructive">Baixo</Badge> : <Badge variant="outline">Ok</Badge>}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={status} label={getStockStatusLabel(qty, min)} />
+                      </TableCell>
                       <TableCell>
                         <EditInventoryDialog
                           productId={p.id}
@@ -202,7 +204,7 @@ export default async function EstoquePage({
                   );
                 })}
               </TableBody>
-            </Table></div>
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -213,7 +215,7 @@ export default async function EstoquePage({
             <CardTitle>Últimas movimentações</CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-0">
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -228,13 +230,17 @@ export default async function EstoquePage({
                   <TableRow key={m.id}>
                     <TableCell className="tabular-nums">{new Date(m.createdAt).toLocaleString("pt-BR")}</TableCell>
                     <TableCell>{m.inventory.product.name}</TableCell>
-                    <TableCell><Badge variant="outline">{m.type}</Badge></TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        status={m.type === "ENTRADA" ? "entry" : m.type === "SAIDA" ? "exit" : "adjustment"}
+                      />
+                    </TableCell>
                     <TableCell className="tabular-nums">{m.quantity}</TableCell>
                     <TableCell>{m.reason ?? "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table></div>
+            </Table>
           </CardContent>
         </Card>
       ) : null}

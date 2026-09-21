@@ -14,12 +14,12 @@ export default async function PermissoesPage() {
   await requireSuperAdmin();
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         title="Permissões"
         description="Matriz role × permissão (somente leitura — definida em src/lib/permissions.ts)."
       />
-      <div className="overflow-x-auto"><Table>
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Permissão</TableHead>
@@ -38,7 +38,7 @@ export default async function PermissoesPage() {
             </TableRow>
           ))}
         </TableBody>
-      </Table></div>
+      </Table>
     </main>
   );
 }

@@ -43,7 +43,7 @@ export default async function PdvPage() {
   const { products, cashboxes, todaysSales } = await getPdvPageData(tenant.id);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader title="PDV" badge={tenant.name} description="Ponto de venda da conveniência." />
       <SearchParamToast
         okText="Venda #{v} registrada com sucesso."
@@ -72,7 +72,7 @@ export default async function PdvPage() {
               <EmptyState title="Nenhuma venda hoje" description="Finalize a primeira acima." icon={ShoppingCart} />
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>#</TableHead>
@@ -86,20 +86,20 @@ export default async function PdvPage() {
               <TableBody>
                 {todaysSales.map((s) => (
                   <TableRow key={s.id}>
-                    <TableCell>{s.id}</TableCell>
+                    <TableCell className="tabular-nums">{s.id}</TableCell>
                     <TableCell>
                       {new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </TableCell>
-                    <TableCell>{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
+                    <TableCell className="tabular-nums">{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
                     <TableCell>{paymentLabel(s.paymentMethod)}</TableCell>
-                    <TableCell>{formatCurrency(s.total)}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(s.total)}</TableCell>
                     <TableCell>
                       <CancelSaleDialog saleId={s.id} />
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table></div>
+            </Table>
           )}
         </CardContent>
       </Card>

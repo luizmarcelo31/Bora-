@@ -12,7 +12,6 @@ export function RecentSalesTable({
     return <EmptyState title="Nenhuma venda hoje" description="As vendas aparecerão aqui ao longo do dia." />;
   }
   return (
-    <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -26,15 +25,14 @@ export function RecentSalesTable({
       <TableBody>
         {sales.map((s) => (
           <TableRow key={s.id}>
-            <TableCell>{s.id}</TableCell>
+            <TableCell className="tabular-nums">{s.id}</TableCell>
             <TableCell>{new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</TableCell>
-            <TableCell>{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
+            <TableCell className="tabular-nums">{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
             <TableCell>{paymentLabel(s.paymentMethod)}</TableCell>
-            <TableCell>{formatCurrency(s.total)}</TableCell>
+            <TableCell className="tabular-nums">{formatCurrency(s.total)}</TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
-    </div>
   );
 }

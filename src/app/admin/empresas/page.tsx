@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createTenantAction } from "@/app/admin/actions";
@@ -22,7 +23,7 @@ export default async function EmpresasPage({
   });
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader title="Empresas" description="Tenants da plataforma." />
 
       <Card>
@@ -67,7 +68,7 @@ export default async function EmpresasPage({
       {tenants.length === 0 ? (
         <EmptyState title="Nenhuma empresa" description="Crie a primeira acima." />
       ) : (
-        <div className="overflow-x-auto"><Table>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
@@ -82,17 +83,22 @@ export default async function EmpresasPage({
           <TableBody>
             {tenants.map((t) => (
               <TableRow key={t.id}>
-                <TableCell>{t.id}</TableCell>
+                <TableCell className="tabular-nums">{t.id}</TableCell>
                 <TableCell>{t.name}</TableCell>
                 <TableCell>{t.type}</TableCell>
-                <TableCell>{t._count.users}</TableCell>
-                <TableCell>{t._count.products}</TableCell>
-                <TableCell>{t._count.sales}</TableCell>
-                <TableCell>{t.suspended ? "Suspensa" : t.active ? "Ativa" : "Inativa"}</TableCell>
+                <TableCell className="tabular-nums">{t._count.users}</TableCell>
+                <TableCell className="tabular-nums">{t._count.products}</TableCell>
+                <TableCell className="tabular-nums">{t._count.sales}</TableCell>
+                <TableCell>
+                  <StatusBadge
+                    status={t.suspended ? "inactive" : t.active ? "active" : "inactive"}
+                    label={t.suspended ? "Suspensa" : t.active ? "Ativa" : "Inativa"}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
-        </Table></div>
+        </Table>
       )}
     </main>
   );

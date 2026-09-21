@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   Table,
   TableHeader,
@@ -19,7 +20,6 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Wallet } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/validators";
 import { openCashBoxAction } from "./actions";
 import { CloseCashBoxDialog } from "./close-dialog";
@@ -98,7 +98,7 @@ export default async function CaixaPage() {
               <EmptyState title="Nenhum caixa" description="Abra o primeiro acima." icon={Wallet} />
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
@@ -114,7 +114,9 @@ export default async function CaixaPage() {
                   return (
                   <TableRow key={b.id}>
                     <TableCell className="font-medium">{b.name}</TableCell>
-                    <TableCell>{b.status === "OPEN" ? <Badge>Aberto</Badge> : <Badge variant="secondary">Fechado</Badge>}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={b.status === "OPEN" ? "open" : "closed"} />
+                    </TableCell>
                     <TableCell className="tabular-nums">{formatCurrency(b.openingBalance)}</TableCell>
                     <TableCell className="tabular-nums">{formatCurrency(b.currentBalance)}</TableCell>
                     <TableCell className="tabular-nums">
@@ -128,7 +130,7 @@ export default async function CaixaPage() {
                   </TableRow>
                 )})}
               </TableBody>
-            </Table></div>
+            </Table>
           )}
         </CardContent>
       </Card>

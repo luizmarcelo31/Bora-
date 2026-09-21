@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   Table,
   TableHeader,
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
-import { Badge } from "@/components/ui/badge";
 import { Tags } from "lucide-react";
 import { createCategoryAction, toggleCategoryAction } from "./actions";
 import { EditCategoryDialog, DeleteCategoryDialog } from "./category-dialogs";
@@ -34,7 +34,7 @@ export default async function CategoriasPage() {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         title="Categorias"
         badge={tenant.name}
@@ -74,7 +74,7 @@ export default async function CategoriasPage() {
       {categories.length === 0 ? (
         <EmptyState title="Nenhuma categoria" description="Crie a primeira acima." icon={Tags} />
       ) : (
-        <div className="overflow-x-auto"><Table>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -87,8 +87,10 @@ export default async function CategoriasPage() {
             {categories.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.name}</TableCell>
-                <TableCell><Badge variant="outline">{c.kind === "PRODUCT" ? "Produto" : "Financeiro"}</Badge></TableCell>
-                <TableCell>{c.active ? <Badge>Ativa</Badge> : <Badge variant="secondary">Inativa</Badge>}</TableCell>
+                <TableCell>{c.kind === "PRODUCT" ? "Produto" : "Financeiro"}</TableCell>
+                <TableCell>
+                  <StatusBadge status={c.active ? "active" : "inactive"} label={c.active ? "Ativa" : "Inativa"} />
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <EditCategoryDialog id={c.id} name={c.name} />
@@ -104,7 +106,7 @@ export default async function CategoriasPage() {
               </TableRow>
             ))}
           </TableBody>
-        </Table></div>
+        </Table>
       )}
     </main>
   );

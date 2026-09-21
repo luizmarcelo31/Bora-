@@ -180,7 +180,7 @@ export default async function RelatoriosPage({
               <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -201,7 +201,7 @@ export default async function RelatoriosPage({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table></div>
+            </Table>
           )}
         </CardContent>
         {totalPages > 1 ? (
@@ -243,7 +243,7 @@ export default async function RelatoriosPage({
               <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
@@ -255,12 +255,12 @@ export default async function RelatoriosPage({
                 {topProducts.map((r) => (
                   <TableRow key={r.productId}>
                     <TableCell>{productsMap.get(r.productId) ?? `#${r.productId}`}</TableCell>
-                    <TableCell>{r._sum.quantity ?? 0}</TableCell>
-                    <TableCell>{formatCurrency(r._sum.total ?? 0)}</TableCell>
+                    <TableCell className="tabular-nums">{r._sum.quantity ?? 0}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(r._sum.total ?? 0)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table></div>
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -275,7 +275,7 @@ export default async function RelatoriosPage({
               <EmptyState title="Sem movimentações no período" description="Ajuste o intervalo acima." icon={BarChart3} />
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Categoria</TableHead>
@@ -287,12 +287,12 @@ export default async function RelatoriosPage({
                 {Object.entries(financialResume.movementsByCategory).map(([cat, v]) => (
                   <TableRow key={cat}>
                     <TableCell>{cat}</TableCell>
-                    <TableCell>{formatCurrency(v.receita)}</TableCell>
-                    <TableCell>{formatCurrency(v.despesa)}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(v.receita)}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(v.despesa)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table></div>
+            </Table>
           )}
         </CardContent>
       </Card>

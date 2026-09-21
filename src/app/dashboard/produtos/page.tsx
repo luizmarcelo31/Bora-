@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, getStockStatus, getStockStatusLabel } from "@/components/shared/StatusBadge";
 import {
   Table,
   TableHeader,
@@ -172,7 +172,7 @@ export default async function ProdutosPage({
       {products.length === 0 ? (
         <EmptyState title="Nenhum produto" description={q || cat !== "all" ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."} icon={Package} />
       ) : (
-        <div className="overflow-x-auto"><Table>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -187,14 +187,19 @@ export default async function ProdutosPage({
             {products.map((p) => {
               const qty = p.inventory?.quantity ?? 0;
               const min = p.inventory?.minimumStock ?? 0;
-              const isLow = qty <= min;
+              const status = getStockStatus(qty, min);
               return (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.name}</TableCell>
-                <TableCell>{p.category ? <Badge variant="outline">{p.category}</Badge> : "—"}</TableCell>
+                <TableCell>{p.category ?? "—"}</TableCell>
                 <TableCell className="tabular-nums">{formatCurrency(p.price)}</TableCell>
-                <TableCell className={isLow ? "text-destructive font-medium" : "tabular-nums"}>{qty} {isLow ? <Badge variant="destructive" className="ml-1">Baixo</Badge> : null}</TableCell>
-                <TableCell>{p.active ? <Badge>Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
+                <TableCell className="tabular-nums">{qty}</TableCell>
+                <TableCell>
+                  <StatusBadge status={status} label={getStockStatusLabel(qty, min)} />
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={p.active ? "active" : "inactive"} />
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <EditProductDialog
@@ -221,7 +226,7 @@ export default async function ProdutosPage({
               </TableRow>
             )})}
           </TableBody>
-        </Table></div>
+        </Table>
       )}
     </main>
   );
