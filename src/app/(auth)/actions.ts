@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema } from "@/lib/validators";
+import { getUserContextByEmail } from "@/lib/tenant";
+import { isSuperAdmin } from "@/lib/roles";
 
 export async function login(formData: FormData) {
   const raw = {
@@ -23,8 +25,18 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  const next = String(formData.get("redirect") ?? "/dashboard");
-  redirect(next.startsWith("/") ? next : "/dashboard");
+
+  const next = String(formData.get("redirect") ?? "");
+  if (next.startsWith("/")) {
+    redirect(next);
+  }
+
+  const dbUser = await getUserContextByEmail(parsed.data.email);
+  if (dbUser && isSuperAdmin(dbUser.role)) {
+    redirect("/admin");
+  }
+
+  redirect("/dashboard");
 }
 
 export async function signup(formData: FormData) {
