@@ -26,9 +26,12 @@ export async function login(formData: FormData) {
 
   revalidatePath("/", "layout");
 
-  const next = String(formData.get("redirect") ?? "");
-  if (next.startsWith("/")) {
-    redirect(next);
+  const rawNext = String(formData.get("redirect") ?? "");
+
+  // Respeita redirect explícito (ex.: /login?redirect=/admin/empresas).
+  // "/dashboard" é o valor padrão do formulário — nesse caso decide pelo role.
+  if (rawNext.startsWith("/") && rawNext !== "/dashboard") {
+    redirect(rawNext);
   }
 
   const dbUser = await getUserContextByEmail(parsed.data.email);
