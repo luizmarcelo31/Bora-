@@ -1,30 +1,36 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { CategoryService } from "./index";
-import { prisma } from "@/lib/db";
 import { ValidationError, ValidationErrorType } from "@/lib/validators";
+
+const mockCategoryFindMany = vi.fn();
+const mockCategoryFindFirst = vi.fn();
+const mockCategoryCreate = vi.fn();
+const mockCategoryUpdate = vi.fn();
+const mockCategoryDelete = vi.fn();
+const mockTenantFindUnique = vi.fn();
+const mockProductCount = vi.fn();
+const mockFinancialMovementCount = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   prisma: {
     category: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
+      findMany: mockCategoryFindMany,
+      findFirst: mockCategoryFindFirst,
+      create: mockCategoryCreate,
+      update: mockCategoryUpdate,
+      delete: mockCategoryDelete,
     },
     tenant: {
-      findUnique: vi.fn(),
+      findUnique: mockTenantFindUnique,
     },
     product: {
-      count: vi.fn(),
+      count: mockProductCount,
     },
     financialMovement: {
-      count: vi.fn(),
+      count: mockFinancialMovementCount,
     },
   },
 }));
-
-const mockPrisma = vi.mocked(prisma);
 
 describe("CategoryService", () => {
   const tenantId = 1;
@@ -39,23 +45,23 @@ describe("CategoryService", () => {
         { id: 1, tenantId, name: "Bebidas", kind: "PRODUCT", active: true },
         { id: 2, tenantId, name: "Aluguel", kind: "FINANCIAL", active: true },
       ];
-      mockPrisma.category.findMany.mockResolvedValue(mockCategories);
+      mockCategoryFindMany.mockResolvedValue(mockCategories);
 
       const result = await CategoryService.listCategories(tenantId);
 
       expect(result).toEqual(mockCategories);
-      expect(mockPrisma.category.findMany).toHaveBeenCalledWith({
+      expect(mockCategoryFindMany).toHaveBeenCalledWith({
         where: { tenantId },
         orderBy: [{ kind: "asc" }, { name: "asc" }],
       });
     });
 
     it("filtra por kind quando fornecido", async () => {
-      mockPrisma.category.findMany.mockResolvedValue([]);
+      mockCategoryFindMany.mockResolvedValue([]);
 
       await CategoryService.listCategories(tenantId, "PRODUCT");
 
-      expect(mockPrisma.category.findMany).toHaveBeenCalledWith({
+      expect(mockCategoryFindMany).toHaveBeenCalledWith({
         where: { tenantId, kind: "PRODUCT" },
         orderBy: [{ kind: "asc" }, { name: "asc" }],
       });
@@ -65,7 +71,7 @@ describe("CategoryService", () => {
   describe("getCategory", () => {
     it("retorna categoria existente", async () => {
       const mockCategory = { id: 1, tenantId, name: "Bebidas", kind: "PRODUCT", active: true };
-      mockPrisma.category.findFirst.mockResolvedValue(mockCategory);
+      mockCategoryFindFirst.mockResolvedValue(mockCategory);
 
       const result = await CategoryService.getCategory(tenantId, 1);
 
@@ -73,7 +79,7 @@ describe("CategoryService", () => {
     });
 
     it("lanca erro quando nao encontra", async () => {
-      mockPrisma.category.findFirst.mockResolvedValue(null);
+      mockCategoryFindFirst.mockResolvedValue(null);
 
       await expect(CategoryService.getCategory(tenantId, 999)).rejects.toThrow(ValidationError);
     });
@@ -81,9 +87,9 @@ describe("CategoryService", () => {
 
   describe("createCategory", () => {
     it("cria categoria quando nome nao existe", async () => {
-      mockPrisma.tenant.findUnique.mockResolvedValue({ id: tenantId } as any);
-      mockPrisma.category.findFirst.mockResolvedValue(null);
-      mockPrisma.category.create.mockResolvedValue({
+      mockTenantFindUnique.mockResolvedValue({ id: tenantId });
+      mockCategoryFindFirst.mockResolvedValue(null);
+      mockCategoryCreate.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas",
@@ -94,12 +100,12 @@ describe("CategoryService", () => {
       const result = await CategoryService.createCategory(tenantId, "Bebidas", "PRODUCT");
 
       expect(result.name).toBe("Bebidas");
-      expect(mockPrisma.category.create).toHaveBeenCalled();
+      expect(mockCategoryCreate).toHaveBeenCalled();
     });
 
     it("lanca erro quando nome ja existe", async () => {
-      mockPrisma.tenant.findUnique.mockResolvedValue({ id: tenantId } as any);
-      mockPrisma.category.findFirst.mockResolvedValue({
+      mockTenantFindUnique.mockResolvedValue({ id: tenantId });
+      mockCategoryFindFirst.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas",
@@ -112,7 +118,7 @@ describe("CategoryService", () => {
     });
 
     it("lanca erro quando tenant nao existe", async () => {
-      mockPrisma.tenant.findUnique.mockResolvedValue(null);
+      mockTenantFindUnique.mockResolvedValue(null);
 
       await expect(
         CategoryService.createCategory(tenantId, "Bebidas", "PRODUCT")
@@ -122,10 +128,10 @@ describe("CategoryService", () => {
 
   describe("updateCategory", () => {
     it("atualiza nome quando nao conflita", async () => {
-      mockPrisma.category.findFirst
+      mockCategoryFindFirst
         .mockResolvedValueOnce({ id: 1, tenantId, name: "Bebidas", kind: "PRODUCT" })
         .mockResolvedValueOnce(null);
-      mockPrisma.category.update.mockResolvedValue({
+      mockCategoryUpdate.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas Frias",
@@ -138,7 +144,7 @@ describe("CategoryService", () => {
     });
 
     it("lanca erro quando novo nome ja existe", async () => {
-      mockPrisma.category.findFirst
+      mockCategoryFindFirst
         .mockResolvedValueOnce({ id: 1, tenantId, name: "Bebidas", kind: "PRODUCT" })
         .mockResolvedValueOnce({ id: 2, tenantId, name: "Bebidas Frias", kind: "PRODUCT" });
 
@@ -150,14 +156,14 @@ describe("CategoryService", () => {
 
   describe("toggleCategory", () => {
     it("inverte status active", async () => {
-      mockPrisma.category.findFirst.mockResolvedValue({
+      mockCategoryFindFirst.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas",
         kind: "PRODUCT",
         active: true,
       });
-      mockPrisma.category.update.mockResolvedValue({
+      mockCategoryUpdate.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas",
@@ -173,37 +179,37 @@ describe("CategoryService", () => {
 
   describe("deleteCategory", () => {
     it("deleta categoria sem dependencias", async () => {
-      mockPrisma.category.findFirst.mockResolvedValue({
+      mockCategoryFindFirst.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas",
         kind: "PRODUCT",
       });
-      mockPrisma.product.count.mockResolvedValue(0);
-      mockPrisma.financialMovement.count.mockResolvedValue(0);
-      mockPrisma.category.delete.mockResolvedValue({} as any);
+      mockProductCount.mockResolvedValue(0);
+      mockFinancialMovementCount.mockResolvedValue(0);
+      mockCategoryDelete.mockResolvedValue({});
 
       await CategoryService.deleteCategory(tenantId, 1);
 
-      expect(mockPrisma.category.delete).toHaveBeenCalledWith({
+      expect(mockCategoryDelete).toHaveBeenCalledWith({
         where: { id: 1 },
       });
     });
 
     it("soft-deleta categoria com dependencias", async () => {
-      mockPrisma.category.findFirst.mockResolvedValue({
+      mockCategoryFindFirst.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas",
         kind: "PRODUCT",
       });
-      mockPrisma.product.count.mockResolvedValue(5);
-      mockPrisma.financialMovement.count.mockResolvedValue(0);
-      mockPrisma.category.update.mockResolvedValue({} as any);
+      mockProductCount.mockResolvedValue(5);
+      mockFinancialMovementCount.mockResolvedValue(0);
+      mockCategoryUpdate.mockResolvedValue({});
 
       await CategoryService.deleteCategory(tenantId, 1);
 
-      expect(mockPrisma.category.update).toHaveBeenCalledWith({
+      expect(mockCategoryUpdate).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { active: false },
       });
