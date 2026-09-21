@@ -1,0 +1,121 @@
+{
+  "name": "SaaS Conveniência Design System",
+  "version": "1.0.0",
+  "colors": {
+    "primary": {
+      "light": "oklch(0.205 0 0)",
+      "dark": "oklch(0.922 0 0)",
+      "usage": "Botões principais, links, ações primárias"
+    },
+    "secondary": {
+      "light": "oklch(0.97 0 0)",
+      "dark": "oklch(0.269 0 0)",
+      "usage": "Botões secundários, backgrounds alternados"
+    },
+    "muted": {
+      "light": "oklch(0.97 0 0)",
+      "dark": "oklch(0.269 0 0)",
+      "usage": "Textos secundários, labels, placeholders"
+    },
+    "accent": {
+      "light": "oklch(0.97 0 0)",
+      "dark": "oklch(0.269 0 0)",
+      "usage": "Destaques, hover states"
+    },
+    "destructive": {
+      "light": "oklch(0.577 0.245 27.325)",
+      "dark": "oklch(0.704 0.191 22.216)",
+      "usage": "Erros, ações destrutivas, exclusões"
+    },
+    "border": {
+      "light": "oklch(0.922 0 0)",
+      "dark": "oklch(1 0 0 / 10%)",
+      "usage": " Bordas de cards, inputs, separadores"
+    },
+    "background": {
+      "light": "oklch(1 0 0)",
+      "dark": "oklch(0.145 0 0)",
+      "usage": "Background principal"
+    },
+    "foreground": {
+      "light": "oklch(0.145 0 0)",
+      "dark": "oklch(0.985 0 0)",
+      "usage": "Texto principal"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "sans": "var(--font-geist), system-ui, sans-serif",
+      "mono": "var(--font-geist-mono), monospace"
+    },
+    "scale": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem"
+    },
+    "fontWeight": {
+      "normal": "400",
+      "medium": "500",
+      "semibold": "600",
+      "bold": "700"
+    },
+    "lineHeight": {
+      "tight": "1.25",
+      "normal": "1.5",
+      "relaxed": "1.75"
+    }
+  },
+  "spacing": {
+    "unit": "4px",
+    "scale": {
+      "0": "0",
+      "1": "0.25rem",
+      "2": "0.5rem",
+      "3": "0.75rem",
+      "4": "1rem",
+      "5": "1.25rem",
+      "6": "1.5rem",
+      "8": "2rem",
+      "10": "2.5rem",
+      "12": "3rem",
+      "16": "4rem"
+    }
+  },
+  "borderRadius": {
+    "none": "0",
+    "sm": "calc(var(--radius) - 4px)",
+    "md": "calc(var(--radius) - 2px)",
+    "lg": "var(--radius)",
+    "xl": "calc(var(--radius) + 4px)",
+    "2xl": "calc(var(--radius) + 8px)",
+    "3xl": "calc(var(--radius) + 12px)",
+    "4xl": "calc(var(--radius) + 16px)",
+    "full": "9999px",
+    "default": "0.625rem"
+  },
+  "shadows": {
+    "2xs": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    "xs": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+    "sm": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+    "md": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+    "xl": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+    "2xl": "0 25px 50px -12px rgb(0 0 0 / 0.25)"
+  },
+  "breakpoints": {
+    "sm": "640px",
+    "md": "768px",
+    "lg": "1024px",
+    "xl": "1280px",
+    "2xl": "1536px"
+  },
+  "transitions": {
+    "fast": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+    "normal": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+    "slow": "300ms cubic-bezier(0.4, 0, 0.2, 1)"
+  }
+}
