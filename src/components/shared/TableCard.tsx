@@ -1,9 +1,9 @@
+import { cn } from "cn";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 /**
- * Invólucro padrão das tabelas do app (Fase 3):
- * título + descrição + ação + toolbar opcional + tabela + rodapé de contagem.
- * A tabela (ou EmptyState) entra como children.
+ * Invólucro padrão das tabelas do app (Fase 3 → revisão visual auditoria):
+ * borda de acento colorida no topo, título + descrição + ação + toolbar + rodapé.
  */
 export function TableCard({
   title,
@@ -12,6 +12,7 @@ export function TableCard({
   toolbar,
   footer,
   children,
+  className,
 }: {
   title: string;
   description?: string;
@@ -19,23 +20,28 @@ export function TableCard({
   toolbar?: React.ReactNode;
   footer?: React.ReactNode;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <Card>
-      <CardHeader>
+    <Card className={cn("border-t-2 border-t-primary/40", className)}>
+      <CardHeader className="pb-0">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle>{title}</CardTitle>
-            {description ? <CardDescription>{description}</CardDescription> : null}
+          <div className="space-y-0.5">
+            <CardTitle className="text-base font-semibold">{title}</CardTitle>
+            {description ? (
+              <CardDescription className="text-sm">{description}</CardDescription>
+            ) : null}
           </div>
           {action}
         </div>
-        {toolbar}
+        {toolbar && <div className="pt-3">{toolbar}</div>}
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-3">
         {children}
         {footer ? (
-          <p className="pt-4 text-xs text-muted-foreground tabular-nums">{footer}</p>
+          <p className="border-t border-border/60 pt-3 mt-2 text-xs text-muted-foreground tabular-nums">
+            {footer}
+          </p>
         ) : null}
       </CardContent>
     </Card>

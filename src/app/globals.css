@@ -185,6 +185,29 @@ These serve as the fallback; there is no separate default.css file. */
 }
 
 @layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
   /* Sombras de assinatura: valem no tema default (:root) e nos presets.
      Especificidade do preset (0,3,0) vence a do default (0,2,0). */
   :root .shadow-2xs,
