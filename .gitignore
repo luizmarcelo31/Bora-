@@ -15,6 +15,7 @@
 /test-results/
 /playwright-report/
 /playwright/.cache/
+/shots/
 tests/e2e/.auth.json
 
 # next.js
