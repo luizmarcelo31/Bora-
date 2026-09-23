@@ -1,4 +1,3 @@
-import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Package,
@@ -11,50 +10,15 @@ import {
   Settings,
   ClipboardList,
 } from "lucide-react";
+import type { NavGroup } from "./types";
+
+export type { NavBadge, NavGroup, NavMainItem, NavMainLinkItem, NavMainParentItem, NavSubItem } from "./types";
 
 /**
  * Navegação da área do tenant (/dashboard).
  * Mesmo formato do admin-nav (Studio Admin, MIT): grupos + links,
- * reaproveitando o NavMain genérico em src/components/admin/nav-main.tsx.
+ * reaproveitando o NavMain genérico em src/components/shell/nav-main.tsx.
  */
-export type NavBadge = "new" | "soon";
-
-export interface NavSubItem {
-  id: string;
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-  badge?: NavBadge;
-  disabled?: boolean;
-  newTab?: boolean;
-}
-
-interface NavItemBase {
-  id: string;
-  title: string;
-  icon?: LucideIcon;
-  badge?: NavBadge;
-  disabled?: boolean;
-  newTab?: boolean;
-}
-
-export interface NavMainLinkItem extends NavItemBase {
-  url: string;
-  subItems?: never;
-}
-
-export interface NavMainParentItem extends NavItemBase {
-  subItems: NavSubItem[];
-}
-
-export type NavMainItem = NavMainLinkItem | NavMainParentItem;
-
-export interface NavGroup {
-  id: number;
-  label?: string;
-  items: NavMainItem[];
-}
-
 export const tenantNav: NavGroup[] = [
   {
     id: 1,

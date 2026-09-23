@@ -1,53 +1,72 @@
 {
-  "name": "SaaS Conveniência Design System",
-  "version": "1.0.0",
+  "name": "BoraMais Design System",
+  "version": "2.0.0",
+  "rationale": "Identidade quente de varejo de bairro: papel quente, tinta café e laranja tangerina (derivada do preset tangerine). Sora para display/números, Inter para corpo. Ver docs/DESIGN.md e docs/design-preview.html.",
   "colors": {
     "primary": {
-      "light": "oklch(0.205 0 0)",
-      "dark": "oklch(0.922 0 0)",
-      "usage": "Botões principais, links, ações primárias"
+      "light": "oklch(0.62 0.19 38)",
+      "dark": "oklch(0.7 0.17 45)",
+      "usage": "Botões principais, links, ações primárias, selo da marca"
+    },
+    "primaryForeground": {
+      "light": "oklch(1 0 0)",
+      "dark": "oklch(0.25 0.05 40)",
+      "usage": "Texto sobre primary (branco no light, café no dark para contraste)"
     },
     "secondary": {
-      "light": "oklch(0.97 0 0)",
-      "dark": "oklch(0.269 0 0)",
-      "usage": "Botões secundários, backgrounds alternados"
+      "light": "oklch(0.94 0.03 72)",
+      "dark": "oklch(0.32 0.03 60)",
+      "usage": "Botões secundários, backgrounds alternados (areia)"
     },
     "muted": {
-      "light": "oklch(0.97 0 0)",
-      "dark": "oklch(0.269 0 0)",
+      "light": "oklch(0.95 0.02 72)",
+      "dark": "oklch(0.3 0.025 55)",
       "usage": "Textos secundários, labels, placeholders"
     },
     "accent": {
-      "light": "oklch(0.97 0 0)",
-      "dark": "oklch(0.269 0 0)",
-      "usage": "Destaques, hover states"
+      "light": "oklch(0.9 0.06 76)",
+      "dark": "oklch(0.36 0.06 55)",
+      "usage": "Destaques, hover states (brasa)"
     },
     "destructive": {
-      "light": "oklch(0.577 0.245 27.325)",
-      "dark": "oklch(0.704 0.191 22.216)",
+      "light": "oklch(0.58 0.22 25)",
+      "dark": "oklch(0.65 0.2 25)",
       "usage": "Erros, ações destrutivas, exclusões"
     },
     "border": {
-      "light": "oklch(0.922 0 0)",
-      "dark": "oklch(1 0 0 / 10%)",
-      "usage": " Bordas de cards, inputs, separadores"
+      "light": "oklch(0.89 0.025 72)",
+      "dark": "oklch(1 0 0 / 12%)",
+      "usage": "Bordas de cards, inputs, separadores"
     },
     "background": {
-      "light": "oklch(1 0 0)",
-      "dark": "oklch(0.145 0 0)",
-      "usage": "Background principal"
+      "light": "oklch(0.98 0.012 75)",
+      "dark": "oklch(0.24 0.02 50)",
+      "usage": "Background principal (papel quente / carvão quente)"
     },
     "foreground": {
-      "light": "oklch(0.145 0 0)",
-      "dark": "oklch(0.985 0 0)",
-      "usage": "Texto principal"
+      "light": "oklch(0.29 0.035 50)",
+      "dark": "oklch(0.93 0.012 72)",
+      "usage": "Texto principal (tinta café)"
+    },
+    "charts": {
+      "chart-1": { "light": "oklch(0.62 0.19 38)", "dark": "oklch(0.7 0.17 45)", "usage": "Série principal (tangerina)" },
+      "chart-2": { "light": "oklch(0.72 0.14 78)", "dark": "oklch(0.78 0.13 80)", "usage": "Âmbar" },
+      "chart-3": { "light": "oklch(0.6 0.12 160)", "dark": "oklch(0.68 0.13 160)", "usage": "Verde (saldos positivos)" },
+      "chart-4": { "light": "oklch(0.6 0.12 250)", "dark": "oklch(0.68 0.12 250)", "usage": "Azul" },
+      "chart-5": { "light": "oklch(0.62 0.14 305)", "dark": "oklch(0.7 0.15 305)", "usage": "Violeta" }
     }
   },
   "typography": {
     "fontFamily": {
-      "sans": "var(--font-geist), system-ui, sans-serif",
+      "display": "var(--font-sora) — Sora, títulos, métricas e números (utility font-heading)",
+      "sans": "var(--font-inter), system-ui, sans-serif — corpo, tabelas, formulários",
       "mono": "var(--font-geist-mono), monospace"
     },
+    "rules": [
+      "Títulos e valores financeiros usam font-heading (Sora) com tracking-tight",
+      "Valores financeiros sempre com tabular-nums",
+      "Corpo em Inter regular; descrições em text-sm text-muted-foreground"
+    ],
     "scale": {
       "xs": "0.75rem",
       "sm": "0.875rem",
@@ -61,7 +80,8 @@
       "normal": "400",
       "medium": "500",
       "semibold": "600",
-      "bold": "700"
+      "bold": "700",
+      "extrabold": "800"
     },
     "lineHeight": {
       "tight": "1.25",
@@ -95,16 +115,17 @@
     "3xl": "calc(var(--radius) + 12px)",
     "4xl": "calc(var(--radius) + 16px)",
     "full": "9999px",
-    "default": "0.625rem"
+    "default": "0.75rem"
   },
   "shadows": {
-    "2xs": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-    "xs": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-    "sm": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-    "md": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-    "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-    "xl": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
-    "2xl": "0 25px 50px -12px rgb(0 0 0 / 0.25)"
+    "note": "Sombras quentes no light (matiz café), pretas densas no dark. Utilitários shadow-* ativos no tema default via src/app/globals.css.",
+    "2xs": "0 1px 2px oklch(0.3 0.04 50 / 0.07)",
+    "xs": "0 1px 3px oklch(0.3 0.04 50 / 0.08)",
+    "sm": "0 1px 3px oklch(0.3 0.04 50 / 0.1), 0 1px 2px -1px oklch(0.3 0.04 50 / 0.1)",
+    "md": "0 1px 3px oklch(0.3 0.04 50 / 0.1), 0 4px 8px -2px oklch(0.3 0.04 50 / 0.12)",
+    "lg": "0 1px 3px oklch(0.3 0.04 50 / 0.1), 0 8px 16px -4px oklch(0.3 0.04 50 / 0.14)",
+    "xl": "0 1px 3px oklch(0.3 0.04 50 / 0.1), 0 12px 24px -6px oklch(0.3 0.04 50 / 0.16)",
+    "2xl": "0 20px 44px -12px oklch(0.3 0.05 50 / 0.28)"
   },
   "breakpoints": {
     "sm": "640px",

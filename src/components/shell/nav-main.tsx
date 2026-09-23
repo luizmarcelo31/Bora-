@@ -33,7 +33,7 @@ import type {
   NavMainItem,
   NavMainLinkItem,
   NavMainParentItem,
-} from "@/navigation/admin-nav";
+} from "@/navigation/types";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];

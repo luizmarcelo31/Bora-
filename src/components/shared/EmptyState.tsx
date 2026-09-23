@@ -11,16 +11,18 @@ export function EmptyState({
   title,
   description,
   icon: Icon,
+  action,
 }: {
   title: string;
   description?: string;
   icon?: LucideIcon;
+  action?: React.ReactNode;
 }) {
   return (
     <Empty>
       <EmptyHeader>
         {Icon ? (
-          <EmptyMedia variant="icon">
+          <EmptyMedia variant="icon" className="bg-primary/10 text-primary">
             <Icon />
           </EmptyMedia>
         ) : null}
@@ -28,6 +30,7 @@ export function EmptyState({
         {description ? (
           <EmptyDescription>{description}</EmptyDescription>
         ) : null}
+        {action}
       </EmptyHeader>
     </Empty>
   );

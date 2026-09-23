@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { TableCard } from "@/components/shared/TableCard";
+import { SelectField } from "@/components/ui/select-field";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createUserAction } from "@/app/admin/actions";
@@ -46,36 +48,21 @@ export default async function UsuariosPage({
           <form action={createUserAction} className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
               Empresa*
-              <select
+              <SelectField
                 name="tenantId"
                 required
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Selecione...
-                </option>
-                {tenants.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Selecione..."
+                options={tenants.map((t) => ({ value: String(t.id), label: t.name }))}
+              />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Role*
-              <select
+              <SelectField
                 name="role"
                 required
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 defaultValue="STAFF"
-              >
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+                options={ROLES.map((r) => ({ value: r, label: r }))}
+              />
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Nome*
@@ -105,6 +92,11 @@ export default async function UsuariosPage({
       {users.length === 0 ? (
         <EmptyState title="Nenhum usuário" description="Crie o primeiro acima." />
       ) : (
+        <TableCard
+          title="Usuários da plataforma"
+          description="Role e vínculo por empresa."
+          footer={`${users.length} usuário(s)`}
+        >
         <Table>
           <TableHeader>
             <TableRow>
@@ -129,6 +121,7 @@ export default async function UsuariosPage({
             ))}
           </TableBody>
         </Table>
+        </TableCard>
       )}
     </main>
   );

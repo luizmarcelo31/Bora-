@@ -3,7 +3,6 @@ import type { Role } from "@prisma/client";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableHeader,
@@ -13,10 +12,10 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { TableCard } from "@/components/shared/TableCard";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { paymentLabel } from "@/lib/payments";
 import { ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/validators";
 import { getPdvPageData } from "./actions";
 import { CancelSaleDialog } from "./cancel-dialog";
@@ -62,11 +61,11 @@ export default async function PdvPage() {
         cashboxes={cashboxes.map((c) => ({ id: c.id, name: c.name }))}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendas de hoje</CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
+      <TableCard
+        title="Vendas de hoje"
+        description="Últimas vendas registradas no PDV."
+        footer={`${todaysSales.length} venda(s) hoje`}
+      >
           {todaysSales.length === 0 ? (
             <div className="px-6 pb-6">
               <EmptyState title="Nenhuma venda hoje" description="Finalize a primeira acima." icon={ShoppingCart} />
@@ -101,8 +100,7 @@ export default async function PdvPage() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+      </TableCard>
     </main>
   );
 }

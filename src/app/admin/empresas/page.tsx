@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { TableCard } from "@/components/shared/TableCard";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createTenantAction } from "@/app/admin/actions";
@@ -12,15 +13,16 @@ import { createTenantAction } from "@/app/admin/actions";
 export default async function EmpresasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; q?: string }>;
 }) {
   await requireSuperAdmin();
   const params = await searchParams;
 
-  const tenants = await prisma.tenant.findMany({
+  const q = (params.q ?? "").toLowerCase().trim();
+  const tenants = (await prisma.tenant.findMany({
     orderBy: { name: "asc" },
     include: { _count: { select: { users: true, products: true, sales: true } } },
-  });
+  })).filter((t) => !q || t.name.toLowerCase().includes(q));
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
@@ -68,6 +70,11 @@ export default async function EmpresasPage({
       {tenants.length === 0 ? (
         <EmptyState title="Nenhuma empresa" description="Crie a primeira acima." />
       ) : (
+        <TableCard
+          title="Empresas cadastradas"
+          description="Usuários, produtos e vendas por tenant."
+          footer={`${tenants.length} empresa(s)`}
+        >
         <Table>
           <TableHeader>
             <TableRow>
@@ -99,6 +106,7 @@ export default async function EmpresasPage({
             ))}
           </TableBody>
         </Table>
+        </TableCard>
       )}
     </main>
   );

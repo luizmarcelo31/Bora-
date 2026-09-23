@@ -2,16 +2,9 @@ import { prisma } from "@/lib/db";
 import { SaleService, FinancialService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { MetricCard } from "@/components/shared/MetricCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { formatCurrency } from "@/lib/validators";
 import { DollarSign, TrendingUp, Package, AlertTriangle, ShoppingCart, Wallet } from "lucide-react";
 import { DashboardChart } from "./dashboard-chart";
@@ -78,94 +71,45 @@ export default async function DashboardPage() {
         description="Acompanhe vendas, estoque, caixa e financeiro em tempo real."
       />
 
-      {/* Metric Cards — estilo Studio Admin default */}
-      <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs xl:grid-cols-4 dark:*:data-[slot=card]:bg-card">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                <DollarSign className="size-4" />
-              </div>
-            </CardTitle>
-            <CardDescription>Faturado hoje</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="font-medium text-2xl tabular-nums leading-none tracking-tight">
-                {formatCurrency(faturadoHoje)}
-              </div>
-              <Badge variant={qtdVendasHoje > 0 ? "default" : "secondary"}>{qtdVendasHoje} vendas</Badge>
-            </div>
-            <p className="text-muted-foreground text-sm">Mês: {formatCurrency(salesResumeMonth.totalReceived)}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                <ShoppingCart className="size-4" />
-              </div>
-            </CardTitle>
-            <CardDescription>Vendas no mês</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="font-medium text-2xl tabular-nums leading-none tracking-tight">
-                {salesResumeMonth.totalSales}
-              </div>
-              <Badge>
-                <TrendingUp className="size-3" />
-                Ticket {formatCurrency(Math.round(salesResumeMonth.averageSale || 0))}
-              </Badge>
-            </div>
-            <p className="text-muted-foreground text-sm">Descontos {formatCurrency(salesResumeMonth.totalDiscount)}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                <Package className="size-4" />
-              </div>
-            </CardTitle>
-            <CardDescription>Produtos ativos</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="font-medium text-2xl tabular-nums leading-none tracking-tight">{products}</div>
-              <Badge variant="outline">{estoqueBaixo} em baixo estoque</Badge>
-            </div>
-            <p className="text-muted-foreground text-sm">
-              {cashboxes.length > 0 ? `${cashboxes.length} caixa(s) aberto(s)` : "Nenhum caixa aberto"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                <Wallet className="size-4" />
-              </div>
-            </CardTitle>
-            <CardDescription>Saldo financeiro (mês)</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="font-medium text-2xl tabular-nums leading-none tracking-tight">
-                {formatCurrency(financialResume.saldo)}
-              </div>
-              <Badge variant={financialResume.saldo >= 0 ? "default" : "destructive"}>
-                {financialResume.saldo >= 0 ? "Positivo" : "Negativo"}
-              </Badge>
-            </div>
-            <p className="text-muted-foreground text-sm">
-              {formatCurrency(financialResume.receitas)} / {formatCurrency(financialResume.despesas)}
-            </p>
-          </CardContent>
-        </Card>
+      {/* Metric Cards — assinatura BoraMais (MetricCard com ícone + badge) */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+        <MetricCard
+          title="Faturado hoje"
+          value={formatCurrency(faturadoHoje)}
+          hint={`Mês: ${formatCurrency(salesResumeMonth.totalReceived)}`}
+          icon={DollarSign}
+          badge={<Badge variant={qtdVendasHoje > 0 ? "default" : "secondary"}>{qtdVendasHoje} vendas</Badge>}
+        />
+        <MetricCard
+          title="Vendas no mês"
+          value={String(salesResumeMonth.totalSales)}
+          hint={`Descontos ${formatCurrency(salesResumeMonth.totalDiscount)}`}
+          icon={ShoppingCart}
+          badge={
+            <Badge>
+              <TrendingUp className="size-3" />
+              Ticket {formatCurrency(Math.round(salesResumeMonth.averageSale || 0))}
+            </Badge>
+          }
+        />
+        <MetricCard
+          title="Produtos ativos"
+          value={String(products)}
+          hint={cashboxes.length > 0 ? `${cashboxes.length} caixa(s) aberto(s)` : "Nenhum caixa aberto"}
+          icon={Package}
+          badge={<Badge variant="outline">{estoqueBaixo} em baixo estoque</Badge>}
+        />
+        <MetricCard
+          title="Saldo financeiro (mês)"
+          value={formatCurrency(financialResume.saldo)}
+          hint={`${formatCurrency(financialResume.receitas)} / ${formatCurrency(financialResume.despesas)}`}
+          icon={Wallet}
+          badge={
+            <Badge variant={financialResume.saldo >= 0 ? "default" : "destructive"}>
+              {financialResume.saldo >= 0 ? "Positivo" : "Negativo"}
+            </Badge>
+          }
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

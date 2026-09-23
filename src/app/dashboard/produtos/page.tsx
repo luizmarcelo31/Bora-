@@ -16,6 +16,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { TableCard } from "@/components/shared/TableCard";
 import { FilterTabs } from "@/components/shared/FilterTabs";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Package } from "lucide-react";
@@ -172,6 +173,11 @@ export default async function ProdutosPage({
       {products.length === 0 ? (
         <EmptyState title="Nenhum produto" description={q || cat !== "all" ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."} icon={Package} />
       ) : (
+        <TableCard
+          title="Catálogo"
+          description="Preço, estoque e status por produto."
+          footer={`${products.length} produto(s)`}
+        >
         <Table>
           <TableHeader>
             <TableRow>
@@ -227,6 +233,7 @@ export default async function ProdutosPage({
             )})}
           </TableBody>
         </Table>
+        </TableCard>
       )}
     </main>
   );

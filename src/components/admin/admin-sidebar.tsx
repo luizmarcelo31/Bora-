@@ -1,47 +1,11 @@
 "use client";
 
-import Link from "next/link";
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { BrandMark } from "@/components/shared/BrandMark";
 import { adminNav } from "@/navigation/admin-nav";
+import { AppSidebar, type AppSidebarProps } from "@/components/shell/AppSidebar";
 
-import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
+type AdminSidebarProps = Omit<AppSidebarProps, "homeHref" | "nav">;
 
-export function AdminSidebar({
-  user,
-  ...props
-}: React.ComponentProps<typeof Sidebar> & {
-  user: { name: string; email: string };
-}) {
-  return (
-    <Sidebar {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link prefetch={false} href="/admin">
-                <BrandMark />
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={adminNav} />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter>
-    </Sidebar>
-  );
+/** Wrapper fino: área /admin usa o shell único com dados da plataforma. */
+export function AdminSidebar({ user, ...props }: AdminSidebarProps) {
+  return <AppSidebar homeHref="/admin" nav={adminNav} user={user} {...props} />;
 }
