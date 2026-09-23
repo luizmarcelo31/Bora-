@@ -32,7 +32,8 @@ export const requireTenant = cache(async (tenantId: number) => {
 /** Busca o vínculo usuário ↔ tenant pelo email (ponte Supabase Auth → banco local). */
 export const getUserContextByEmail = cache(async (email: string) => {
   const user = await prisma.user.findFirst({
-    where: { email },
+    // Supabase normaliza o email; o banco pode ter case diferente.
+    where: { email: { equals: email, mode: "insensitive" } },
     include: { tenant: true },
   });
   return user;

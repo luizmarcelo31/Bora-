@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { LoginForm } from "@/components/auth/login-form";
+import { getSessionUser } from "@/lib/auth";
+import { getUserContextByEmail } from "@/lib/tenant";
+import { getHomePathForRole } from "@/lib/redirect";
 
 export default async function LoginPage({
   searchParams,
@@ -8,6 +12,13 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; ok?: string; redirect?: string }>;
 }) {
   const params = await searchParams;
+
+  // Já logado → home do role (evita super admin preso no form de login).
+  const sessionUser = await getSessionUser();
+  if (sessionUser?.email) {
+    const dbUser = await getUserContextByEmail(sessionUser.email);
+    redirect(getHomePathForRole(dbUser?.role));
+  }
 
   return (
     <div className="flex min-h-full flex-1">

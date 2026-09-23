@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema } from "@/lib/validators";
 import { getUserContextByEmail } from "@/lib/tenant";
-import { isSuperAdmin } from "@/lib/roles";
+import { resolvePostLoginRedirect } from "@/lib/redirect";
 
 export async function login(formData: FormData) {
   const raw = {
@@ -28,18 +28,10 @@ export async function login(formData: FormData) {
 
   const rawNext = String(formData.get("redirect") ?? "");
 
-  // Respeita redirect explícito (ex.: /login?redirect=/admin/empresas).
-  // "/dashboard" é o valor padrão do formulário — nesse caso decide pelo role.
-  if (rawNext.startsWith("/") && rawNext !== "/dashboard") {
-    redirect(rawNext);
-  }
-
+  // Destino validado pelo role: super admin só vai para /admin*,
+  // demais roles nunca vão para /admin*. Sem vínculo → home padrão.
   const dbUser = await getUserContextByEmail(parsed.data.email);
-  if (dbUser && isSuperAdmin(dbUser.role)) {
-    redirect("/admin");
-  }
-
-  redirect("/dashboard");
+  redirect(resolvePostLoginRedirect(dbUser?.role, rawNext));
 }
 
 export async function signup(formData: FormData) {
