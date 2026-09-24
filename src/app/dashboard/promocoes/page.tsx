@@ -35,16 +35,17 @@ export default async function PromocoesPage({
   const { tenant } = await requireSessionTenant("/dashboard/promocoes");
   const params = await searchParams;
 
-  const promotions = await prisma.promotion.findMany({
-    where: { tenantId: tenant.id },
-    include: { items: true },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const products = await prisma.product.findMany({
-    where: { tenantId: tenant.id, active: true },
-    orderBy: { name: "asc" },
-  });
+  const [promotions, products] = await Promise.all([
+    prisma.promotion.findMany({
+      where: { tenantId: tenant.id },
+      include: { items: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.product.findMany({
+      where: { tenantId: tenant.id, active: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">

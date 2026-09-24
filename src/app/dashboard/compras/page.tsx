@@ -34,16 +34,17 @@ export default async function ComprasPage({
   const { tenant } = await requireSessionTenant("/dashboard/compras");
   const params = await searchParams;
 
-  const suppliers = await prisma.supplier.findMany({
-    where: { tenantId: tenant.id },
-    orderBy: { name: "asc" },
-  });
-
-  const purchases = await prisma.purchase.findMany({
-    where: { tenantId: tenant.id },
-    include: { supplier: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [suppliers, purchases] = await Promise.all([
+    prisma.supplier.findMany({
+      where: { tenantId: tenant.id },
+      orderBy: { name: "asc" },
+    }),
+    prisma.purchase.findMany({
+      where: { tenantId: tenant.id },
+      include: { supplier: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
