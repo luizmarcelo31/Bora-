@@ -22,21 +22,21 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <Empty className={cn("border-border/50 bg-muted/20 py-12", className)}>
+    <Empty className={cn("border-dashed border-border/60 bg-transparent py-16", className)}>
       <EmptyHeader>
         {Icon ? (
           <EmptyMedia 
             variant="icon" 
-            className="mb-4 size-12 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-xs [&_svg:not([class*='size-'])]:size-6"
+            className="mb-6 size-14 rounded-2xl bg-muted/30 text-muted-foreground ring-1 ring-border/50 shadow-sm [&_svg:not([class*='size-'])]:size-7"
           >
             <Icon />
           </EmptyMedia>
         ) : null}
         <EmptyTitle className="text-base font-semibold text-foreground">{title}</EmptyTitle>
         {description ? (
-          <EmptyDescription className="mt-1 max-w-[280px]">{description}</EmptyDescription>
+          <EmptyDescription className="mt-2 max-w-[320px] text-[13px]">{description}</EmptyDescription>
         ) : null}
-        {action && <div className="mt-4">{action}</div>}
+        {action && <div className="mt-6">{action}</div>}
       </EmptyHeader>
     </Empty>
   );

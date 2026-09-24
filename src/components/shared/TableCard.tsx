@@ -1,5 +1,4 @@
-import { cn } from "cn";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 /**
  * Invólucro padrão das tabelas do app (Fase 3 → revisão visual auditoria):
@@ -23,27 +22,29 @@ export function TableCard({
   className?: string;
 }) {
   return (
-    <Card className={cn("border-t-2 border-t-primary/40", className)}>
-      <CardHeader className="pb-0">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-0.5">
-            <CardTitle className="text-base font-semibold">{title}</CardTitle>
+    <div className={cn("w-full flex flex-col gap-4", className)}>
+      <div className="flex flex-col gap-4 px-1">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
             {description ? (
-              <CardDescription className="text-sm">{description}</CardDescription>
+              <p className="text-sm text-muted-foreground">{description}</p>
             ) : null}
           </div>
-          {action}
+          {action && <div className="shrink-0">{action}</div>}
         </div>
-        {toolbar && <div className="pt-3">{toolbar}</div>}
-      </CardHeader>
-      <CardContent className="pt-3">
+        {toolbar && <div>{toolbar}</div>}
+      </div>
+      
+      <div className="w-full rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
         {children}
-        {footer ? (
-          <p className="border-t border-border/60 pt-3 mt-2 text-xs text-muted-foreground tabular-nums">
-            {footer}
-          </p>
-        ) : null}
-      </CardContent>
-    </Card>
+      </div>
+
+      {footer ? (
+        <div className="px-1 flex items-center justify-between text-xs font-medium text-muted-foreground tabular-nums">
+          {footer}
+        </div>
+      ) : null}
+    </div>
   );
 }
