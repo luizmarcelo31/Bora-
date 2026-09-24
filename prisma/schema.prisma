@@ -13,27 +13,35 @@ datasource db {
 // ============================================================
 
 model Tenant {
-  id        Int       @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   name      String
-  type      String    @default("CONVENIENCE")
+  type      String  @default("CONVENIENCE")
   email     String?
   phone     String?
-  active    Boolean   @default(true)
-  suspended Boolean   @default(false)
-  
-  users     User[]
-  products  Product[]
-  inventory Inventory[]
-  stockMovements StockMovement[]
-  sales     Sale[]
-  saleItems SaleItem[]
-  cashBoxes CashBox[]
+  active    Boolean @default(true)
+  suspended Boolean @default(false)
+
+  users              User[]
+  products           Product[]
+  inventory          Inventory[]
+  stockMovements     StockMovement[]
+  sales              Sale[]
+  saleItems          SaleItem[]
+  cashBoxes          CashBox[]
   financialMovements FinancialMovement[]
-  categories Category[]
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
+  categories         Category[]
+
+  suppliers       Supplier[]
+  purchases       Purchase[]
+  promotions      Promotion[]
+  inventoryCounts InventoryCount[]
+
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  promotionItems      PromotionItem[]
+  purchaseItems       PurchaseItem[]
+  inventoryCountItems InventoryCountItem[]
+
   @@index([active])
   @@index([suspended])
 }
@@ -52,12 +60,12 @@ model User {
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   active    Boolean   @default(true)
   lastLogin DateTime?
-  
+
   createdSales Sale[] @relation("createdBy")
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([tenantId, email])
   @@index([tenantId])
   @@index([role])
@@ -79,30 +87,36 @@ enum Role {
 // ============================================================
 
 model Product {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  name      String
-  sku       String?
-  barcode   String?
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name        String
+  sku         String?
+  barcode     String?
   description String?
-  
-  price     Int
-  cost      Int?
-  margin    Float?
-  
-  category  String?
-  active    Boolean   @default(true)
-  
-  imageUrl  String?
-  
-  inventory Inventory?
-  saleItems SaleItem[]
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
+
+  price  Int
+  cost   Int?
+  margin Float?
+
+  category String?
+  active   Boolean @default(true)
+
+  imageUrl String?
+
+  wholesalePrice       Int?
+  wholesaleMinQuantity Int?
+
+  inventory           Inventory?
+  saleItems           SaleItem[]
+  purchaseItems       PurchaseItem[]
+  promotionItems      PromotionItem[]
+  inventoryCountItems InventoryCountItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([tenantId, sku])
   @@unique([tenantId, barcode])
   @@index([tenantId])
@@ -115,43 +129,43 @@ model Product {
 // ============================================================
 
 model Inventory {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  productId Int       @unique
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  quantity  Int       @default(0)
-  
-  minimumStock Int    @default(0)
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  productId Int     @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quantity Int @default(0)
+
+  minimumStock Int  @default(0)
   maximumStock Int?
-  
+
   movements StockMovement[]
-  
-  updatedAt DateTime  @updatedAt
-  
+
+  updatedAt DateTime @updatedAt
+
   @@index([tenantId])
   @@index([productId])
 }
 
 model StockMovement {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   inventoryId Int
   inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-  
-  type      StockMovementType
-  quantity  Int
-  reason    String?
-  
-  referenceId Int?
+
+  type     StockMovementType
+  quantity Int
+  reason   String?
+
+  referenceId   Int?
   referenceType String?
-  
-  createdAt DateTime  @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@index([tenantId])
   @@index([inventoryId])
   @@index([type])
@@ -165,6 +179,8 @@ enum StockMovementType {
   VENDA
   DEVOLUCAO
   TRANSFERENCIA
+  PERDA
+  AVARIA
 }
 
 // ============================================================
@@ -172,58 +188,58 @@ enum StockMovementType {
 // ============================================================
 
 model Sale {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  userId    Int
-  user      User      @relation("createdBy", fields: [userId], references: [id])
-  
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  userId Int
+  user   User @relation("createdBy", fields: [userId], references: [id])
+
   cashBoxId Int?
-  cashBox   CashBox?  @relation(fields: [cashBoxId], references: [id])
-  
-  status    SaleStatus @default(COMPLETED)
-  
-  subtotal  Int
-  discount  Int       @default(0)
-  total     Int
-  
+  cashBox   CashBox? @relation(fields: [cashBoxId], references: [id])
+
+  status SaleStatus @default(COMPLETED)
+
+  subtotal Int
+  discount Int @default(0)
+  total    Int
+
   paymentMethod PaymentMethod @default(CASH)
-  
-  customerName String?
+
+  customerName  String?
   customerPhone String?
-  
+
   idempotencyKey String?
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
-  items     SaleItem[]
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items SaleItem[]
+
+  @@unique([tenantId, idempotencyKey])
   @@index([tenantId])
   @@index([userId])
   @@index([status])
   @@index([createdAt])
-  @@unique([tenantId, idempotencyKey])
 }
 
 model SaleItem {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  saleId    Int
-  sale      Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  saleId Int
+  sale   Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
   productId Int
-  product   Product   @relation(fields: [productId], references: [id])
-  
-  quantity  Int
-  
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+
   unitPrice Int
-  discount  Int       @default(0)
+  discount  Int @default(0)
   total     Int
-  
+
   @@index([tenantId])
   @@index([saleId])
   @@index([productId])
@@ -251,29 +267,29 @@ enum PaymentMethod {
 // ============================================================
 
 model CashBox {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  name      String
-  
-  status    CashBoxStatus @default(CLOSED)
-  
-  openingBalance Int   @default(0)
-  currentBalance Int   @default(0)
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name String
+
+  status CashBoxStatus @default(CLOSED)
+
+  openingBalance Int  @default(0)
+  currentBalance Int  @default(0)
   closingBalance Int?
-  
+
   operatorName String?
-  
-  openedAt  DateTime?
-  closedAt  DateTime?
-  
-  sales     Sale[]
+
+  openedAt DateTime?
+  closedAt DateTime?
+
+  sales              Sale[]
   financialMovements FinancialMovement[]
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([tenantId])
   @@index([status])
 }
@@ -288,27 +304,27 @@ enum CashBoxStatus {
 // ============================================================
 
 model FinancialMovement {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   cashBoxId Int?
-  cashBox   CashBox?  @relation(fields: [cashBoxId], references: [id])
-  
-  type      FinancialMovementType
-  category  String
+  cashBox   CashBox? @relation(fields: [cashBoxId], references: [id])
+
+  type        FinancialMovementType
+  category    String
   description String
-  
-  amount    Int
-  
-  paid      Boolean   @default(false)
-  paidAt    DateTime?
-  
+
+  amount Int
+
+  paid   Boolean   @default(false)
+  paidAt DateTime?
+
   movementDate DateTime
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([tenantId])
   @@index([type])
   @@index([category])
@@ -327,19 +343,19 @@ enum FinancialMovementType {
 // ============================================================
 
 model DailyReport {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  
+  id       Int @id @default(autoincrement())
+  tenantId Int
+
   reportDate DateTime
-  
+
   totalSales Int
   totalItems Int
-  
+
   totalReceived Int
   totalExpenses Int
-  
-  createdAt DateTime  @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@unique([tenantId, reportDate])
   @@index([tenantId])
 }
@@ -349,21 +365,21 @@ model DailyReport {
 // ============================================================
 
 model AuditLog {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int
-  
-  action    String
-  entity    String
-  entityId  Int
-  
+  id       Int @id @default(autoincrement())
+  tenantId Int
+
+  action   String
+  entity   String
+  entityId Int
+
   userId    Int?
   userEmail String?
-  
-  changes   String?
-  details   String?
-  
-  createdAt DateTime  @default(now())
-  
+
+  changes String?
+  details String?
+
+  createdAt DateTime @default(now())
+
   @@index([tenantId])
   @@index([action])
   @@index([entity])
@@ -375,17 +391,17 @@ model AuditLog {
 // ============================================================
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  tenantId  Int
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  name      String
-  kind      CategoryKind
-  active    Boolean  @default(true)
-  
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name   String
+  kind   CategoryKind
+  active Boolean      @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([tenantId, kind, name])
   @@index([tenantId])
   @@index([kind])
@@ -401,21 +417,199 @@ enum CategoryKind {
 // ============================================================
 
 model TenantSettings {
-  id        Int       @id @default(autoincrement())
-  tenantId  Int       @unique
-  
+  id       Int @id @default(autoincrement())
+  tenantId Int @unique
+
   enableDiscount Boolean @default(true)
-  maxDiscount Int?
-  
+  maxDiscount    Int?
+
   enableStockControl Boolean @default(true)
   allowNegativeStock Boolean @default(false)
-  
+
   autoGenerateDailyReport Boolean @default(true)
-  
+
   companyLogoUrl String?
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([tenantId])
+}
+
+// ============================================================
+// PROMOCOES E PRECOS (Promotions & Prices)
+// ============================================================
+
+model Promotion {
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name  String
+  type  PromotionType
+  value Int
+
+  startDate DateTime?
+  endDate   DateTime?
+  active    Boolean   @default(true)
+
+  items PromotionItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([active])
+}
+
+model PromotionItem {
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  promotionId Int
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, productId])
+  @@index([tenantId])
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  COMBO
+}
+
+// ============================================================
+// COMPRAS E FORNECEDORES (Purchases & Suppliers)
+// ============================================================
+
+model Supplier {
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name     String
+  document String?
+  contact  String?
+  email    String?
+  phone    String?
+
+  active Boolean @default(true)
+
+  purchases Purchase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([active])
+}
+
+model Purchase {
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  supplierId Int
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  status     PurchaseStatus @default(PENDING)
+  total      Int
+  invoiceKey String?
+
+  receivedAt DateTime?
+
+  items PurchaseItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([status])
+}
+
+model PurchaseItem {
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  purchaseId Int
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+  unitCost Int
+  total    Int
+
+  @@index([tenantId])
+  @@index([purchaseId])
+  @@index([productId])
+}
+
+enum PurchaseStatus {
+  PENDING
+  RECEIVED
+  CANCELLED
+}
+
+// ============================================================
+// INVENTARIO DE ESTOQUE (Inventory Count)
+// ============================================================
+
+model InventoryCount {
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  status CountStatus @default(OPEN)
+  type   CountType   @default(FULL)
+
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  items InventoryCountItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model InventoryCountItem {
+  id       Int    @id @default(autoincrement())
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  inventoryCountId Int
+  inventoryCount   InventoryCount @relation(fields: [inventoryCountId], references: [id], onDelete: Cascade)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  expectedQuantity Int
+  countedQuantity  Int?
+  divergence       Int?
+
+  @@index([tenantId])
+  @@index([inventoryCountId])
+  @@index([productId])
+}
+
+enum CountStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+enum CountType {
+  FULL
+  PARTIAL
 }
