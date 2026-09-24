@@ -9,6 +9,9 @@ import {
   BarChart3,
   Settings,
   ClipboardList,
+  Truck,
+  Percent,
+  ClipboardCheck,
 } from "lucide-react";
 import type { NavGroup } from "./types";
 
@@ -28,11 +31,20 @@ export const tenantNav: NavGroup[] = [
       { id: "products", title: "Produtos", url: "/dashboard/produtos", icon: Package },
       { id: "categories", title: "Categorias", url: "/dashboard/categorias", icon: Tag },
       { id: "stock", title: "Estoque", url: "/dashboard/estoque", icon: Boxes },
+      { id: "inventory", title: "Inventário", url: "/dashboard/inventario", icon: ClipboardCheck },
       { id: "pdv", title: "PDV", url: "/dashboard/pdv", icon: ShoppingCart },
+      { id: "promotions", title: "Promoções", url: "/dashboard/promocoes", icon: Percent },
     ],
   },
   {
     id: 2,
+    label: "Compras",
+    items: [
+      { id: "purchases", title: "Compras", url: "/dashboard/compras", icon: Truck },
+    ],
+  },
+  {
+    id: 3,
     label: "Financeiro",
     items: [
       { id: "cashbox", title: "Caixa", url: "/dashboard/caixa", icon: Wallet },
@@ -40,7 +52,7 @@ export const tenantNav: NavGroup[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     label: "Gestão",
     items: [
       { id: "reports", title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3 },

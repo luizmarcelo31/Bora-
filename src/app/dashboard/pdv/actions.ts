@@ -58,14 +58,20 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
   }
   const dbProducts = await prisma.product.findMany({
     where: { tenantId: tenant.id, id: { in: [...new Set(wanted.map((w) => w.productId))] } },
-    select: { id: true, price: true, active: true },
+    select: { id: true, price: true, active: true, wholesalePrice: true, wholesaleMinQuantity: true },
   });
   const priceById = new Map(dbProducts.map((p) => [p.id, p]));
   const items = [];
   for (const w of wanted) {
     const product = priceById.get(w.productId);
     if (!product || !product.active) return { error: "invalid" };
-    items.push({ productId: w.productId, quantity: w.quantity, unitPrice: product.price, discount: 0 });
+    // Aplica preço de atacado se quantidade atingir o mínimo configurado
+    const useWholesale =
+      product.wholesalePrice != null &&
+      product.wholesaleMinQuantity != null &&
+      w.quantity >= product.wholesaleMinQuantity;
+    const unitPrice = useWholesale ? product.wholesalePrice! : product.price;
+    items.push({ productId: w.productId, quantity: w.quantity, unitPrice, discount: 0 });
   }
 
   const idempotencyKey = String(formData.get("idempotencyKey") ?? "").trim() || undefined;

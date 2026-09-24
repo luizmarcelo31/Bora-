@@ -7,7 +7,15 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { formatCurrency } from "@/lib/validators";
 import { Package, Plus, Minus } from "lucide-react";
 
-export type GridProduct = { id: number; name: string; price: number; stock: number; category: string | null };
+export type GridProduct = {
+  id: number;
+  name: string;
+  price: number;
+  stock: number;
+  category: string | null;
+  wholesalePrice?: number | null;
+  wholesaleMinQuantity?: number | null;
+};
 
 export function ProductGrid({
   products,
@@ -27,6 +35,8 @@ export function ProductGrid({
         const qty = cart[p.id] ?? 0;
         const low = p.stock <= 5 && p.stock > 0;
         const out = p.stock <= 0;
+        const hasWholesale = p.wholesalePrice != null && p.wholesaleMinQuantity != null;
+        const isWholesaleActive = hasWholesale && qty >= p.wholesaleMinQuantity!;
         return (
           <Card key={p.id} className="overflow-hidden">
             <CardContent className="p-3 flex flex-col gap-2">
@@ -39,11 +49,28 @@ export function ProductGrid({
                   <div className="flex flex-wrap gap-1 mt-1">
                     {p.category ? <Badge variant="outline" className="text-[10px] px-1.5 py-0">{p.category}</Badge> : null}
                     {out ? <Badge variant="destructive" className="text-[10px]">Sem estoque</Badge> : low ? <Badge variant="secondary" className="text-[10px]">Baixo</Badge> : null}
+                    {hasWholesale && !isWholesaleActive ? (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-blue-600 border-blue-300">
+                        Atacado ≥{p.wholesaleMinQuantity} un
+                      </Badge>
+                    ) : null}
+                    {isWholesaleActive ? (
+                      <Badge className="text-[10px] px-1.5 py-0 bg-blue-600">ATACADO ATIVO</Badge>
+                    ) : null}
                   </div>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="font-medium text-sm tabular-nums">{formatCurrency(p.price)}</span>
+                <div className="flex flex-col">
+                  {isWholesaleActive ? (
+                    <>
+                      <span className="text-xs text-muted-foreground line-through tabular-nums">{formatCurrency(p.price)}</span>
+                      <span className="font-semibold text-sm tabular-nums text-blue-600">{formatCurrency(p.wholesalePrice!)}</span>
+                    </>
+                  ) : (
+                    <span className="font-medium text-sm tabular-nums">{formatCurrency(p.price)}</span>
+                  )}
+                </div>
                 <span className="text-xs text-muted-foreground">est. {p.stock}</span>
               </div>
               <div className="flex items-center gap-1">
@@ -66,3 +93,4 @@ export function ProductGrid({
     </div>
   );
 }
+

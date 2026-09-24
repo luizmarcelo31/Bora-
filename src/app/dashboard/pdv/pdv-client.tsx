@@ -13,7 +13,7 @@ import { CartSheet } from "./_components/cart-sheet";
 import { ControlledSelect } from "@/components/ui/controlled-select";
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
 
-export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null };
+export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null; wholesalePrice?: number | null; wholesaleMinQuantity?: number | null };
 export type PdvCashbox = { id: number; name: string };
 
 const PAYMENTS = PAYMENT_OPTIONS;
@@ -133,7 +133,7 @@ export function PdvClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <ProductGrid products={filtered.map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, category: (p as unknown as { category?: string | null }).category ?? null }))} cart={cart} onQty={setQty} />
+          <ProductGrid products={filtered.map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, category: (p as unknown as { category?: string | null }).category ?? null, wholesalePrice: (p as unknown as { wholesalePrice?: number | null }).wholesalePrice ?? null, wholesaleMinQuantity: (p as unknown as { wholesaleMinQuantity?: number | null }).wholesaleMinQuantity ?? null }))} cart={cart} onQty={setQty} />
         </CardContent>
       </Card>
 
