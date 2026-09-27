@@ -8,6 +8,7 @@
  * - Cria (ou promove a SUPER_ADMIN) o usuário com o email informado.
  * - O email precisa ser o mesmo do cadastro no /signup (Supabase Auth).
  */
+/* eslint-disable @typescript-eslint/no-require-imports -- script .cjs executado por node, sem ESM */
 const { PrismaClient } = require("@prisma/client");
 
 async function main() {

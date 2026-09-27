@@ -13,6 +13,7 @@ export type GridProduct = {
   price: number;
   stock: number;
   category: string | null;
+  imageUrl?: string | null;
   wholesalePrice?: number | null;
   wholesaleMinQuantity?: number | null;
 };
@@ -41,9 +42,19 @@ export function ProductGrid({
           <Card key={p.id} className="overflow-hidden">
             <CardContent className="p-3 flex flex-col gap-2">
               <div className="flex items-start gap-2">
-                <div className="flex size-9 items-center justify-center rounded-lg border bg-muted text-muted-foreground shrink-0">
-                  <Package className="size-4" />
-                </div>
+                {p.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- thumb remoto do Storage, sem remotePatterns
+                  <img
+                    src={p.imageUrl}
+                    alt={`Foto de ${p.name}`}
+                    className="size-9 shrink-0 rounded-lg border object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex size-9 items-center justify-center rounded-lg border bg-muted text-muted-foreground shrink-0">
+                    <Package className="size-4" />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm leading-tight truncate">{p.name}</p>
                   <div className="flex flex-wrap gap-1 mt-1">

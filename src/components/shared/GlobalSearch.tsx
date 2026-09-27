@@ -51,9 +51,19 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Limpa o debounce ao desmontar. Sem setState aqui.
   useEffect(() => {
+    const t = timer.current;
+    return () => {
+      if (t) clearTimeout(t);
+    };
+  }, []);
+
+  // Debounce mora no handler (evento), não em efeito: evita setState
+  // síncrono dentro de efeito e uma query por tecla.
+  function buscar(texto: string) {
     if (timer.current) clearTimeout(timer.current);
-    const q = value.trim();
+    const q = texto.trim();
     if (q.length < 2) {
       setProducts([]);
       setCategories([]);
@@ -75,10 +85,13 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
         setLoading(false);
       }
     }, 250);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [value, tenantId]);
+  }
+
+  function aoMudar(v: string) {
+    setValue(v);
+    setOpen(true);
+    buscar(v);
+  }
 
   const routes = useMemo(() => {
     const q = norm(value.trim());
@@ -89,6 +102,8 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
   function go(href: string) {
     setOpen(false);
     setValue("");
+    setProducts([]);
+    setCategories([]);
     inputRef.current?.blur();
     router.push(href);
   }
@@ -117,10 +132,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
           <Input
             ref={inputRef}
             value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              setOpen(true);
-            }}
+            onChange={(e) => aoMudar(e.target.value)}
             onFocus={() => setOpen(true)}
             onKeyDown={onKeyDown}
             placeholder="Buscar..."

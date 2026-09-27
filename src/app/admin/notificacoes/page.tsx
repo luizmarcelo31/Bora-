@@ -23,7 +23,13 @@ import {
   statusEnvioLabel,
 } from "@/lib/labels";
 import type { Tom } from "@/lib/labels";
-import { ERROS_COMUNICACAO, salvarComunicacaoAction } from "./actions";
+import { salvarComunicacaoAction } from "./actions";
+
+const ERROS_COMUNICACAO: Record<string, string> = {
+  dadosInvalidos: "Verifique assunto, mensagem e o público-alvo.",
+  alvoInvalido: "Escolha um público-alvo válido.",
+  naoEncontrado: "Comunicação não encontrada.",
+};
 
 const TOM_ENVIO: Record<string, Tom> = {
   RASCUNHO: "neutro",

@@ -25,13 +25,8 @@ const ERROR_MSG: Record<string, string> = {
   fail: "Não foi possível concluir.",
 };
 
-export default async function InventarioPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
-}) {
+export default async function InventarioPage() {
   const { tenant } = await requireSessionTenant("/dashboard/inventario");
-  const params = await searchParams;
 
   const counts = await prisma.inventoryCount.findMany({
     where: { tenantId: tenant.id },

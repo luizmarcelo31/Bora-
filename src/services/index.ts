@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { paymentLabel } from '@/lib/payments';
-import { Prisma, Sale, StatusVenda, StockMovement, TipoCategoria } from '@prisma/client';
+import { Prisma, Sale, StatusVenda, TipoCategoria } from '@prisma/client';
 import {
   CreateProductInput,
   CreateSaleInput,
@@ -9,7 +9,6 @@ import {
   ValidationError,
   ValidationErrorType,
   calculateMargin,
-  centsToReais,
 } from '@/lib/validators';
 
 // Defaults iguais aos da tela de Configurações quando ainda não há linha salva.
@@ -224,7 +223,7 @@ export class ProductService {
   }
 
   static async deleteProduct(tenantId: number, productId: number) {
-    const product = await this.getProduct(tenantId, productId);
+    await this.getProduct(tenantId, productId);
 
     return prisma.product.update({
       where: { id: productId },

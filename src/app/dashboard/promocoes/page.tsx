@@ -27,13 +27,8 @@ const ERROR_MSG: Record<string, string> = {
   fail: "Não foi possível concluir. Tente novamente.",
 };
 
-export default async function PromocoesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; ok?: string; q?: string }>;
-}) {
+export default async function PromocoesPage() {
   const { tenant } = await requireSessionTenant("/dashboard/promocoes");
-  const params = await searchParams;
 
   const [promotions, products] = await Promise.all([
     prisma.promotion.findMany({

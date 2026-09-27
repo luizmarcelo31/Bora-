@@ -12,8 +12,9 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { updateProductAction } from "./actions";
+import { updateProductAction, uploadProductImageAction, removeProductImageAction } from "./actions";
 import { centsToReais } from "@/lib/validators";
+import { Package } from "lucide-react";
 import { SelectField } from "@/components/ui/select-field";
 
 type ProductLike = {
@@ -25,6 +26,7 @@ type ProductLike = {
   price: number;
   cost: number | null;
   category: string | null;
+  imageUrl: string | null;
 };
 
 export function EditProductDialog({
@@ -112,6 +114,62 @@ export function EditProductDialog({
             </Button>
           </div>
         </form>
+        <div className="flex items-center gap-3 rounded-lg border p-3">
+          {product.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- preview remoto do Storage, sem remotePatterns
+            <img
+              src={product.imageUrl}
+              alt={`Foto de ${product.name}`}
+              className="size-14 shrink-0 rounded-lg border object-cover"
+            />
+          ) : (
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+              <Package className="size-5" />
+            </div>
+          )}
+          <form
+            action={async (formData: FormData) => {
+              setPending(true);
+              try {
+                await uploadProductImageAction(formData);
+              } finally {
+                setPending(false);
+              }
+            }}
+            className="flex flex-1 flex-wrap items-center gap-2"
+          >
+            <input type="hidden" name="productId" value={product.id} />
+            <input
+              type="file"
+              name="imagem"
+              accept="image/jpeg,image/png,image/webp"
+              required
+              disabled={pending}
+              className="min-w-0 flex-1 text-xs text-muted-foreground file:mr-2 file:rounded-md file:border file:bg-muted file:px-2 file:py-1 file:text-xs"
+            />
+            <Button type="submit" size="sm" variant="outline" disabled={pending}>
+              {pending ? "Enviando..." : "Enviar foto"}
+            </Button>
+          </form>
+          {product.imageUrl ? (
+            <form
+              action={async (formData: FormData) => {
+                setPending(true);
+                try {
+                  await removeProductImageAction(formData);
+                } finally {
+                  setPending(false);
+                }
+              }}
+            >
+              <input type="hidden" name="productId" value={product.id} />
+              <Button type="submit" size="sm" variant="ghost" disabled={pending}>
+                Remover
+              </Button>
+            </form>
+          ) : null}
+        </div>
+        <p className="text-xs text-muted-foreground">JPG, PNG ou WebP até 2MB.</p>
       </DialogContent>
     </Dialog>
   );

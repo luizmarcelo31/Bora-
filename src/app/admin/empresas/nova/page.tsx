@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createTenantAction } from "@/app/admin/actions";
-import { VOLTAR_EMPRESAS } from "../actions";
+import { VOLTAR_EMPRESAS } from "../mensagens";
 
 /**
  * Cadastro de empresa em página própria, e não embutido na listagem.

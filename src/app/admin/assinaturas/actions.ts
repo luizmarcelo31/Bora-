@@ -1,33 +1,14 @@
+"use server";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { registrarAuditoriaPlataforma } from "@/lib/platform-audit";
+import {
+  podeTransicionarAssinatura,
+} from "@/lib/plataforma";
 import type { MotivoCancelamento, StatusAssinatura } from "@prisma/client";
-
-/**
- * Transições de assinatura. Uma assinatura nunca é apagada: cancelar
- * registra o cancelamento e a data, senão o histórico de receita fica
- * sem rastro no dia em que a pessoa mais precisa dele.
- */
-const TRANSICOES: Record<StatusAssinatura, StatusAssinatura[]> = {
-  EXPERIMENTACAO: ["ATIVA", "SUSPENSA", "CANCELADA"],
-  ATIVA: ["PENDENTE_PAGAMENTO", "SUSPENSA", "CANCELADA"],
-  PENDENTE_PAGAMENTO: ["ATIVA", "SUSPENSA", "CANCELADA"],
-  SUSPENSA: ["ATIVA", "CANCELADA"],
-  CANCELADA: ["ATIVA", "ARQUIVADA"],
-  ARQUIVADA: [],
-};
-
-export function podeTransicionarAssinatura(de: StatusAssinatura, para: StatusAssinatura) {
-  return TRANSICOES[de]?.includes(para) ?? false;
-}
-
-const ERROS: Record<string, string> = {
-  naoEncontrada: "Assinatura não encontrada.",
-  transicaoInvalida: "Essa mudança não é permitida a partir do estado atual.",
-  motivoObrigatorio: "Informe o motivo.",
-};
 
 export async function mudarStatusAssinaturaAction(formData: FormData) {
   const admin = await requireSuperAdmin();
@@ -83,5 +64,3 @@ export async function mudarStatusAssinaturaAction(formData: FormData) {
   revalidatePath("/admin/assinaturas");
   redirect("/admin/assinaturas?ok=1");
 }
-
-export { ERROS as ERROS_ASSINATURA, TRANSICOES as TRANSICOES_ASSINATURA };

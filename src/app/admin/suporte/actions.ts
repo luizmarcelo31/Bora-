@@ -1,18 +1,16 @@
+"use server";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { registrarAuditoriaPlataforma } from "@/lib/platform-audit";
-import type { PrioridadeTicket, StatusTicket } from "@prisma/client";
-
-/** Prazo de resposta por prioridade, em horas. */
-const SLA_HORAS: Record<PrioridadeTicket, number> = {
-  CRITICA: 1,
-  ALTA: 4,
-  MEDIA: 8,
-  BAIXA: 24,
-};
+import {
+  calcularVencimentoSla,
+  transicaoTicketValida,
+} from "@/lib/plataforma";
+import type { StatusTicket } from "@prisma/client";
 
 const ticketSchema = z.object({
   tenantId: z.coerce.number().int().positive("Selecione a empresa"),
@@ -20,13 +18,6 @@ const ticketSchema = z.object({
   description: z.string().min(10, "Descreva o problema com mais detalhes").max(5000),
   priority: z.enum(["BAIXA", "MEDIA", "ALTA", "CRITICA"]).default("MEDIA"),
 });
-
-const ERROS: Record<string, string> = {
-  tenantInvalida: "Selecione a empresa.",
-  dadosInvalidos: "Verifique o assunto, a descrição e a prioridade.",
-  naoEncontrado: "Ticket não encontrado.",
-  transicaoInvalida: "Essa mudança de situação não é permitida.",
-};
 
 export async function abrirTicketAction(formData: FormData) {
   const admin = await requireSuperAdmin();
@@ -45,8 +36,7 @@ export async function abrirTicketAction(formData: FormData) {
   });
   if (!empresa) redirect("/admin/suporte?error=tenantInvalida");
 
-  const sla = new Date();
-  sla.setHours(sla.getHours() + SLA_HORAS[parsed.data.priority]);
+  const sla = calcularVencimentoSla(new Date(), parsed.data.priority);
 
   const ticket = await prisma.ticket.create({
     data: {
@@ -77,14 +67,6 @@ export async function abrirTicketAction(formData: FormData) {
   redirect("/admin/suporte?ok=1");
 }
 
-const TRANSICOES: Record<StatusTicket, StatusTicket[]> = {
-  ABERTO: ["EM_ANALISE", "AGUARDANDO_CLIENTE", "FECHADO"],
-  EM_ANALISE: ["AGUARDANDO_CLIENTE", "RESOLVIDO", "FECHADO"],
-  AGUARDANDO_CLIENTE: ["EM_ANALISE", "RESOLVIDO", "FECHADO"],
-  RESOLVIDO: ["EM_ANALISE", "FECHADO"],
-  FECHADO: ["ABERTO"],
-};
-
 export async function mudarStatusTicketAction(formData: FormData) {
   const admin = await requireSuperAdmin();
 
@@ -94,7 +76,7 @@ export async function mudarStatusTicketAction(formData: FormData) {
 
   const ticket = await prisma.ticket.findUnique({ where: { id } });
   if (!ticket) redirect("/admin/suporte?error=naoEncontrado");
-  if (!TRANSICOES[ticket.status]?.includes(para)) {
+  if (!transicaoTicketValida(ticket.status, para)) {
     redirect("/admin/suporte?error=transicaoInvalida");
   }
 
@@ -141,5 +123,3 @@ export async function responderTicketAction(formData: FormData) {
   revalidatePath("/admin/suporte");
   redirect("/admin/suporte?ok=1");
 }
-
-export { ERROS as ERROS_TICKET, SLA_HORAS, TRANSICOES as TRANSICOES_TICKET };

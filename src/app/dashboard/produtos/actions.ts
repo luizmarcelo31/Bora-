@@ -7,6 +7,7 @@ import { ProductService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { createProductSchema, reaisToCents, ValidationError } from "@/lib/validators";
+import { ErroImagem, enviarImagemProduto, removerImagemProduto } from "@/lib/storage";
 
 function toCents(raw: FormDataEntryValue | null): number | undefined {
   if (raw === null) return undefined;
@@ -99,6 +100,127 @@ export async function toggleProductAction(formData: FormData) {
   });
   revalidatePath("/dashboard/produtos");
   redirect("/dashboard/produtos?ok=1");
+}
+
+async function exigirEdicaoProduto(productId: number) {
+  const { tenant, dbUser } = await requireSessionTenant("/dashboard/produtos");
+  try {
+    requirePermission(dbUser.role as Funcao, "products.update");
+  } catch {
+    redirect("/dashboard/produtos?error=forbidden");
+  }
+  if (!productId) redirect("/dashboard/produtos?error=invalid");
+  try {
+    await ProductService.getProduct(tenant.id, productId);
+  } catch {
+    redirect("/dashboard/produtos?error=not_found");
+  }
+  return { tenant, dbUser };
+}
+
+/** Upload da foto do produto. Arquivo vai ao Storage; no banco fica só a URL. */
+export async function uploadProductImageAction(formData: FormData) {
+  const productId = parseInt(String(formData.get("productId") ?? "0"), 10);
+  const { tenant, dbUser } = await exigirEdicaoProduto(productId);
+
+  const file = formData.get("imagem");
+  if (!(file instanceof File) || file.size === 0) {
+    redirect("/dashboard/produtos?error=arquivo");
+  }
+
+  let url: string;
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/service");
+    url = await enviarImagemProduto({
+      storage: createServiceClient().storage,
+      tenantId: tenant.id,
+      productId,
+      file,
+    });
+  } catch (e) {
+    if (e instanceof ErroImagem) {
+      if (e.codigo === "TIPO" || e.codigo === "TAMANHO" || e.codigo === "VAZIA") {
+        redirect("/dashboard/produtos?error=arquivo");
+      }
+      if (e.codigo === "ENVIO") redirect("/dashboard/produtos?error=storage");
+    }
+    console.error("[uploadProductImageAction] falha inesperada", {
+      tenantId: tenant.id,
+      productId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+    redirect("/dashboard/produtos?error=fail");
+  }
+
+  const anterior = await ProductService.getProduct(tenant.id, productId);
+  await ProductService.updateProduct(tenant.id, productId, { imageUrl: url });
+  if (anterior.imageUrl && anterior.imageUrl !== url) {
+    try {
+      const { createServiceClient } = await import("@/lib/supabase/service");
+      await removerImagemProduto({
+        storage: createServiceClient().storage,
+        tenantId: tenant.id,
+        imageUrl: anterior.imageUrl,
+      });
+    } catch (e) {
+      console.error("[uploadProductImageAction] limpeza da foto antiga falhou", {
+        tenantId: tenant.id,
+        productId,
+        cause: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  const { logAudit } = await import("@/lib/audit");
+  await logAudit({
+    tenantId: tenant.id,
+    action: "update",
+    entity: "product",
+    entityId: productId,
+    userId: dbUser.id,
+    userEmail: dbUser.email,
+    details: "Foto do produto atualizada",
+  });
+
+  revalidatePath("/dashboard/produtos");
+  redirect("/dashboard/produtos?ok=imagem");
+}
+
+/** Remove a foto: apaga do Storage (best-effort) e limpa a URL no banco. */
+export async function removeProductImageAction(formData: FormData) {
+  const productId = parseInt(String(formData.get("productId") ?? "0"), 10);
+  const { tenant, dbUser } = await exigirEdicaoProduto(productId);
+
+  const produto = await ProductService.getProduct(tenant.id, productId);
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/service");
+    await removerImagemProduto({
+      storage: createServiceClient().storage,
+      tenantId: tenant.id,
+      imageUrl: produto.imageUrl,
+    });
+  } catch (e) {
+    console.error("[removeProductImageAction] storage falhou", {
+      tenantId: tenant.id,
+      productId,
+      cause: e instanceof Error ? e.message : String(e),
+    });
+  }
+  await ProductService.updateProduct(tenant.id, productId, { imageUrl: "" });
+
+  const { logAudit } = await import("@/lib/audit");
+  await logAudit({
+    tenantId: tenant.id,
+    action: "update",
+    entity: "product",
+    entityId: productId,
+    userId: dbUser.id,
+    userEmail: dbUser.email,
+    details: "Foto do produto removida",
+  });
+
+  revalidatePath("/dashboard/produtos");
+  redirect("/dashboard/produtos?ok=imagem");
 }
 
 export async function updateProductAction(formData: FormData) {

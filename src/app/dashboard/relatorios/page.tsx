@@ -103,7 +103,6 @@ export default async function RelatoriosPage({
       take: 500,
     }),
   ]);
-  const salesTotal = periodSales.reduce((s, v) => s + v.total, 0);
   const salesCount = await prisma.sale.count({ where: salesWhere });
   const totalPages = Math.max(1, Math.ceil(salesCount / PAGE_SIZE));
 

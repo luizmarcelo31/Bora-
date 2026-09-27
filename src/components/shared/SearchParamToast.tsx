@@ -47,10 +47,6 @@ function SearchParamToastInner({
   const router = useRouter();
   const seen = useRef<string | null>(null);
 
-  // Guarda a referência mais recente sem re-disparar o efeito.
-  const latest = useRef({ okText, okMap, errorMap, fallbackError });
-  latest.current = { okText, okMap, errorMap, fallbackError };
-
   useEffect(() => {
     const error = searchParams.get("error");
     const ok = searchParams.get("ok");
@@ -59,15 +55,13 @@ function SearchParamToastInner({
     if (seen.current === key) return;
     seen.current = key;
 
-    const { okText: ot, okMap: om, errorMap: em, fallbackError: fe } =
-      latest.current;
     if (error) {
-      toast.error(em?.[error] ?? fe);
-    } else if (ok && (ot || om?.[ok])) {
-      toast.success(om?.[ok] ?? ot!.replace("{v}", ok));
+      toast.error(errorMap?.[error] ?? fallbackError);
+    } else if (ok && (okText || okMap?.[ok])) {
+      toast.success(okMap?.[ok] ?? okText!.replace("{v}", ok));
     }
     router.replace(pathname, { scroll: false });
-  }, [searchParams, pathname, router]);
+  }, [searchParams, pathname, router, okText, okMap, errorMap, fallbackError]);
 
   return null;
 }

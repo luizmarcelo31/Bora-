@@ -41,7 +41,8 @@ import {
   acaoAuditoriaLabel,
 } from "@/lib/labels";
 import type { StatusEmpresa } from "@prisma/client";
-import { alterarStatusEmpresaAction, MENSAGEM_EMPRESA } from "../actions";
+import { alterarStatusEmpresaAction } from "../actions";
+import { MENSAGEM_EMPRESA } from "../mensagens";
 
 /** Ações oferecidas a partir do estado atual, respeitando a máquina de estados. */
 const PROXIMOS: Record<StatusEmpresa, { status: StatusEmpresa; rotulo: string; destrutivo?: boolean }[]> = {

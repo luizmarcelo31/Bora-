@@ -39,8 +39,8 @@ async function main() {
     SaleService.createSale(tenantId, payload),
     SaleService.createSale(tenantId, payload),
   ]);
-  console.log("r1", r1.status, r1.status === "fulfilled" ? `id=${(r1.value as any).id}` : (r1.reason as Error).message.slice(0,120));
-  console.log("r2", r2.status, r2.status === "fulfilled" ? `id=${(r2.value as any).id}` : (r2.reason as Error).message.slice(0,120));
+  console.log("r1", r1.status, r1.status === "fulfilled" ? `id=${r1.value.id}` : (r1.reason as Error).message.slice(0,120));
+  console.log("r2", r2.status, r2.status === "fulfilled" ? `id=${r2.value.id}` : (r2.reason as Error).message.slice(0,120));
 
   const afterSale = await prisma.sale.count({ where: { tenantId } });
   const afterFin = await prisma.financialMovement.count({ where: { tenantId, category: "Vendas PDV" } });

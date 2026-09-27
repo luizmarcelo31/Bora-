@@ -34,6 +34,8 @@ const ERROR_MSG: Record<string, string> = {
   duplicate_barcode: "Código de barras já existe nesta empresa.",
   not_found: "Produto não encontrado.",
   forbidden: "Seu role não tem permissão para esta ação.",
+  arquivo: "Arquivo inválido. Use JPG, PNG ou WebP até 2MB.",
+  storage: "Storage não configurado. Veja docs/STORAGE.md.",
   fail: "Não foi possível concluir. Tente novamente.",
 };
 
@@ -76,7 +78,7 @@ export default async function ProdutosPage({
         badge={tenant.name}
         description="Catálogo, estoque e status — com filtros e edição inline."
       />
-      <SearchParamToast okText="Produto criado com estoque zerado." errorMap={ERROR_MSG} />
+      <SearchParamToast okText="Produto criado com estoque zerado." okMap={{ imagem: "Foto do produto atualizada." }} errorMap={ERROR_MSG} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="Total" value={String(total)} hint={`${ativos} ativos`} />
@@ -181,6 +183,7 @@ export default async function ProdutosPage({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Foto</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Preço</TableHead>
@@ -196,6 +199,21 @@ export default async function ProdutosPage({
               const status = getStockStatus(qty, min);
               return (
               <TableRow key={p.id}>
+                <TableCell>
+                  {p.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- miniatura remota do Storage, sem remotePatterns
+                    <img
+                      src={p.imageUrl}
+                      alt={`Foto de ${p.name}`}
+                      className="size-10 rounded-lg border object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex size-10 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+                      <Package className="size-4" />
+                    </div>
+                  )}
+                </TableCell>
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>{p.category ?? "—"}</TableCell>
                 <TableCell className="tabular-nums">{formatCurrency(p.price)}</TableCell>
@@ -218,6 +236,7 @@ export default async function ProdutosPage({
                         price: p.price,
                         cost: p.cost,
                         category: p.category,
+                        imageUrl: p.imageUrl,
                       }}
                       categories={productCategories}
                     />

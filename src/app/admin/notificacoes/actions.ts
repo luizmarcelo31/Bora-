@@ -1,3 +1,5 @@
+"use server";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -13,12 +15,6 @@ const comunicacaoSchema = z.object({
   targetRef: z.string().optional(),
   enviarAgora: z.coerce.boolean().default(false),
 });
-
-const ERROS: Record<string, string> = {
-  dadosInvalidos: "Verifique assunto, mensagem e o público-alvo.",
-  alvoInvalido: "Escolha um público-alvo válido.",
-  naoEncontrado: "Comunicação não encontrada.",
-};
 
 export async function salvarComunicacaoAction(formData: FormData) {
   const admin = await requireSuperAdmin();
@@ -87,5 +83,3 @@ export async function salvarComunicacaoAction(formData: FormData) {
   revalidatePath("/admin/notificacoes");
   redirect("/admin/notificacoes?ok=1");
 }
-
-export { ERROS as ERROS_COMUNICACAO };

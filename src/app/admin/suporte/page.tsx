@@ -28,7 +28,15 @@ import {
 } from "@/lib/labels";
 import type { PrioridadeTicket, StatusTicket } from "@prisma/client";
 import { AdminFilterBar } from "@/components/admin/admin-filter-bar";
-import { ERROS_TICKET, mudarStatusTicketAction, abrirTicketAction } from "./actions";
+import { slaVencido } from "@/lib/plataforma";
+import { mudarStatusTicketAction, abrirTicketAction } from "./actions";
+
+const ERROS_TICKET: Record<string, string> = {
+  tenantInvalida: "Selecione a empresa.",
+  dadosInvalidos: "Verifique o assunto, a descrição e a prioridade.",
+  naoEncontrado: "Ticket não encontrado.",
+  transicaoInvalida: "Essa mudança de situação não é permitida.",
+};
 
 const FILTROS: { valor: StatusTicket; rotulo: string }[] = [
   { valor: "ABERTO", rotulo: "Abertos" },
@@ -38,16 +46,10 @@ const FILTROS: { valor: StatusTicket; rotulo: string }[] = [
   { valor: "FECHADO", rotulo: "Fechados" },
 ];
 
-function slaVencido(sla: Date | null, status: StatusTicket) {
-  if (!sla) return false;
-  if (status === "RESOLVIDO" || status === "FECHADO") return false;
-  return sla.getTime() < Date.now();
-}
-
 export default async function SuportePage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; prioridade?: string; error?: string; ok?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; prioridade?: string; pagina?: string; error?: string; ok?: string }>;
 }) {
   await requireSuperAdmin();
   const params = await searchParams;
@@ -60,15 +62,40 @@ export default async function SuportePage({
   )
     ? (params.prioridade as PrioridadeTicket)
     : undefined;
+  const q = (params.q ?? "").trim();
+  const pagina = Math.max(1, Number(params.pagina ?? 1) || 1);
+  const POR_PAGINA = 20;
 
-  const [tickets, empresas, contagens] = await Promise.all([
+  const where = {
+    ...(status ? { status } : {}),
+    ...(prioridade ? { priority: prioridade } : {}),
+    ...(q
+      ? {
+          OR: [
+            { subject: { contains: q, mode: "insensitive" as const } },
+            { description: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+
+  const comQuery = (p: number) => {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (status) sp.set("status", status);
+    if (prioridade) sp.set("prioridade", prioridade);
+    if (p > 1) sp.set("pagina", String(p));
+    const s = sp.toString();
+    return s ? `?${s}` : "";
+  };
+
+  const [total, tickets, empresas, contagens] = await Promise.all([
+    prisma.ticket.count({ where }),
     prisma.ticket.findMany({
-      where: {
-        ...(status ? { status } : {}),
-        ...(prioridade ? { priority: prioridade } : {}),
-      },
+      where,
       orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-      take: 100,
+      skip: (pagina - 1) * POR_PAGINA,
+      take: POR_PAGINA,
       include: { tenant: { select: { id: true, name: true } }, _count: { select: { messages: true } } },
     }),
     prisma.tenant.findMany({
@@ -155,8 +182,16 @@ export default async function SuportePage({
         <div className="lg:col-span-2">
           <TableCard
             title="Chamados"
-            description="Prioridade mais alta primeiro."
-            footer={`${tickets.length} ticket(s)`}
+            description={
+              total === 0
+                ? "Nenhum chamado no filtro atual."
+                : `Página ${pagina} de ${Math.max(1, Math.ceil(total / POR_PAGINA))} · ${total} ticket(s). Prioridade mais alta primeiro.`
+            }
+            footer={
+              total === 0
+                ? undefined
+                : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
+            }
           >
             <AdminFilterBar
               placeholder="Filtrar por empresa ou assunto…"
@@ -253,6 +288,32 @@ export default async function SuportePage({
                 </TableBody>
               </Table>
             )}
+
+            {total > POR_PAGINA ? (
+              <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
+                {pagina > 1 ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`/admin/suporte${comQuery(pagina - 1)}`}>Anterior</a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Anterior
+                  </Button>
+                )}
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {pagina} de {Math.max(1, Math.ceil(total / POR_PAGINA))}
+                </span>
+                {pagina < Math.max(1, Math.ceil(total / POR_PAGINA)) ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`/admin/suporte${comQuery(pagina + 1)}`}>Próxima</a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Próxima
+                  </Button>
+                )}
+              </nav>
+            ) : null}
           </TableCard>
         </div>
       </div>

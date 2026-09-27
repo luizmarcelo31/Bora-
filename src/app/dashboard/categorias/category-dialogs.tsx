@@ -65,7 +65,7 @@ export function DeleteCategoryDialog({ id, name }: { id: number; name: string })
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir "{name}"?</AlertDialogTitle>
+          <AlertDialogTitle>Excluir &quot;{name}&quot;?</AlertDialogTitle>
           <AlertDialogDescription>
             Se houver produtos ou lançamentos usando esta categoria, ela será apenas inativada para preservar o histórico. Caso contrário será removida.
           </AlertDialogDescription>

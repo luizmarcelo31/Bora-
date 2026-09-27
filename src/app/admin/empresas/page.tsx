@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Building2, Users, ShoppingCart, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
+import { calcularMRR } from "@/lib/plataforma";
 import {
   LABELS,
   labelDe,
@@ -98,13 +99,11 @@ export default async function EmpresasPage({
   const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
 
   // MRR normaliza o plano anual para o mês, senão a métrica mente.
-  const mrr = assinaturasAtivas.reduce(
-    (s, a) =>
-      s +
-      (a.billingCycle === "ANUAL"
-        ? Math.round(a.plan.monthlyPrice / 12)
-        : a.plan.monthlyPrice),
-    0
+  const mrr = calcularMRR(
+    assinaturasAtivas.map((a) => ({
+      billingCycle: a.billingCycle,
+      monthlyPrice: a.plan.monthlyPrice,
+    }))
   );
 
   // Preserva os filtros ativos ao trocar de página.

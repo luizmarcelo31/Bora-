@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { CreditCard, TrendingUp, AlertTriangle, PauseCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
+import { calcularMRR, TRANSICOES_ASSINATURA } from "@/lib/plataforma";
 import {
   cicloCobrancaLabel,
   labelDe,
@@ -26,7 +27,13 @@ import {
 } from "@/lib/labels";
 import type { StatusAssinatura } from "@prisma/client";
 import { AdminFilterBar } from "@/components/admin/admin-filter-bar";
-import { ERROS_ASSINATURA, mudarStatusAssinaturaAction, TRANSICOES_ASSINATURA } from "./actions";
+import { mudarStatusAssinaturaAction } from "./actions";
+
+const ERROS_ASSINATURA: Record<string, string> = {
+  naoEncontrada: "Assinatura não encontrada.",
+  transicaoInvalida: "Essa mudança não é permitida a partir do estado atual.",
+  motivoObrigatorio: "Informe o motivo.",
+};
 
 const FILTROS: { valor: StatusAssinatura; rotulo: string }[] = [
   { valor: "ATIVA", rotulo: "Ativas" },
@@ -40,7 +47,7 @@ const FILTROS: { valor: StatusAssinatura; rotulo: string }[] = [
 export default async function AssinaturasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; error?: string; ok?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; pagina?: string; error?: string; ok?: string }>;
 }) {
   await requireSuperAdmin();
   const params = await searchParams;
@@ -48,11 +55,31 @@ export default async function AssinaturasPage({
   const status = params.status && params.status in Object.fromEntries(
     FILTROS.map((f) => [f.valor, f.valor])
   ) ? (params.status as StatusAssinatura) : undefined;
+  const q = (params.q ?? "").trim();
+  const pagina = Math.max(1, Number(params.pagina ?? 1) || 1);
+  const POR_PAGINA = 20;
 
-  const [assinaturas, totais, pendentes] = await Promise.all([
+  const where = {
+    ...(status ? { status } : {}),
+    ...(q ? { tenant: { name: { contains: q, mode: "insensitive" as const } } } : {}),
+  };
+
+  const comQuery = (p: number) => {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (status) sp.set("status", status);
+    if (p > 1) sp.set("pagina", String(p));
+    const s = sp.toString();
+    return s ? `?${s}` : "";
+  };
+
+  const [total, assinaturas, totais, pendentes] = await Promise.all([
+    prisma.subscription.count({ where }),
     prisma.subscription.findMany({
-      where: status ? { status } : {},
+      where,
       orderBy: { renewsAt: "asc" },
+      skip: (pagina - 1) * POR_PAGINA,
+      take: POR_PAGINA,
       include: {
         tenant: { select: { id: true, name: true } },
         plan: { select: { name: true, monthlyPrice: true } },
@@ -66,10 +93,11 @@ export default async function AssinaturasPage({
   ]);
 
   const porStatus = new Map(totais.map((t) => [t.status, t._count._all]));
-  const mrr = pendentes.reduce(
-    (s, a) =>
-      s + (a.billingCycle === "ANUAL" ? Math.round(a.plan.monthlyPrice / 12) : a.plan.monthlyPrice),
-    0
+  const mrr = calcularMRR(
+    pendentes.map((a) => ({
+      billingCycle: a.billingCycle,
+      monthlyPrice: a.plan.monthlyPrice,
+    }))
   );
 
   return (
@@ -100,8 +128,16 @@ export default async function AssinaturasPage({
 
       <TableCard
         title="Assinaturas"
-        description="Renovação mais próxima primeiro."
-        footer={`${assinaturas.length} assinatura(s)`}
+        description={
+          total === 0
+            ? "Nenhuma assinatura no filtro atual."
+            : `Página ${pagina} de ${Math.max(1, Math.ceil(total / POR_PAGINA))} · ${total} assinatura(s). Renovação mais próxima primeiro.`
+        }
+        footer={
+          total === 0
+            ? undefined
+            : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
+        }
       >
         <AdminFilterBar
           placeholder="Filtrar por empresa…"
@@ -204,6 +240,32 @@ export default async function AssinaturasPage({
             </TableBody>
           </Table>
         )}
+
+        {total > POR_PAGINA ? (
+          <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
+            {pagina > 1 ? (
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/admin/assinaturas${comQuery(pagina - 1)}`}>Anterior</a>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" disabled>
+                Anterior
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {pagina} de {Math.max(1, Math.ceil(total / POR_PAGINA))}
+            </span>
+            {pagina < Math.max(1, Math.ceil(total / POR_PAGINA)) ? (
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/admin/assinaturas${comQuery(pagina + 1)}`}>Próxima</a>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" disabled>
+                Próxima
+              </Button>
+            )}
+          </nav>
+        ) : null}
       </TableCard>
     </main>
   );

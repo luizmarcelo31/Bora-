@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/shared/StatusPill";
-import { ERROS_CONFIG, salvarConfiguracoesAction } from "./actions";
+import { salvarConfiguracoesAction } from "./actions";
 import { labelDe, statusIntegracaoLabel } from "@/lib/labels";
 import type { Tom } from "@/lib/labels";
 
@@ -14,6 +14,10 @@ const TOM_INTEGRACAO: Record<string, Tom> = {
   DESCONECTADA: "neutro",
   ERRO: "critico",
   PENDENTE: "atencao",
+};
+
+const ERROS_CONFIG: Record<string, string> = {
+  dadosInvalidos: "Verifique os valores informados.",
 };
 
 export default async function ConfiguracoesPage({

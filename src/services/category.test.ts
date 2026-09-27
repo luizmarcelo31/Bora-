@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { CategoryService } from "./index";
-import { ValidationError, ValidationErrorType } from "@/lib/validators";
+import { ValidationError } from "@/lib/validators";
 
 // vi.mock é hoisted acima dos imports, então os mocks precisam nascer em
 // vi.hoisted() — senão a factory roda na TDZ e quebra com

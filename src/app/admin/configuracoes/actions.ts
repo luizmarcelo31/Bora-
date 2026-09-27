@@ -1,3 +1,5 @@
+"use server";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -13,10 +15,6 @@ const schema = z.object({
   maintenanceMode: z.coerce.boolean(),
   auditRetentionDays: z.coerce.number().int().min(30).max(3650),
 });
-
-const ERROS: Record<string, string> = {
-  dadosInvalidos: "Verifique os valores informados.",
-};
 
 export async function salvarConfiguracoesAction(formData: FormData) {
   const admin = await requireSuperAdmin();
@@ -67,5 +65,3 @@ export async function salvarConfiguracoesAction(formData: FormData) {
   revalidatePath("/admin/configuracoes");
   redirect("/admin/configuracoes?ok=1");
 }
-
-export { ERROS as ERROS_CONFIG };

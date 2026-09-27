@@ -26,13 +26,8 @@ const ERROR_MSG: Record<string, string> = {
   fail: "Não foi possível concluir.",
 };
 
-export default async function ComprasPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
-}) {
+export default async function ComprasPage() {
   const { tenant } = await requireSessionTenant("/dashboard/compras");
-  const params = await searchParams;
 
   const [suppliers, purchases] = await Promise.all([
     prisma.supplier.findMany({

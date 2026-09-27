@@ -1,6 +1,8 @@
+"use server";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { MotivoCancelamento, StatusEmpresa } from "@prisma/client";
+import type { StatusEmpresa } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { registrarAuditoriaPlataforma, resumoEmpresa } from "@/lib/platform-audit";
@@ -21,16 +23,9 @@ const TRANSICOES: Record<StatusEmpresa, StatusEmpresa[]> = {
   ARQUIVADA: [],
 };
 
-export function podeTransicionar(de: StatusEmpresa, para: StatusEmpresa): boolean {
+function podeTransicionar(de: StatusEmpresa, para: StatusEmpresa): boolean {
   return TRANSICOES[de]?.includes(para) ?? false;
 }
-
-const MENSAGEM: Record<string, string> = {
-  naoEncontrada: "Empresa não encontrada.",
-  transicaoInvalida: "Essa mudança de situação não é permitida a partir do estado atual.",
-  motivoObrigatorio: "Informe o motivo da mudança.",
-  empresaArquivada: "Empresa arquivada não pode mais ser alterada.",
-};
 
 export async function alterarStatusEmpresaAction(formData: FormData) {
   const admin = await requireSuperAdmin();
@@ -121,13 +116,3 @@ export async function definirTrialEmpresaAction(formData: FormData) {
   revalidatePath(`/admin/empresas/${id}`);
   redirect(`/admin/empresas/${id}?ok=TRIAL`);
 }
-
-export { MENSAGEM as MENSAGEM_EMPRESA, MotivoCancelamento };
-
-/** Mensagens do formulário de nova empresa, em português claro. */
-export const VOLTAR_EMPRESAS = {
-  error: {
-    invalid: "Não foi possível criar a empresa. Verifique nome, email e telefone.",
-  },
-  ok: { created: "Empresa criada. Agora vincule o primeiro usuário a ela." },
-} as const;
