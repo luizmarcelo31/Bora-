@@ -167,14 +167,16 @@ export function PdvClient({
       {/* Operador — PIN para troca */}
       <div className="flex items-center justify-between bg-card rounded-lg px-4 py-2 border">
         <span className="text-sm font-medium">👤 {user.name}</span>
-        <Button variant="ghost" size="sm" onClick={() => setPinOpen(true)}>
-          🔒 Trocar operador
+        <Button variant="ghost" size="sm" onClick={() => setPinOpen(true)} className="hit-area-44" aria-label="Trocar operador">
+          <span aria-hidden="true">🔒</span> Trocar operador
         </Button>
       </div>
       {pinOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setPinOpen(false); setPinValue(""); setPinError(""); }}>
-          <div className="bg-card rounded-lg p-6 w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-lg p-4 sm:p-6 w-[calc(100%-2rem)] max-w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <CardTitle className="text-lg mb-4">Trocar operador</CardTitle>
+            <label className="flex flex-col gap-1 text-sm">
+              PIN do operador
             <Input
               type="password"
               placeholder="PIN do operador"
@@ -191,12 +193,13 @@ export function PdvClient({
                 }
               }}
             />
+            </label>
             {pinError && <span className="text-xs text-destructive">{pinError}</span>}
             <p className="text-xs text-muted-foreground mt-2">PIN: 1234 (demo)</p>
           </div>
         </div>
       )}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>Catálogo</CardTitle>
@@ -217,11 +220,14 @@ export function PdvClient({
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="sr-only">Buscar produto</span>
           <Input
             placeholder="Buscar produto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          </label>
           <ProductGrid products={filtered.map((p) => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, category: (p as unknown as { category?: string | null }).category ?? null, wholesalePrice: (p as unknown as { wholesalePrice?: number | null }).wholesalePrice ?? null, wholesaleMinQuantity: (p as unknown as { wholesaleMinQuantity?: number | null }).wholesaleMinQuantity ?? null }))} cart={cart} onQty={setQty} />
         </CardContent>
       </Card>
@@ -249,7 +255,7 @@ export function PdvClient({
               </ItemGroup>
             )}
             <p className="text-base font-semibold">Subtotal: {formatCurrency(subtotal)}</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-sm">
                 Pagamento
                 <ControlledSelect
@@ -271,7 +277,7 @@ export function PdvClient({
                 />
               </label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-sm">
                 Desconto (R$)
                 <div className="flex gap-1">
@@ -282,7 +288,8 @@ export function PdvClient({
                     type="button"
                     onClick={applyDiscount}
                     disabled={!discount || discountPending}
-                    className="whitespace-nowrap"
+                    className="whitespace-nowrap hit-area-44"
+                    aria-label={discountPending ? "Desconto aguardando senha" : "Autorizar desconto"}
                   >
                     {discountPending ? "🔒" : "🔑"}
                   </Button>

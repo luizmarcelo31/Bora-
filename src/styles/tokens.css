@@ -77,7 +77,7 @@
 
   /* --- Tipografia (título 22px → micro 10px) --- */
   --text-micro: 10px;
-  --text-xs: 10px;
+  --text-xs: 11px;
   --text-sm: 12px;
   --text-base: 14px;
   --text-lg: 16px;
@@ -180,7 +180,7 @@
 
   /* --- Tipografia (pesos mantidos, valores iguais ao light) --- */
   --text-micro: 10px;
-  --text-xs: 10px;
+  --text-xs: 11px;
   --text-sm: 12px;
   --text-base: 14px;
   --text-lg: 16px;

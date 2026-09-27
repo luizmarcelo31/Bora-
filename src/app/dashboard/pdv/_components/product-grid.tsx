@@ -85,13 +85,13 @@ export function ProductGrid({
                 <span className="text-xs text-muted-foreground">est. {p.stock}</span>
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" type="button" disabled={out && qty === 0} onClick={() => onQty(p.id, qty + 1)}>
+                <Button variant="outline" size="sm" type="button" className="hit-area-44" disabled={out && qty === 0} onClick={() => onQty(p.id, qty + 1)}>
                   <Plus className="size-3" /> Adicionar
                 </Button>
                 {qty > 0 ? (
                   <>
                     <span className="w-8 text-center text-sm tabular-nums">{qty}</span>
-                    <Button variant="outline" size="sm" type="button" onClick={() => onQty(p.id, qty - 1)}>
+                    <Button variant="outline" size="sm" type="button" className="hit-area-44" aria-label={`Remover um ${p.name}`} onClick={() => onQty(p.id, qty - 1)}>
                       <Minus className="size-3" />
                     </Button>
                   </>

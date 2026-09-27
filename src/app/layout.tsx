@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, Sora } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -30,6 +30,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BoraMais — SaaS de Gestão para Conveniências",
   description: "Gestão de produtos, estoque, PDV, caixa e financeiro para conveniências.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#C45C2E",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

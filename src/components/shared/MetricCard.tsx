@@ -51,7 +51,7 @@ export function MetricCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-1.5 pb-4">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="font-heading text-3xl font-semibold tabular-nums leading-none tracking-tight">
+          <div className="font-heading text-2xl font-semibold tabular-nums leading-none tracking-tight">
             {value}
           </div>
         </div>

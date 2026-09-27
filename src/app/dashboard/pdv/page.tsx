@@ -42,7 +42,7 @@ export default async function PdvPage() {
 const { products, cashboxes, todaysSales, user } = await getPdvPageData(tenant.id);
 
     return (
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
         <PageHeader title="PDV" badge={tenant.name} description="Ponto de venda da conveniência." />
         <SearchParamToast
           okText="Venda #{v} registrada com sucesso."

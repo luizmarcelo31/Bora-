@@ -30,7 +30,7 @@ export function EditInventoryDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="hit-area-44">
           Limites
         </Button>
       </DialogTrigger>
