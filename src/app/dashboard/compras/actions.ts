@@ -51,7 +51,7 @@ export async function createPurchaseAction(formData: FormData) {
         tenantId: tenant.id,
         supplierId,
         total,
-        status: "PENDING",
+        status: "PENDENTE",
       },
     });
   } catch (err) {
@@ -72,7 +72,7 @@ export async function receivePurchaseAction(formData: FormData) {
   try {
     await prisma.purchase.update({
       where: { id: purchaseId, tenantId: tenant.id },
-      data: { status: "RECEIVED", receivedAt: new Date() },
+      data: { status: "RECEBIDA", receivedAt: new Date() },
     });
   } catch (err) {
     console.error("[receivePurchaseAction]", err);

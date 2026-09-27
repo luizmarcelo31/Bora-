@@ -8,8 +8,8 @@ import {
 describe("redirect por role", () => {
   it("home: super admin → /admin, demais → /dashboard", () => {
     expect(getHomePathForRole("SUPER_ADMIN")).toBe("/admin");
-    expect(getHomePathForRole("OWNER")).toBe("/dashboard");
-    expect(getHomePathForRole("CASHIER")).toBe("/dashboard");
+    expect(getHomePathForRole("PROPRIETARIO")).toBe("/dashboard");
+    expect(getHomePathForRole("CAIXA")).toBe("/dashboard");
     expect(getHomePathForRole(null)).toBe("/dashboard");
     expect(getHomePathForRole(undefined)).toBe("/dashboard");
   });
@@ -33,10 +33,10 @@ describe("redirect por role", () => {
   });
 
   it("role comum nunca entra em /admin", () => {
-    expect(resolvePostLoginRedirect("OWNER", "/admin")).toBe("/dashboard");
-    expect(resolvePostLoginRedirect("OWNER", "/admin/empresas")).toBe("/dashboard");
-    expect(resolvePostLoginRedirect("CASHIER", "/dashboard/pdv")).toBe("/dashboard/pdv");
-    expect(resolvePostLoginRedirect("CASHIER", "/dashboard")).toBe("/dashboard");
-    expect(resolvePostLoginRedirect("STAFF", null)).toBe("/dashboard");
+    expect(resolvePostLoginRedirect("PROPRIETARIO", "/admin")).toBe("/dashboard");
+    expect(resolvePostLoginRedirect("PROPRIETARIO", "/admin/empresas")).toBe("/dashboard");
+    expect(resolvePostLoginRedirect("CAIXA", "/dashboard/pdv")).toBe("/dashboard/pdv");
+    expect(resolvePostLoginRedirect("CAIXA", "/dashboard")).toBe("/dashboard");
+    expect(resolvePostLoginRedirect("FUNCIONARIO", null)).toBe("/dashboard");
   });
 });

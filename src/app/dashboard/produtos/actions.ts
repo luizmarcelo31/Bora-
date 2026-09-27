@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { ProductService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -19,7 +19,7 @@ function toCents(raw: FormDataEntryValue | null): number | undefined {
 
 export async function createProductAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/produtos");
-  requirePermission(dbUser.role as Role, "products.create");
+  requirePermission(dbUser.role as Funcao, "products.create");
 
   const price = toCents(formData.get("price"));
   if (price === undefined) redirect("/dashboard/produtos?error=price");
@@ -70,7 +70,7 @@ export async function createProductAction(formData: FormData) {
 export async function toggleProductAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/produtos");
   try {
-    requirePermission(dbUser.role as Role, "products.update");
+    requirePermission(dbUser.role as Funcao, "products.update");
   } catch {
     redirect("/dashboard/produtos?error=forbidden");
   }
@@ -104,7 +104,7 @@ export async function toggleProductAction(formData: FormData) {
 export async function updateProductAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/produtos");
   try {
-    requirePermission(dbUser.role as Role, "products.update");
+    requirePermission(dbUser.role as Funcao, "products.update");
   } catch {
     redirect("/dashboard/produtos?error=forbidden");
   }

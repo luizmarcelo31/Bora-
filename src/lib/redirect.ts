@@ -1,12 +1,12 @@
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { isSuperAdmin } from "@/lib/roles";
 
 export const ADMIN_HOME = "/admin";
 export const TENANT_HOME = "/dashboard";
 
-/** Home padrão de cada role. Ponto único de verdade do roteamento por role. */
-export function getHomePathForRole(role: Role | null | undefined): string {
-  return isSuperAdmin(role) ? ADMIN_HOME : TENANT_HOME;
+/** Home padrao de cada funcao. Ponto unico de verdade do roteamento. */
+export function getHomePathForRole(funcao: Funcao | null | undefined): string {
+  return isSuperAdmin(funcao) ? ADMIN_HOME : TENANT_HOME;
 }
 
 /**
@@ -22,21 +22,21 @@ export function isSafeRedirect(target: string): boolean {
 }
 
 /**
- * Decide o destino pós-login respeitando o role:
- * - SUPER_ADMIN: só aceita destinos /admin* (qualquer outro → /admin).
- * - demais roles: só aceita destinos fora de /admin* (qualquer outro → /dashboard).
- * - "/dashboard" é o valor padrão do formulário: cai no home do role.
- * - destino ausente/inseguro: cai no home do role.
+ * Decide o destino pos-login respeitando a funcao:
+ * - SUPER_ADMIN: so aceita destinos /admin* (qualquer outro → /admin).
+ * - demais funcoes: so aceita destinos fora de /admin* (qualquer outro → /dashboard).
+ * - "/dashboard" e o valor padrao do formulario: cai no home da funcao.
+ * - destino ausente/inseguro: cai no home da funcao.
  */
 export function resolvePostLoginRedirect(
-  role: Role | null | undefined,
+  funcao: Funcao | null | undefined,
   rawNext: string | null | undefined
 ): string {
-  const fallback = getHomePathForRole(role);
+  const fallback = getHomePathForRole(funcao);
   const next = (rawNext ?? "").trim();
   if (!next || !isSafeRedirect(next)) return fallback;
 
-  if (isSuperAdmin(role)) {
+  if (isSuperAdmin(funcao)) {
     if (next === ADMIN_HOME || next.startsWith(`${ADMIN_HOME}/`)) return next;
     return ADMIN_HOME;
   }

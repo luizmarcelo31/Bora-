@@ -125,11 +125,11 @@ export default async function ComprasPage({
                 <TableCell className="font-medium">{p.supplier.name}</TableCell>
                 <TableCell className="tabular-nums">{formatCurrency(p.total)}</TableCell>
                 <TableCell>
-                  <StatusBadge status={p.status === "RECEIVED" ? "active" : "pending"} label={p.status} />
+                  <StatusBadge status={p.status === "RECEBIDA" ? "active" : "pending"} label={p.status} />
                 </TableCell>
                 <TableCell className="tabular-nums">{p.createdAt.toLocaleDateString('pt-BR')}</TableCell>
                 <TableCell>
-                  {p.status === "PENDING" && (
+                  {p.status === "PENDENTE" && (
                     <form action={receivePurchaseAction}>
                       <input type="hidden" name="purchaseId" value={p.id} />
                       <Button variant="outline" size="sm" type="submit">Confirmar recebimento</Button>

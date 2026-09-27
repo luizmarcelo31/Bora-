@@ -1,8 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { SettingsService } from "./index";
 
-const mockTenantSettingsFindUnique = vi.fn();
-const mockTenantSettingsUpsert = vi.fn();
+// Mesma razão de category.test.ts: a factory de vi.mock roda hoisted.
+const { mockTenantSettingsFindUnique, mockTenantSettingsUpsert } = vi.hoisted(() => ({
+  mockTenantSettingsFindUnique: vi.fn(),
+  mockTenantSettingsUpsert: vi.fn(),
+}));
 
 vi.mock("@/lib/db", () => ({
   prisma: {

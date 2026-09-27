@@ -48,7 +48,7 @@ export default async function ProdutosPage({
   const [allProducts, productCategories] = await Promise.all([
     ProductService.listProducts(tenant.id, { active: "all" }),
     prisma.category.findMany({
-      where: { tenantId: tenant.id, kind: "PRODUCT", active: true },
+      where: { tenantId: tenant.id, kind: "PRODUTO", active: true },
       orderBy: { name: "asc" },
     }),
   ]);

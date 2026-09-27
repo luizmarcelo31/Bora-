@@ -1,12 +1,13 @@
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
+import { funcaoLabel, LABELS } from "@/lib/labels";
 
 /**
- * Matriz de permissões por role (nível tenant).
- * Mantém o conceito da fundação: TENANT → TYPE → ROLE → PERMISSION.
+ * Matriz de permissoes por funcao (nivel empresa).
+ * Mantem o conceito da fundacao: EMPRESA → TIPO → FUNCAO → PERMISSAO.
  *
- * Convenção: recurso.ação (ex: "products.create").
+ * Convecao: recurso.acao (ex: "products.create").
  */
-export type Permission =
+export type Permissao =
   | "products.view"
   | "products.create"
   | "products.update"
@@ -26,7 +27,7 @@ export type Permission =
   | "tenants.manage"
   | "reports.view";
 
-const OWNER_PERMS: Permission[] = [
+const PERMISSOES_PROPRIETARIO: Permissao[] = [
   "products.view",
   "products.create",
   "products.update",
@@ -47,10 +48,10 @@ const OWNER_PERMS: Permission[] = [
   "reports.view",
 ];
 
-export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  SUPER_ADMIN: [...OWNER_PERMS],
-  OWNER: [...OWNER_PERMS],
-  MANAGER: [
+export const FUNCAO_PERMISSOES: Record<Funcao, Permissao[]> = {
+  SUPER_ADMIN: [...PERMISSOES_PROPRIETARIO],
+  PROPRIETARIO: [...PERMISSOES_PROPRIETARIO],
+  GERENTE: [
     "products.view",
     "products.create",
     "products.update",
@@ -66,24 +67,58 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "reports.view",
     "users.view",
   ],
-  FINANCIAL: ["financial.view", "financial.create", "reports.view", "sales.view"],
-  STOCK: [
+  FINANCEIRO: ["financial.view", "financial.create", "reports.view", "sales.view"],
+  ESTOQUISTA: [
     "products.view",
     "products.create",
     "products.update",
     "inventory.view",
     "inventory.move",
+    "reports.view",
   ],
-  CASHIER: ["products.view", "sales.view", "sales.create", "cashbox.view"],
-  STAFF: ["products.view", "sales.view"],
+  CAIXA: [
+    "products.view",
+    "sales.view",
+    "sales.create",
+    "cashbox.view",
+    "cashbox.open",
+    "cashbox.close",
+  ],
+  FUNCIONARIO: ["products.view", "inventory.view", "sales.view"],
 };
 
-export function can(role: Role, permission: Permission): boolean {
-  return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
+/** Rotulo humano da permissao (usado na matriz /admin/permissoes). */
+export const PERMISSAO_LABEL: Record<Permissao, string> = {
+  "products.view": "Ver produtos",
+  "products.create": "Criar produtos",
+  "products.update": "Editar produtos",
+  "products.delete": "Excluir produtos",
+  "inventory.view": "Ver estoque",
+  "inventory.move": "Movimentar estoque",
+  "sales.view": "Ver vendas",
+  "sales.create": "Registrar vendas",
+  "sales.cancel": "Cancelar vendas",
+  "cashbox.view": "Ver caixa",
+  "cashbox.open": "Abrir caixa",
+  "cashbox.close": "Fechar caixa",
+  "financial.view": "Ver financeiro",
+  "financial.create": "Lancar financeiro",
+  "users.view": "Ver usuarios",
+  "users.manage": "Gerenciar usuarios",
+  "tenants.manage": "Gerenciar empresas",
+  "reports.view": "Ver relatorios",
+};
+
+export function can(funcao: Funcao, permissao: Permissao): boolean {
+  return FUNCAO_PERMISSOES[funcao]?.includes(permissao) ?? false;
 }
 
-export function requirePermission(role: Role, permission: Permission): void {
-  if (!can(role, permission)) {
-    throw new Error(`Forbidden: role ${role} não possui ${permission}`);
+export function requirePermission(funcao: Funcao, permissao: Permissao): void {
+  if (!can(funcao, permissao)) {
+    throw new Error(
+      `Acesso negado: ${funcaoLabel[funcao]} nao pode ${PERMISSAO_LABEL[permissao].toLowerCase()}`
+    );
   }
 }
+
+export { funcaoLabel, LABELS };

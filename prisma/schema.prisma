@@ -21,6 +21,18 @@ model Tenant {
   active    Boolean @default(true)
   suspended Boolean @default(false)
 
+  // Ciclo de vida da empresa na plataforma (admin).
+  status           StatusEmpresa @default(ATIVA)
+  health           StatusSaude   @default(DESCONHECIDO)
+  trialEndsAt      DateTime?
+  lastActivityAt   DateTime?
+  archivedAt       DateTime?
+  suspendedAt      DateTime?
+  suspensionReason String?
+
+  subscription Subscription?
+  tickets      Ticket[]
+
   users              User[]
   products           Product[]
   inventory          Inventory[]
@@ -55,7 +67,7 @@ model User {
   email     String    @unique
   name      String
   password  String?
-  role      Role      @default(STAFF)
+  role      Funcao    @default(FUNCIONARIO)
   tenantId  Int
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   active    Boolean   @default(true)
@@ -72,14 +84,15 @@ model User {
   @@index([active])
 }
 
-enum Role {
+// Função do usuário dentro da empresa. SUPER_ADMIN é o nível plataforma.
+enum Funcao {
   SUPER_ADMIN
-  OWNER
-  MANAGER
-  FINANCIAL
-  STOCK
-  CASHIER
-  STAFF
+  PROPRIETARIO
+  GERENTE
+  FINANCEIRO
+  ESTOQUISTA
+  CAIXA
+  FUNCIONARIO
 }
 
 // ============================================================
@@ -157,7 +170,7 @@ model StockMovement {
   inventoryId Int
   inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
 
-  type     StockMovementType
+  type     TipoMovimentacaoEstoque
   quantity Int
   reason   String?
 
@@ -172,7 +185,7 @@ model StockMovement {
   @@index([createdAt])
 }
 
-enum StockMovementType {
+enum TipoMovimentacaoEstoque {
   ENTRADA
   SAIDA
   AJUSTE
@@ -198,13 +211,13 @@ model Sale {
   cashBoxId Int?
   cashBox   CashBox? @relation(fields: [cashBoxId], references: [id])
 
-  status SaleStatus @default(COMPLETED)
+  status StatusVenda @default(CONCLUIDA)
 
   subtotal Int
   discount Int @default(0)
   total    Int
 
-  paymentMethod PaymentMethod @default(CASH)
+  paymentMethod FormaPagamento @default(DINHEIRO)
 
   customerName  String?
   customerPhone String?
@@ -245,21 +258,21 @@ model SaleItem {
   @@index([productId])
 }
 
-enum SaleStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
+enum StatusVenda {
+  PENDENTE
+  CONCLUIDA
+  CANCELADA
 }
 
-enum PaymentMethod {
-  CASH
-  CARD
-  TRANSFER
+enum FormaPagamento {
+  DINHEIRO
+  CARTAO
+  TRANSFERENCIA
   PIX
-  CHECK
-  OTHER
-  CREDIT
-  DEBIT
+  CHEQUE
+  OUTRO
+  CREDITO
+  DEBITO
 }
 
 // ============================================================
@@ -273,7 +286,7 @@ model CashBox {
 
   name String
 
-  status CashBoxStatus @default(CLOSED)
+  status StatusCaixa @default(FECHADO)
 
   openingBalance Int  @default(0)
   currentBalance Int  @default(0)
@@ -294,9 +307,9 @@ model CashBox {
   @@index([status])
 }
 
-enum CashBoxStatus {
-  CLOSED
-  OPEN
+enum StatusCaixa {
+  FECHADO
+  ABERTO
 }
 
 // ============================================================
@@ -311,7 +324,7 @@ model FinancialMovement {
   cashBoxId Int?
   cashBox   CashBox? @relation(fields: [cashBoxId], references: [id])
 
-  type        FinancialMovementType
+  type        TipoMovimentacaoFinanceira
   category    String
   description String
 
@@ -332,7 +345,7 @@ model FinancialMovement {
   @@index([movementDate])
 }
 
-enum FinancialMovementType {
+enum TipoMovimentacaoFinanceira {
   RECEITA
   DESPESA
   TRANSFERENCIA
@@ -396,8 +409,8 @@ model Category {
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   name   String
-  kind   CategoryKind
-  active Boolean      @default(true)
+  kind   TipoCategoria
+  active Boolean       @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -407,9 +420,9 @@ model Category {
   @@index([kind])
 }
 
-enum CategoryKind {
-  PRODUCT
-  FINANCIAL
+enum TipoCategoria {
+  PRODUTO
+  FINANCEIRO
 }
 
 // ============================================================
@@ -446,7 +459,7 @@ model Promotion {
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   name  String
-  type  PromotionType
+  type  TipoPromocao
   value Int
 
   startDate DateTime?
@@ -477,9 +490,9 @@ model PromotionItem {
   @@index([tenantId])
 }
 
-enum PromotionType {
-  PERCENTAGE
-  FIXED_AMOUNT
+enum TipoPromocao {
+  PERCENTUAL
+  VALOR_FIXO
   COMBO
 }
 
@@ -517,7 +530,7 @@ model Purchase {
   supplierId Int
   supplier   Supplier @relation(fields: [supplierId], references: [id])
 
-  status     PurchaseStatus @default(PENDING)
+  status     StatusCompra @default(PENDENTE)
   total      Int
   invoiceKey String?
 
@@ -553,10 +566,10 @@ model PurchaseItem {
   @@index([productId])
 }
 
-enum PurchaseStatus {
-  PENDING
-  RECEIVED
-  CANCELLED
+enum StatusCompra {
+  PENDENTE
+  RECEBIDA
+  CANCELADA
 }
 
 // ============================================================
@@ -568,8 +581,8 @@ model InventoryCount {
   tenantId Int
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  status CountStatus @default(OPEN)
-  type   CountType   @default(FULL)
+  status StatusInventario @default(ABERTO)
+  type   TipoInventario   @default(TOTAL)
 
   startedAt  DateTime  @default(now())
   finishedAt DateTime?
@@ -603,13 +616,277 @@ model InventoryCountItem {
   @@index([productId])
 }
 
-enum CountStatus {
-  OPEN
-  COMPLETED
-  CANCELLED
+enum StatusInventario {
+  ABERTO
+  CONCLUIDO
+  CANCELADO
 }
 
-enum CountType {
-  FULL
-  PARTIAL
+enum TipoInventario {
+  TOTAL
+  PARCIAL
+}
+
+// ============================================================
+// PLATAFORMA: CICLO DE VIDA DA EMPRESA
+// ============================================================
+
+/**
+ * Ciclo de vida da empresa dentro da plataforma.
+ */
+enum StatusEmpresa {
+  TRIAL
+  ATIVA
+  SUSPENSA
+  CANCELADA
+  ARQUIVADA
+}
+
+/**
+ * Sinais de risco calculados sobre atividade e assinatura da empresa.
+ */
+enum StatusSaude {
+  SAUDAVEL
+  ATENCAO
+  CRITICA
+  DESCONHECIDO
+}
+
+// ============================================================
+// PLATAFORMA: PLANOS E ASSINATURAS
+// ============================================================
+
+enum StatusAssinatura {
+  EXPERIMENTACAO
+  ATIVA
+  PENDENTE_PAGAMENTO
+  SUSPENSA
+  CANCELADA
+  ARQUIVADA
+}
+
+enum CicloCobranca {
+  MENSAL
+  ANUAL
+}
+
+enum MotivoCancelamento {
+  SOLICITACAO_CLIENTE
+  FALHA_PAGAMENTO
+  INADIMPLENCIA
+  VIOLACAO_TERMO
+  INICIADA_PLATAFORMA
+}
+
+model Plan {
+  id               Int      @id @default(autoincrement())
+  name             String   @unique
+  slug             String   @unique
+  monthlyPrice     Int      @default(0) // centavos
+  annualPrice      Int? // centavos
+  maxUsers         Int?
+  maxProducts      Int?
+  maxSalesPerMonth Int?
+  features         String[]
+  trialDays        Int      @default(0)
+  active           Boolean  @default(true)
+  featured         Boolean  @default(false)
+  sortOrder        Int      @default(0)
+
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id           Int                 @id @default(autoincrement())
+  tenantId     Int                 @unique
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  planId       Int
+  plan         Plan                @relation(fields: [planId], references: [id])
+  status       StatusAssinatura    @default(EXPERIMENTACAO)
+  billingCycle CicloCobranca       @default(MENSAL)
+  startedAt    DateTime            @default(now())
+  renewsAt     DateTime
+  endsAt       DateTime?
+  cancelledAt  DateTime?
+  cancelReason MotivoCancelamento?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([renewsAt])
+}
+
+// ============================================================
+// PLATAFORMA: SUPORTE
+// ============================================================
+
+enum StatusTicket {
+  ABERTO
+  EM_ANALISE
+  AGUARDANDO_CLIENTE
+  RESOLVIDO
+  FECHADO
+}
+
+enum PrioridadeTicket {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+model Ticket {
+  id          Int              @id @default(autoincrement())
+  tenantId    Int
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  subject     String
+  description String
+  status      StatusTicket     @default(ABERTO)
+  priority    PrioridadeTicket @default(MEDIA)
+  assigneeId  Int?
+  slaDueAt    DateTime?
+  resolvedAt  DateTime?
+
+  messages TicketMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([priority])
+}
+
+model TicketMessage {
+  id          Int     @id @default(autoincrement())
+  ticketId    Int
+  ticket      Ticket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorEmail String
+  body        String
+  internal    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+// ============================================================
+// PLATAFORMA: AUDITORIA (sem tenantId obrigatório)
+// ============================================================
+
+/**
+ * Ações destrutivas ou sensíveis feitas pelo super admin.
+ */
+enum AcaoAuditoria {
+  EMPRESA_CRIADA
+  EMPRESA_STATUS_ALTERADO
+  EMPRESA_ARQUIVADA
+  ASSINATURA_ALTERADA
+  PLANO_ALTERADO
+  USUARIO_CRIADO
+  USUARIO_ALTERADO
+  USUARIO_DESATIVADO
+  FUNCAO_ALTERADA
+  TICKET_ALTERADO
+  COMUNICACAO_ENVIADA
+  CONFIGURACAO_ALTERADA
+}
+
+model PlatformAuditLog {
+  id         Int           @id @default(autoincrement())
+  actorEmail String
+  action     AcaoAuditoria
+  entity     String
+  entityId   Int?
+  tenantId   Int? // nulo em ações que não pertencem a uma empresa
+  before     String?
+  after      String?
+  metadata   String?
+  ip         String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([tenantId])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+// ============================================================
+// PLATAFORMA: COMUNICAÇÃO E SAÚDE
+// ============================================================
+
+enum StatusEnvio {
+  RASCUNHO
+  AGENDADO
+  ENVIANDO
+  ENVIADO
+  FALHOU
+}
+
+enum AlvoNotificacao {
+  TODAS_EMPRESAS
+  POR_PLANO
+  POR_EMPRESA
+  POR_FUNCAO
+}
+
+model Broadcast {
+  id         Int             @id @default(autoincrement())
+  subject    String
+  body       String
+  target     AlvoNotificacao @default(TODAS_EMPRESAS)
+  targetRef  String?
+  status     StatusEnvio     @default(RASCUNHO)
+  sentAt     DateTime?
+  recipients Int             @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+enum StatusIntegracao {
+  CONECTADA
+  DESCONECTADA
+  ERRO
+  PENDENTE
+}
+
+model PlatformSettings {
+  id                 Int     @id @default(autoincrement())
+  supportEmail       String?
+  defaultTrialDays   Int     @default(14)
+  defaultCurrency    String  @default("BRL")
+  defaultTimezone    String  @default("America/Sao_Paulo")
+  maintenanceMode    Boolean @default(false)
+  auditRetentionDays Int     @default(365)
+
+  integrations Integracao[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Integracao {
+  id                 Int              @id @default(autoincrement())
+  platformSettingsId Int
+  platformSettings   PlatformSettings @relation(fields: [platformSettingsId], references: [id])
+  key                String
+  name               String
+  status             StatusIntegracao @default(PENDENTE)
+  externalAccount    String?
+  lastSyncAt         DateTime?
+  lastError          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key])
 }

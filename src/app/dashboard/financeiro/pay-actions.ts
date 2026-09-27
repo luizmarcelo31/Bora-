@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -10,7 +10,7 @@ import { requirePermission } from "@/lib/permissions";
 export async function togglePaidAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/financeiro");
   try {
-    requirePermission(dbUser.role as Role, "financial.create");
+    requirePermission(dbUser.role as Funcao, "financial.create");
   } catch {
     redirect("/dashboard/financeiro?error=forbidden");
   }

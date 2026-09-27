@@ -29,7 +29,7 @@ export default async function DashboardPage() {
       FinancialService.getFinancialResume(tenant.id, monthStart, now),
       SaleService.getSalesResume(tenant.id, monthStart, now),
       prisma.sale.findMany({
-        where: { tenantId: tenant.id, status: "COMPLETED", createdAt: { gte: weekStart } },
+        where: { tenantId: tenant.id, status: "CONCLUIDA", createdAt: { gte: weekStart } },
         select: { total: true, createdAt: true },
         orderBy: { createdAt: "asc" },
       }),
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
         orderBy: { quantity: "asc" },
         take: 5,
       }),
-      prisma.cashBox.findMany({ where: { tenantId: tenant.id, status: "OPEN" } }),
+      prisma.cashBox.findMany({ where: { tenantId: tenant.id, status: "ABERTO" } }),
     ]);
 
   const faturadoHoje = todaysSales.reduce((s, sale) => s + sale.total, 0);

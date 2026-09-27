@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
+import { tipoInventarioLabel } from "@/lib/labels";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ export default async function InventarioPage({
                 name="type"
                 options={[
                   { value: "FULL", label: "Geral (Todos os produtos)" },
-                  { value: "PARTIAL", label: "Parcial (Por categoria)" },
+                  { value: "PARCIAL", label: "Parcial (Por categoria)" },
                 ]}
               />
             </label>
@@ -89,14 +90,14 @@ export default async function InventarioPage({
           <TableBody>
             {counts.map((c) => (
               <TableRow key={c.id}>
-                <TableCell className="font-medium">{c.type === "FULL" ? "Geral" : "Parcial"}</TableCell>
+                <TableCell className="font-medium">{tipoInventarioLabel[c.type]}</TableCell>
                 <TableCell>
-                  <StatusBadge status={c.status === "COMPLETED" ? "active" : c.status === "OPEN" ? "pending" : "inactive"} label={c.status} />
+                  <StatusBadge status={c.status === "CONCLUIDO" ? "active" : c.status === "ABERTO" ? "pending" : "inactive"} label={c.status} />
                 </TableCell>
                 <TableCell className="tabular-nums">{c.startedAt.toLocaleString('pt-BR')}</TableCell>
                 <TableCell>{c.items.length}</TableCell>
                 <TableCell>
-                  {c.status === "OPEN" && (
+                  {c.status === "ABERTO" && (
                     <form action={finalizeInventoryCountAction}>
                       <input type="hidden" name="countId" value={c.id} />
                       <Button variant="outline" size="sm" type="submit">Finalizar</Button>

@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { Role, PaymentMethod, StockMovementType, SaleStatus, CategoryKind } from '@prisma/client';
+import {
+  Funcao,
+  FormaPagamento,
+  TipoMovimentacaoEstoque,
+  TipoCategoria,
+} from '@prisma/client';
 
 // ============================================================
 // TENANT (Empresa)
@@ -34,8 +39,8 @@ export const createUserSchema = z.object({
   name: z.string()
     .min(1, 'Nome e obrigatorio')
     .max(255, 'Nome nao pode exceder 255 caracteres'),
-  role: z.nativeEnum(Role)
-    .default('STAFF'),
+  role: z.nativeEnum(Funcao)
+    .default('FUNCIONARIO'),
   password: z.string()
     .min(6, 'Senha deve ter no minimo 6 caracteres')
     .optional(),
@@ -43,7 +48,7 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  role: z.nativeEnum(Role).optional(),
+  role: z.nativeEnum(Funcao).optional(),
   active: z.boolean().optional(),
 });
 
@@ -122,7 +127,7 @@ export type UpdateInventoryInput = z.infer<typeof updateInventorySchema>;
 
 export const createStockMovementSchema = z.object({
   inventoryId: z.number().int().positive('ID do inventario invalido'),
-  type: z.nativeEnum(StockMovementType),
+  type: z.nativeEnum(TipoMovimentacaoEstoque),
   quantity: z.number()
     .int('Quantidade deve ser um numero inteiro')
     .positive('Quantidade deve ser maior que 0'),
@@ -154,7 +159,7 @@ export const createSaleSchema = z.object({
   items: z.array(saleItemSchema)
     .min(1, 'Venda deve ter no minimo um item'),
   discount: z.number().int().min(0, 'Desconto nao pode ser negativo').default(0),
-  paymentMethod: z.nativeEnum(PaymentMethod).default('CASH'),
+  paymentMethod: z.nativeEnum(FormaPagamento).default('DINHEIRO'),
   customerName: z.string().max(255).optional().or(z.literal('')),
   customerPhone: z.string()
     .regex(/^\d{10,15}$/, 'Telefone deve ter 10-15 digitos')
@@ -253,7 +258,7 @@ export type UpdateTenantSettingsInput = z.infer<typeof updateTenantSettingsSchem
 
 export const createCategorySchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100),
-  kind: z.nativeEnum(CategoryKind),
+  kind: z.nativeEnum(TipoCategoria),
 });
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

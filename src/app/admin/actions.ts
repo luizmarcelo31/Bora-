@@ -39,7 +39,7 @@ export async function createUserAction(formData: FormData) {
   const parsed = createUserSchema.safeParse({
     email: String(formData.get("email") ?? ""),
     name: String(formData.get("name") ?? ""),
-    role: String(formData.get("role") ?? "STAFF"),
+    role: String(formData.get("role") ?? "FUNCIONARIO"),
   });
   if (!parsed.success) redirect("/admin/usuarios?error=invalid");
 

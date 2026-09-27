@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { FinancialService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
@@ -44,7 +44,7 @@ export default async function FinanceiroPage({
 }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/financeiro");
   try {
-    requirePermission(dbUser.role as Role, "financial.view");
+    requirePermission(dbUser.role as Funcao, "financial.view");
   } catch {
     redirect("/unauthorized");
   }
@@ -60,7 +60,7 @@ export default async function FinanceiroPage({
   const whereType =
     typeFilter === "ALL" || !allowed.includes(typeFilter as (typeof allowed)[number])
       ? {}
-      : { type: typeFilter as import("@prisma/client").FinancialMovementType };
+      : { type: typeFilter as import("@prisma/client").TipoMovimentacaoFinanceira };
 
   const [resume, allMovements, cashboxes, finCategories] = await Promise.all([
     FinancialService.getFinancialResume(tenant.id, monthStart, now),
@@ -70,11 +70,11 @@ export default async function FinanceiroPage({
       take: 50,
     }),
     prisma.cashBox.findMany({
-      where: { tenantId: tenant.id, status: "OPEN" },
+      where: { tenantId: tenant.id, status: "ABERTO" },
       orderBy: { createdAt: "desc" },
     }),
     prisma.category.findMany({
-      where: { tenantId: tenant.id, kind: "FINANCIAL", active: true },
+      where: { tenantId: tenant.id, kind: "FINANCEIRO", active: true },
       orderBy: { name: "asc" },
     }),
   ]);

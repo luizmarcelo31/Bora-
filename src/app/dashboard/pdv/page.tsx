@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -35,7 +35,7 @@ const ERROR_MSG: Record<string, string> = {
 export default async function PdvPage() {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/pdv");
   try {
-    requirePermission(dbUser.role as Role, "sales.create");
+    requirePermission(dbUser.role as Funcao, "sales.create");
   } catch {
     redirect("/unauthorized");
   }

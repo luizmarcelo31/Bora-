@@ -1,23 +1,23 @@
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 
 /**
- * Hierarquia de roles (maior número = mais poder).
- * SUPER_ADMIN está fora do tenant (nível plataforma).
+ * Hierarquia de funcoes (maior numero = mais poder).
+ * SUPER_ADMIN esta fora da empresa (nivel plataforma).
  */
-export const ROLE_RANK: Record<Role, number> = {
-  STAFF: 10,
-  CASHIER: 20,
-  STOCK: 30,
-  FINANCIAL: 40,
-  MANAGER: 60,
-  OWNER: 80,
+export const FUNCAO_RANK: Record<Funcao, number> = {
+  FUNCIONARIO: 10,
+  CAIXA: 20,
+  ESTOQUISTA: 30,
+  FINANCEIRO: 40,
+  GERENTE: 60,
+  PROPRIETARIO: 80,
   SUPER_ADMIN: 100,
 };
 
-export function hasMinRole(userRole: Role, minRole: Role): boolean {
-  return ROLE_RANK[userRole] >= ROLE_RANK[minRole];
+export function hasMinFuncao(userFuncao: Funcao, minFuncao: Funcao): boolean {
+  return FUNCAO_RANK[userFuncao] >= FUNCAO_RANK[minFuncao];
 }
 
-export function isSuperAdmin(role: Role | null | undefined): boolean {
-  return role === "SUPER_ADMIN";
+export function isSuperAdmin(funcao: Funcao | null | undefined): boolean {
+  return funcao === "SUPER_ADMIN";
 }

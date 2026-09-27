@@ -70,10 +70,10 @@ export default async function PromocoesPage({
               Tipo*
               <SelectField
                 name="type"
-                defaultValue="PERCENTAGE"
+                defaultValue="PERCENTUAL"
                 options={[
-                  { value: "PERCENTAGE", label: "Percentual (%)" },
-                  { value: "FIXED_AMOUNT", label: "Valor Fixo (R$)" },
+                  { value: "PERCENTUAL", label: "Percentual (%)" },
+                  { value: "VALOR_FIXO", label: "Valor Fixo (R$)" },
                   { value: "COMBO", label: "Combo" },
                 ]}
               />
@@ -119,7 +119,7 @@ export default async function PromocoesPage({
           </TableHeader>
           <TableBody>
             {promotions.map((p) => {
-              const valueFormatted = p.type === "FIXED_AMOUNT" ? formatCurrency(p.value) : p.type === "PERCENTAGE" ? `${p.value}%` : p.value;
+              const valueFormatted = p.type === "VALOR_FIXO" ? formatCurrency(p.value) : p.type === "PERCENTUAL" ? `${p.value}%` : p.value;
               return (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.name}</TableCell>

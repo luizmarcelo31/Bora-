@@ -11,7 +11,7 @@ export default async function AdminHomePage() {
     prisma.tenant.count(),
     prisma.user.count(),
     prisma.product.count(),
-    prisma.sale.count({ where: { status: "COMPLETED" } }),
+    prisma.sale.count({ where: { status: "CONCLUIDA" } }),
   ]);
 
   return (

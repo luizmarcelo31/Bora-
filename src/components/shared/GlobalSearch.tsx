@@ -100,7 +100,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
       else if (products.length > 0) go(`/dashboard/produtos?q=${encodeURIComponent(products[0].name)}`);
       else if (categories.length > 0) {
         const c = categories[0];
-        go(c.kind === "PRODUCT" ? `/dashboard/produtos?cat=${encodeURIComponent(c.name)}` : `/dashboard/financeiro?q=${encodeURIComponent(c.name)}`);
+        go(c.kind === "PRODUTO" ? `/dashboard/produtos?cat=${encodeURIComponent(c.name)}` : `/dashboard/financeiro?q=${encodeURIComponent(c.name)}`);
       }
     }
   }
@@ -180,7 +180,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
                 type="button"
                 onClick={() =>
                   go(
-                    c.kind === "PRODUCT"
+                    c.kind === "PRODUTO"
                       ? `/dashboard/produtos?cat=${encodeURIComponent(c.name)}`
                       : `/dashboard/financeiro?q=${encodeURIComponent(c.name)}`
                   )
@@ -190,7 +190,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
                 <Tag className="size-4 shrink-0 text-muted-foreground" />
                 <span className="flex-1 truncate">{c.name}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  {c.kind === "PRODUCT" ? "Produto" : "Financeiro"}
+                  {c.kind === "PRODUTO" ? "Produto" : "Financeiro"}
                 </span>
               </button>
             ))}

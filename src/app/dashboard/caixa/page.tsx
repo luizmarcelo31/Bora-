@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -34,7 +34,7 @@ const ERROR_MSG: Record<string, string> = {
 export default async function CaixaPage() {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/caixa");
   try {
-    requirePermission(dbUser.role as Role, "cashbox.view");
+    requirePermission(dbUser.role as Funcao, "cashbox.view");
   } catch {
     redirect("/unauthorized");
   }
@@ -43,7 +43,7 @@ export default async function CaixaPage() {
     where: { tenantId: tenant.id },
     orderBy: { createdAt: "desc" },
   });
-  const openBoxes = boxes.filter((b) => b.status === "OPEN");
+  const openBoxes = boxes.filter((b) => b.status === "ABERTO");
   const closedCount = boxes.length - openBoxes.length;
   const saldoAbertos = openBoxes.reduce((s, b) => s + b.currentBalance, 0);
 
@@ -115,7 +115,7 @@ export default async function CaixaPage() {
                   <TableRow key={b.id}>
                     <TableCell className="font-medium">{b.name}</TableCell>
                     <TableCell>
-                      <StatusBadge status={b.status === "OPEN" ? "open" : "closed"} />
+                      <StatusBadge status={b.status === "ABERTO" ? "open" : "closed"} />
                     </TableCell>
                     <TableCell className="tabular-nums">{formatCurrency(b.openingBalance)}</TableCell>
                     <TableCell className="tabular-nums">{formatCurrency(b.currentBalance)}</TableCell>

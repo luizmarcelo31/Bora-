@@ -2,14 +2,28 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { CategoryService } from "./index";
 import { ValidationError, ValidationErrorType } from "@/lib/validators";
 
-const mockCategoryFindMany = vi.fn();
-const mockCategoryFindFirst = vi.fn();
-const mockCategoryCreate = vi.fn();
-const mockCategoryUpdate = vi.fn();
-const mockCategoryDelete = vi.fn();
-const mockTenantFindUnique = vi.fn();
-const mockProductCount = vi.fn();
-const mockFinancialMovementCount = vi.fn();
+// vi.mock é hoisted acima dos imports, então os mocks precisam nascer em
+// vi.hoisted() — senão a factory roda na TDZ e quebra com
+// "Cannot access 'mockCategoryFindMany' before initialization".
+const {
+  mockCategoryFindMany,
+  mockCategoryFindFirst,
+  mockCategoryCreate,
+  mockCategoryUpdate,
+  mockCategoryDelete,
+  mockTenantFindUnique,
+  mockProductCount,
+  mockFinancialMovementCount,
+} = vi.hoisted(() => ({
+  mockCategoryFindMany: vi.fn(),
+  mockCategoryFindFirst: vi.fn(),
+  mockCategoryCreate: vi.fn(),
+  mockCategoryUpdate: vi.fn(),
+  mockCategoryDelete: vi.fn(),
+  mockTenantFindUnique: vi.fn(),
+  mockProductCount: vi.fn(),
+  mockFinancialMovementCount: vi.fn(),
+}));
 
 vi.mock("@/lib/db", () => ({
   prisma: {
@@ -42,8 +56,8 @@ describe("CategoryService", () => {
   describe("listCategories", () => {
     it("retorna categorias do tenant", async () => {
       const mockCategories = [
-        { id: 1, tenantId, name: "Bebidas", kind: "PRODUCT", active: true },
-        { id: 2, tenantId, name: "Aluguel", kind: "FINANCIAL", active: true },
+        { id: 1, tenantId, name: "Bebidas", kind: "PRODUTO", active: true },
+        { id: 2, tenantId, name: "Aluguel", kind: "FINANCEIRO", active: true },
       ];
       mockCategoryFindMany.mockResolvedValue(mockCategories);
 
@@ -59,10 +73,10 @@ describe("CategoryService", () => {
     it("filtra por kind quando fornecido", async () => {
       mockCategoryFindMany.mockResolvedValue([]);
 
-      await CategoryService.listCategories(tenantId, "PRODUCT");
+      await CategoryService.listCategories(tenantId, "PRODUTO");
 
       expect(mockCategoryFindMany).toHaveBeenCalledWith({
-        where: { tenantId, kind: "PRODUCT" },
+        where: { tenantId, kind: "PRODUTO" },
         orderBy: [{ kind: "asc" }, { name: "asc" }],
       });
     });
@@ -70,7 +84,7 @@ describe("CategoryService", () => {
 
   describe("getCategory", () => {
     it("retorna categoria existente", async () => {
-      const mockCategory = { id: 1, tenantId, name: "Bebidas", kind: "PRODUCT", active: true };
+      const mockCategory = { id: 1, tenantId, name: "Bebidas", kind: "PRODUTO", active: true };
       mockCategoryFindFirst.mockResolvedValue(mockCategory);
 
       const result = await CategoryService.getCategory(tenantId, 1);
@@ -93,11 +107,11 @@ describe("CategoryService", () => {
         id: 1,
         tenantId,
         name: "Bebidas",
-        kind: "PRODUCT",
+        kind: "PRODUTO",
         active: true,
       });
 
-      const result = await CategoryService.createCategory(tenantId, "Bebidas", "PRODUCT");
+      const result = await CategoryService.createCategory(tenantId, "Bebidas", "PRODUTO");
 
       expect(result.name).toBe("Bebidas");
       expect(mockCategoryCreate).toHaveBeenCalled();
@@ -109,11 +123,11 @@ describe("CategoryService", () => {
         id: 1,
         tenantId,
         name: "Bebidas",
-        kind: "PRODUCT",
+        kind: "PRODUTO",
       });
 
       await expect(
-        CategoryService.createCategory(tenantId, "Bebidas", "PRODUCT")
+        CategoryService.createCategory(tenantId, "Bebidas", "PRODUTO")
       ).rejects.toThrow(ValidationError);
     });
 
@@ -121,7 +135,7 @@ describe("CategoryService", () => {
       mockTenantFindUnique.mockResolvedValue(null);
 
       await expect(
-        CategoryService.createCategory(tenantId, "Bebidas", "PRODUCT")
+        CategoryService.createCategory(tenantId, "Bebidas", "PRODUTO")
       ).rejects.toThrow("Tenant nao encontrado");
     });
   });
@@ -129,13 +143,13 @@ describe("CategoryService", () => {
   describe("updateCategory", () => {
     it("atualiza nome quando nao conflita", async () => {
       mockCategoryFindFirst
-        .mockResolvedValueOnce({ id: 1, tenantId, name: "Bebidas", kind: "PRODUCT" })
+        .mockResolvedValueOnce({ id: 1, tenantId, name: "Bebidas", kind: "PRODUTO" })
         .mockResolvedValueOnce(null);
       mockCategoryUpdate.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas Frias",
-        kind: "PRODUCT",
+        kind: "PRODUTO",
       });
 
       const result = await CategoryService.updateCategory(tenantId, 1, "Bebidas Frias");
@@ -145,8 +159,8 @@ describe("CategoryService", () => {
 
     it("lanca erro quando novo nome ja existe", async () => {
       mockCategoryFindFirst
-        .mockResolvedValueOnce({ id: 1, tenantId, name: "Bebidas", kind: "PRODUCT" })
-        .mockResolvedValueOnce({ id: 2, tenantId, name: "Bebidas Frias", kind: "PRODUCT" });
+        .mockResolvedValueOnce({ id: 1, tenantId, name: "Bebidas", kind: "PRODUTO" })
+        .mockResolvedValueOnce({ id: 2, tenantId, name: "Bebidas Frias", kind: "PRODUTO" });
 
       await expect(
         CategoryService.updateCategory(tenantId, 1, "Bebidas Frias")
@@ -160,14 +174,14 @@ describe("CategoryService", () => {
         id: 1,
         tenantId,
         name: "Bebidas",
-        kind: "PRODUCT",
+        kind: "PRODUTO",
         active: true,
       });
       mockCategoryUpdate.mockResolvedValue({
         id: 1,
         tenantId,
         name: "Bebidas",
-        kind: "PRODUCT",
+        kind: "PRODUTO",
         active: false,
       });
 
@@ -183,7 +197,7 @@ describe("CategoryService", () => {
         id: 1,
         tenantId,
         name: "Bebidas",
-        kind: "PRODUCT",
+        kind: "PRODUTO",
       });
       mockProductCount.mockResolvedValue(0);
       mockFinancialMovementCount.mockResolvedValue(0);
@@ -201,7 +215,7 @@ describe("CategoryService", () => {
         id: 1,
         tenantId,
         name: "Bebidas",
-        kind: "PRODUCT",
+        kind: "PRODUTO",
       });
       mockProductCount.mockResolvedValue(5);
       mockFinancialMovementCount.mockResolvedValue(0);

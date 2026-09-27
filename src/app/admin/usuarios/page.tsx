@@ -10,11 +10,21 @@ import { SelectField } from "@/components/ui/select-field";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { createUserAction } from "@/app/admin/actions";
+import { funcaoLabel } from "@/lib/labels";
+import type { Funcao } from "@prisma/client";
 
-const ROLES = ["OWNER", "MANAGER", "FINANCIAL", "STOCK", "CASHIER", "STAFF", "SUPER_ADMIN"];
+const FUNCOES: Funcao[] = [
+  "PROPRIETARIO",
+  "GERENTE",
+  "FINANCEIRO",
+  "ESTOQUISTA",
+  "CAIXA",
+  "FUNCIONARIO",
+  "SUPER_ADMIN",
+];
 
 const ERROR_MSG: Record<string, string> = {
-  invalid: "Dados inválidos. Verifique email, nome e role.",
+  invalid: "Dados inválidos. Verifique email, nome e função.",
   tenant: "Empresa inválida.",
   duplicate: "Este email já existe nesta empresa.",
   root: "A conta raiz não pode ser duplicada nem alterada.",
@@ -56,12 +66,12 @@ export default async function UsuariosPage({
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              Role*
+              Função*
               <SelectField
                 name="role"
                 required
-                defaultValue="STAFF"
-                options={ROLES.map((r) => ({ value: r, label: r }))}
+                defaultValue="FUNCIONARIO"
+                options={FUNCOES.map((f) => ({ value: f, label: funcaoLabel[f] }))}
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
@@ -94,7 +104,7 @@ export default async function UsuariosPage({
       ) : (
         <TableCard
           title="Usuários da plataforma"
-          description="Role e vínculo por empresa."
+          description="Função e vínculo por empresa."
           footer={`${users.length} usuário(s)`}
         >
         <Table>
@@ -103,7 +113,7 @@ export default async function UsuariosPage({
               <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Empresa</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Função</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -113,7 +123,7 @@ export default async function UsuariosPage({
                 <TableCell>{u.name}</TableCell>
                 <TableCell>{u.email}</TableCell>
                 <TableCell>{u.tenant.name}</TableCell>
-                <TableCell>{u.role}</TableCell>
+                <TableCell>{funcaoLabel[u.role]}</TableCell>
                 <TableCell>
                   <StatusBadge status={u.active ? "active" : "inactive"} />
                 </TableCell>

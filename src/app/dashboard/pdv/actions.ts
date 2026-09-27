@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { SaleService, ProductService } from "@/services";
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
@@ -23,7 +23,7 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/pdv");
 
   try {
-    requirePermission(dbUser.role as Role, "sales.create");
+    requirePermission(dbUser.role as Funcao, "sales.create");
   } catch {
     redirect("/dashboard/pdv?error=forbidden");
   }
@@ -121,7 +121,7 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
 export async function cancelSaleAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/pdv");
   try {
-    requirePermission(dbUser.role as Role, "sales.cancel");
+    requirePermission(dbUser.role as Funcao, "sales.cancel");
   } catch {
     redirect("/dashboard/pdv?error=forbidden");
   }
@@ -165,7 +165,7 @@ export async function getPdvPageData(tenantId: number) {
   const [products, cashboxes, todaysSales] = await Promise.all([
     ProductService.listProducts(tenantId),
     prisma.cashBox.findMany({
-      where: { tenantId, status: "OPEN" },
+      where: { tenantId, status: "ABERTO" },
       orderBy: { createdAt: "desc" },
     }),
     SaleService.getTodaysSales(tenantId),

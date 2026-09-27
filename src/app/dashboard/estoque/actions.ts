@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { InventoryService, ProductService } from "@/services";
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
@@ -15,7 +15,7 @@ export async function moveStockAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/estoque");
 
   try {
-    requirePermission(dbUser.role as Role, "inventory.move");
+    requirePermission(dbUser.role as Funcao, "inventory.move");
   } catch {
     redirect("/dashboard/estoque?error=forbidden");
   }
@@ -80,7 +80,7 @@ export async function getStockPageData(tenantId: number) {
 export async function updateInventorySettingsAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/estoque");
   try {
-    requirePermission(dbUser.role as Role, "inventory.move");
+    requirePermission(dbUser.role as Funcao, "inventory.move");
   } catch {
     redirect("/dashboard/estoque?error=forbidden");
   }

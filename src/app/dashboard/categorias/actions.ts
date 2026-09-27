@@ -78,11 +78,11 @@ export async function updateCategoryAction(formData: FormData) {
   if (!id || !name || name.length > 100) redirect("/dashboard/categorias?error=invalid");
   const cat = await prisma.category.findFirst({ where: { id, tenantId: tenant.id } });
   if (!cat) redirect("/dashboard/categorias?error=invalid");
-  // permission: PRODUCT -> products.update, FINANCIAL -> financial.create
+  // permission: PRODUTO -> products.update, FINANCEIRO -> financial.create
   const { requirePermission: reqPerm } = await import("@/lib/permissions");
-  const needed = cat.kind === "PRODUCT" ? "products.update" : "financial.create";
+  const needed = cat.kind === "PRODUTO" ? "products.update" : "financial.create";
   try {
-    reqPerm(dbUser.role as import("@prisma/client").Role, needed as import("@/lib/permissions").Permission);
+    reqPerm(dbUser.role as import("@prisma/client").Funcao, needed as import("@/lib/permissions").Permissao);
   } catch {
     redirect("/dashboard/categorias?error=unauthorized");
   }
@@ -120,10 +120,10 @@ export async function deleteCategoryAction(formData: FormData) {
   if (!id) redirect("/dashboard/categorias?error=invalid");
   const cat = await prisma.category.findFirst({ where: { id, tenantId: tenant.id } });
   if (!cat) redirect("/dashboard/categorias?error=invalid");
-  const needed = cat.kind === "PRODUCT" ? "products.delete" : "financial.create";
+  const needed = cat.kind === "PRODUTO" ? "products.delete" : "financial.create";
   try {
     const { requirePermission: reqPerm } = await import("@/lib/permissions");
-    reqPerm(dbUser.role as import("@prisma/client").Role, needed as import("@/lib/permissions").Permission);
+    reqPerm(dbUser.role as import("@prisma/client").Funcao, needed as import("@/lib/permissions").Permissao);
   } catch {
     redirect("/dashboard/categorias?error=unauthorized");
   }

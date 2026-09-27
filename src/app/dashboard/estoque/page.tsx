@@ -1,4 +1,4 @@
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -39,7 +39,7 @@ export default async function EstoquePage({
 }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/estoque");
   try {
-    requirePermission(dbUser.role as Role, "inventory.view");
+    requirePermission(dbUser.role as Funcao, "inventory.view");
   } catch {
     redirect("/unauthorized");
   }

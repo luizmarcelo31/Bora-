@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { paymentLabel } from '@/lib/payments';
-import { Prisma, Sale, SaleStatus, StockMovement } from '@prisma/client';
+import { Prisma, Sale, StatusVenda, StockMovement, TipoCategoria } from '@prisma/client';
 import {
   CreateProductInput,
   CreateSaleInput,
@@ -365,7 +365,7 @@ export class SaleService {
 
     if (data.cashBoxId) {
       if (!cashBox) throw new Error('Caixa nao encontrada');
-      if (cashBox.status === 'CLOSED') {
+      if (cashBox.status === 'FECHADO') {
         throw new ValidationError(
           ValidationErrorType.CLOSED_CASHBOX,
           'Caixa esta fechada'
@@ -464,7 +464,7 @@ export class SaleService {
             tenantId,
             userId: data.userId,
             cashBoxId: data.cashBoxId || null,
-            status: 'COMPLETED' as SaleStatus,
+            status: 'CONCLUIDA' as StatusVenda,
             subtotal,
             discount: data.discount,
             total,
@@ -527,7 +527,7 @@ export class SaleService {
         if (data.cashBoxId) {
           // Condicional: se o caixa fechou entre o check e a escrita, ninguém vence em silêncio.
           const updated = await tx.cashBox.updateMany({
-            where: { id: data.cashBoxId, tenantId, status: 'OPEN' },
+            where: { id: data.cashBoxId, tenantId, status: 'ABERTO' },
             data: {
               currentBalance: { increment: total },
             },
@@ -580,15 +580,15 @@ export class SaleService {
     });
 
     if (!sale) throw new Error('Venda nao encontrada');
-    if (sale.status !== 'COMPLETED') {
-      throw new Error('Apenas vendas completadas podem ser canceladas');
+    if (sale.status !== 'CONCLUIDA') {
+      throw new Error('Apenas vendas concluidas podem ser canceladas');
     }
 
     let cashboxAdjusted = false;
     await prisma.$transaction(async (tx) => {
       await tx.sale.update({
         where: { id: saleId },
-        data: { status: 'CANCELLED' },
+        data: { status: 'CANCELADA' },
       });
 
       for (const item of sale.items) {
@@ -626,7 +626,7 @@ export class SaleService {
       // o estorno segue no financeiro via DESPESA "Estorno PDV".
       if (sale.cashBoxId) {
         const res = await tx.cashBox.updateMany({
-          where: { id: sale.cashBoxId, tenantId, status: 'OPEN' },
+          where: { id: sale.cashBoxId, tenantId, status: 'ABERTO' },
           data: {
             currentBalance: {
               decrement: sale.total,
@@ -655,7 +655,7 @@ export class SaleService {
           gte: today,
           lt: tomorrow,
         },
-        status: 'COMPLETED',
+        status: 'CONCLUIDA',
       },
       select: {
         id: true,
@@ -673,7 +673,7 @@ export class SaleService {
     const where = {
       tenantId,
       createdAt: { gte: startDate, lte: endDate },
-      status: 'COMPLETED' as const,
+      status: 'CONCLUIDA' as const,
     };
     const [agg, byPayment] = await Promise.all([
       prisma.sale.aggregate({
@@ -715,7 +715,7 @@ export class CashBoxService {
       data: {
         tenantId,
         name,
-        status: 'OPEN',
+        status: 'ABERTO',
         openingBalance,
         currentBalance: openingBalance,
       },
@@ -735,22 +735,22 @@ export class CashBoxService {
     });
 
     if (!cashBox) throw new Error('Caixa nao encontrada');
-    if (cashBox.status === 'CLOSED') throw new Error('Caixa ja esta fechada');
+    if (cashBox.status === 'FECHADO') throw new Error('Caixa ja esta fechada');
 
     const difference = closingBalance - cashBox.currentBalance;
 
     // Condicional: só um fechamento concorrente vence (evita duplo lançamento de diferença).
     const updated = await prisma.cashBox.updateMany({
-      where: { id: cashBoxId, tenantId, status: 'OPEN' },
+      where: { id: cashBoxId, tenantId, status: 'ABERTO' },
       data: {
-        status: 'CLOSED',
+        status: 'FECHADO',
         closingBalance,
         closedAt: new Date(),
       },
     });
     if (updated.count === 0) throw new Error('Caixa ja esta fechada');
 
-    return { ...cashBox, status: 'CLOSED' as const, closingBalance, closedAt: new Date(), difference };
+    return { ...cashBox, status: 'FECHADO' as const, closingBalance, closedAt: new Date(), difference };
   }
 }
 
@@ -829,7 +829,7 @@ export class FinancialService {
 // ============================================================
 
 export class CategoryService {
-  static async listCategories(tenantId: number, kind?: 'PRODUCT' | 'FINANCIAL') {
+  static async listCategories(tenantId: number, kind?: TipoCategoria) {
     return prisma.category.findMany({
       where: {
         tenantId,
@@ -857,7 +857,7 @@ export class CategoryService {
     return category;
   }
 
-  static async createCategory(tenantId: number, name: string, kind: 'PRODUCT' | 'FINANCIAL') {
+  static async createCategory(tenantId: number, name: string, kind: TipoCategoria) {
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!tenant) throw new Error('Tenant nao encontrado');
 

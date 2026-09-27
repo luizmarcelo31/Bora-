@@ -14,12 +14,12 @@ import {
 
 describe("category schema", () => {
   it("aceita PRODUCT e FINANCIAL", () => {
-    expect(createCategorySchema.safeParse({ name: "Bebidas", kind: "PRODUCT" }).success).toBe(true);
-    expect(createCategorySchema.safeParse({ name: "Aluguel", kind: "FINANCIAL" }).success).toBe(true);
+    expect(createCategorySchema.safeParse({ name: "Bebidas", kind: "PRODUTO" }).success).toBe(true);
+    expect(createCategorySchema.safeParse({ name: "Aluguel", kind: "FINANCEIRO" }).success).toBe(true);
   });
 
   it("rejeita nome vazio e kind inválido", () => {
-    expect(createCategorySchema.safeParse({ name: "", kind: "PRODUCT" }).success).toBe(false);
+    expect(createCategorySchema.safeParse({ name: "", kind: "PRODUTO" }).success).toBe(false);
     expect(createCategorySchema.safeParse({ name: "X", kind: "NOPE" }).success).toBe(false);
   });
 });

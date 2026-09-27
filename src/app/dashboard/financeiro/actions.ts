@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { FinancialService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -14,7 +14,7 @@ const TYPES = ["RECEITA", "DESPESA", "TRANSFERENCIA"] as const;
 export async function createFinancialAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/financeiro");
   try {
-    requirePermission(dbUser.role as Role, "financial.create");
+    requirePermission(dbUser.role as Funcao, "financial.create");
   } catch {
     redirect("/dashboard/financeiro?error=forbidden");
   }
@@ -68,7 +68,7 @@ export async function createFinancialAction(formData: FormData) {
 export async function updateFinancialAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/financeiro");
   try {
-    requirePermission(dbUser.role as Role, "financial.create");
+    requirePermission(dbUser.role as Funcao, "financial.create");
   } catch {
     redirect("/dashboard/financeiro?error=forbidden");
   }
@@ -100,7 +100,7 @@ export async function updateFinancialAction(formData: FormData) {
     await (await import("@/lib/db")).prisma.financialMovement.update({
       where: { id },
       data: {
-        type: parsed.data.type as import("@prisma/client").FinancialMovementType,
+        type: parsed.data.type as import("@prisma/client").TipoMovimentacaoFinanceira,
         category: parsed.data.category,
         description: parsed.data.description,
         amount: parsed.data.amount,
@@ -133,7 +133,7 @@ export async function updateFinancialAction(formData: FormData) {
 export async function deleteFinancialAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/financeiro");
   try {
-    requirePermission(dbUser.role as Role, "financial.create");
+    requirePermission(dbUser.role as Funcao, "financial.create");
   } catch {
     redirect("/dashboard/financeiro?error=forbidden");
   }

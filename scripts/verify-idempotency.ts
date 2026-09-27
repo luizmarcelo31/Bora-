@@ -9,7 +9,7 @@ async function main() {
   // Ensure product 1 exists and has inventory
   const product = await prisma.product.findFirst({ where: { id: 1, tenantId }, include: { inventory: true } });
   if (!product) throw new Error("Produto 1 não encontrado");
-  const user = await prisma.user.findFirst({ where: { tenantId, role: "OWNER" } });
+  const user = await prisma.user.findFirst({ where: { tenantId, role: "PROPRIETARIO" } });
   if (!user) throw new Error("Usuário OWNER não encontrado");
   console.log(`Produto ${product.name} estoque ${product.inventory?.quantity} user ${user.email}`);
 
@@ -29,7 +29,7 @@ async function main() {
     userId: user.id,
     items: [{ productId: product.id, quantity: 1, unitPrice: product.price, discount: 0 }],
     discount: 0,
-    paymentMethod: "CASH" as const,
+    paymentMethod: "DINHEIRO" as const,
     customerName: "Teste Idempotência",
     idempotencyKey: idem,
   };

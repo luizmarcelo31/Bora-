@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -21,7 +21,7 @@ const ERROR_MSG: Record<string, string> = {
 export default async function ConfiguracoesPage() {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/configuracoes");
   try {
-    requirePermission(dbUser.role as Role, "tenants.manage");
+    requirePermission(dbUser.role as Funcao, "tenants.manage");
   } catch {
     redirect("/unauthorized");
   }

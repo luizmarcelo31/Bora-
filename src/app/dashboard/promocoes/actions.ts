@@ -9,7 +9,7 @@ export async function createPromotionAction(formData: FormData) {
   const { tenant } = await requireSessionTenant("/dashboard/promocoes");
 
   const name = (formData.get("name") as string)?.trim();
-  const type = formData.get("type") as "PERCENTAGE" | "FIXED_AMOUNT" | "COMBO";
+  const type = formData.get("type") as "PERCENTUAL" | "VALOR_FIXO" | "COMBO";
   const raw = parseInt(formData.get("value") as string, 10);
   const productIds = formData.getAll("productIds") as string[];
 

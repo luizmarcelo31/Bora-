@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export async function createInventoryCountAction(formData: FormData) {
   const { tenant } = await requireSessionTenant("/dashboard/inventario");
 
-  const type = formData.get("type") as "FULL" | "PARTIAL";
+  const type = formData.get("type") as "TOTAL" | "PARCIAL";
   if (!type) redirect("/dashboard/inventario?error=invalid");
 
   try {
@@ -16,7 +16,7 @@ export async function createInventoryCountAction(formData: FormData) {
       data: {
         tenantId: tenant.id,
         type,
-        status: "OPEN",
+        status: "ABERTO",
       },
     });
   } catch (err) {
@@ -37,7 +37,7 @@ export async function finalizeInventoryCountAction(formData: FormData) {
   try {
     await prisma.inventoryCount.update({
       where: { id: countId, tenantId: tenant.id },
-      data: { status: "COMPLETED", finishedAt: new Date() },
+      data: { status: "CONCLUIDO", finishedAt: new Date() },
     });
   } catch (err) {
     console.error("[finalizeInventoryCountAction]", err);

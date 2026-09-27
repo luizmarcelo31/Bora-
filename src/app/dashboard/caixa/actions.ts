@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { CashBoxService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -11,7 +11,7 @@ import { parseBRLToCents } from "@/lib/money";
 export async function openCashBoxAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/caixa");
   try {
-    requirePermission(dbUser.role as Role, "cashbox.open");
+    requirePermission(dbUser.role as Funcao, "cashbox.open");
   } catch {
     redirect("/dashboard/caixa?error=forbidden");
   }
@@ -48,7 +48,7 @@ export async function openCashBoxAction(formData: FormData) {
 export async function closeCashBoxAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/caixa");
   try {
-    requirePermission(dbUser.role as Role, "cashbox.close");
+    requirePermission(dbUser.role as Funcao, "cashbox.close");
   } catch {
     redirect("/dashboard/caixa?error=forbidden");
   }

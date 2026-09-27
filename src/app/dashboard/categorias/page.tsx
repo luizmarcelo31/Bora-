@@ -56,11 +56,11 @@ export default async function CategoriasPage() {
               Tipo*
               <SelectField
                 name="kind"
-                defaultValue="PRODUCT"
+                defaultValue="PRODUTO"
                 required
                 options={[
-                  { value: "PRODUCT", label: "Produto" },
-                  { value: "FINANCIAL", label: "Financeiro" },
+                  { value: "PRODUTO", label: "Produto" },
+                  { value: "FINANCEIRO", label: "Financeiro" },
                 ]}
               />
             </label>
@@ -87,7 +87,7 @@ export default async function CategoriasPage() {
             {categories.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.name}</TableCell>
-                <TableCell>{c.kind === "PRODUCT" ? "Produto" : "Financeiro"}</TableCell>
+                <TableCell>{c.kind === "PRODUTO" ? "Produto" : "Financeiro"}</TableCell>
                 <TableCell>
                   <StatusBadge status={c.active ? "active" : "inactive"} label={c.active ? "Ativa" : "Inativa"} />
                 </TableCell>

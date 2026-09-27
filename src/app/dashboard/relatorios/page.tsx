@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Funcao } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { SaleService, FinancialService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
@@ -36,7 +36,7 @@ export default async function RelatoriosPage({
 }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/relatorios");
   try {
-    requirePermission(dbUser.role as Role, "reports.view");
+    requirePermission(dbUser.role as Funcao, "reports.view");
   } catch {
     redirect("/unauthorized");
   }
@@ -61,7 +61,7 @@ export default async function RelatoriosPage({
     by: ["productId"],
     where: {
       tenantId: tenant.id,
-      sale: { tenantId: tenant.id, status: "COMPLETED", createdAt: { gte: startDate, lte: endInclusive } },
+      sale: { tenantId: tenant.id, status: "CONCLUIDA", createdAt: { gte: startDate, lte: endInclusive } },
     },
     _sum: { quantity: true, total: true },
     orderBy: { _sum: { quantity: "desc" } },
@@ -72,7 +72,7 @@ export default async function RelatoriosPage({
   const vendasPage = Math.max(1, parseInt(params.vendasPage ?? "1", 10) || 1);
   const salesWhere = {
     tenantId: tenant.id,
-    status: "COMPLETED" as const,
+    status: "CONCLUIDA" as const,
     createdAt: { gte: startDate, lte: endInclusive },
   };
   const [periodSales, printSales] = await Promise.all([
