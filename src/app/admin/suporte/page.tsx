@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { TableCard } from "@/components/shared/TableCard";
@@ -113,7 +114,8 @@ export default async function SuportePage({
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
+      <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
+        <PageHeader
         title="Suporte"
         badge="Atendimento"
         description="Chamados das empresas, com prazo de resposta por prioridade."
@@ -320,3 +322,6 @@ export default async function SuportePage({
     </main>
   );
 }
+
+
+

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,8 @@ export default async function PlanosPage({
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
+      <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
+        <PageHeader
         title="Planos"
         badge="Receita"
         description="O que a plataforma vende. A assinatura é o que liga um plano a uma empresa."
@@ -176,3 +178,6 @@ export default async function PlanosPage({
     </main>
   );
 }
+
+
+

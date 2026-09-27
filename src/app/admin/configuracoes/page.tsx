@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,8 @@ export default async function ConfiguracoesPage({
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
+      <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
+        <PageHeader
         title="Configurações da plataforma"
         badge="Sistema"
         description="Padrões que valem para todas as empresas. Configuração alterada fica na auditoria."
@@ -155,3 +157,6 @@ export default async function ConfiguracoesPage({
     </main>
   );
 }
+
+
+

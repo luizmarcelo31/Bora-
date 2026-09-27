@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, Package, Tag, LayoutDashboard } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,9 @@ import { Kbd } from "@/components/ui/kbd";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { tenantNav } from "@/navigation/tenant-nav";
 import { formatCurrency } from "@/lib/validators";
+
+const CACHE_KEY = "boramais_product_search_cache";
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 type ApiProduct = { id: number; name: string; price: number; active: boolean };
 type ApiCategory = { id: number; name: string; kind: string };
@@ -70,12 +73,30 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
       setLoading(false);
       return;
     }
+    // Check cache
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { q: cachedQ, data, timestamp } = JSON.parse(cached);
+        if (cachedQ === q && Date.now() - timestamp < CACHE_TTL_MS) {
+          setProducts(data.products ?? []);
+          setCategories(data.categories ?? []);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch { /* ignore cache errors */ }
+
     setLoading(true);
     timer.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&tenantId=${tenantId}`);
         if (res.ok) {
           const data = await res.json();
+          // Cache result
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ q, data, timestamp: Date.now() }));
+          } catch { /* ignore storage errors */ }
           setProducts(data.products ?? []);
           setCategories(data.categories ?? []);
         }
