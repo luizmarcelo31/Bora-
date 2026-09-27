@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { DailySummary } from "@/components/shared/DailySummary";
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,16 +86,18 @@ export default async function AdminHomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        title="Visão geral da plataforma"
-        badge="Plataforma"
-        description="O número que pede ação vem primeiro; o contexto vem depois."
-        actions={
-          <Button asChild size="sm">
-            <Link href="/admin/empresas/nova">Nova empresa</Link>
-          </Button>
-        }
-      />
+        <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
+        <DailySummary />
+        <PageHeader
+          title="Visão geral da plataforma"
+          badge="Plataforma"
+          description="O número que pede ação vem primeiro; o contexto vem depois."
+          actions={
+            <Button asChild size="sm">
+              <Link href="/admin/empresas/nova">Nova empresa</Link>
+            </Button>
+          }
+        />
 
       {/* Linha 1: o dinheiro e o cliente. */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

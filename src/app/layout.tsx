@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Sora } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { KeyboardShortcuts } from "@/components/shared/KeyboardShortcuts";
+import { Suspense } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
@@ -39,6 +41,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <TooltipProvider>
+            <Suspense fallback={null}>
+              <KeyboardShortcuts />
+            </Suspense>
             {children}
             <Toaster />
           </TooltipProvider>
