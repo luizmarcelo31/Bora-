@@ -85,7 +85,7 @@ export default async function InventarioPage() {
           <TableBody>
             {counts.map((c) => (
               <TableRow key={c.id}>
-                <TableCell className="font-medium">{tipoInventarioLabel[c.type]}</TableCell>
+                <TableCell className="font-semibold">{tipoInventarioLabel[c.type]}</TableCell>
                 <TableCell>
                   <StatusBadge status={c.status === "CONCLUIDO" ? "active" : c.status === "ABERTO" ? "pending" : "inactive"} label={c.status} />
                 </TableCell>

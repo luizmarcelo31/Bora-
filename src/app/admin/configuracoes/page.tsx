@@ -47,13 +47,13 @@ export default async function ConfiguracoesPage({
         </p>
       ) : null}
       {params.ok ? (
-        <p role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
           Configurações salvas.
         </p>
       ) : null}
 
       {config?.maintenanceMode ? (
-        <p role="alert" className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+        <p role="alert" className="rounded-lg border border-[var(--status-warning-dot)]/50 bg-[var(--status-warning-bg)] p-3 text-sm text-[var(--status-warning-fg)]">
           Modo de manutenção ativo. Novas empresas não conseguem se cadastrar.
         </p>
       ) : null}
@@ -134,7 +134,7 @@ export default async function ConfiguracoesPage({
               {integracoes.map((i) => (
                 <li key={i.id} className="flex items-center justify-between gap-3 py-3 text-sm">
                   <div>
-                    <p className="font-medium">{i.name}</p>
+                    <p className="font-semibold">{i.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {i.externalAccount ?? "Conta não informada"}
                       {i.lastSyncAt

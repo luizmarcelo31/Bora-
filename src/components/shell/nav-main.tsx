@@ -71,7 +71,7 @@ interface NavCollapsibleItemProps {
 
 function CollapsedIconFallback({ title }: { title: string }) {
   return (
-    <span className="flex size-4 shrink-0 items-center justify-center rounded-xs font-medium text-[10px] outline">
+    <span className=      "flex size-4 shrink-0 items-center justify-center rounded-xs font-semibold text-[10px] outline">
       {title.slice(0, 1)}
     </span>
   );
@@ -278,7 +278,7 @@ function NavItemBadge({ badge }: { badge?: NavBadge }) {
       className={cn(
         "rounded-sm border capitalize",
         badge === "new" &&
-          "border-green-600 text-green-600 peer-hover/menu-button:text-green-600 peer-data-active/menu-button:text-green-600",
+          "border-[var(--status-success-dot)] text-[var(--status-success-dot)] peer-hover/menu-button:text-[var(--status-success-dot)] peer-data-active/menu-button:text-[var(--status-success-dot)]",
         badge === "soon" && "border-muted-foreground text-muted-foreground",
       )}
     >

@@ -161,7 +161,7 @@ export default async function SaudePage() {
                 key={s.nome}
                 className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm"
               >
-                <span className="font-medium">{s.nome}</span>
+                <span className="font-semibold">{s.nome}</span>
                 <span className="flex items-center gap-2 text-xs text-muted-foreground">
                   {s.detalhe}
                   <StatusPill tom={s.tom}>{s.ok ? "Operacional" : "Atenção"}</StatusPill>

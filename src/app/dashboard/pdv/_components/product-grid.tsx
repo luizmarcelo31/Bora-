@@ -56,17 +56,17 @@ export function ProductGrid({
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm leading-tight truncate">{p.name}</p>
+                  <p className="font-semibold text-sm leading-tight truncate">{p.name}</p>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {p.category ? <Badge variant="outline" className="text-[10px] px-1.5 py-0">{p.category}</Badge> : null}
                     {out ? <Badge variant="destructive" className="text-[10px]">Sem estoque</Badge> : low ? <Badge variant="secondary" className="text-[10px]">Baixo</Badge> : null}
                     {hasWholesale && !isWholesaleActive ? (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-blue-600 border-blue-300">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-[var(--status-brand)] border-[var(--status-brand)]/30">
                         Atacado ≥{p.wholesaleMinQuantity} un
                       </Badge>
                     ) : null}
                     {isWholesaleActive ? (
-                      <Badge className="text-[10px] px-1.5 py-0 bg-blue-600">ATACADO ATIVO</Badge>
+                      <Badge className="text-[10px] px-1.5 py-0 bg-[var(--status-brand)]">ATACADO ATIVO</Badge>
                     ) : null}
                   </div>
                 </div>
@@ -76,10 +76,10 @@ export function ProductGrid({
                   {isWholesaleActive ? (
                     <>
                       <span className="text-xs text-muted-foreground line-through tabular-nums">{formatCurrency(p.price)}</span>
-                      <span className="font-semibold text-sm tabular-nums text-blue-600">{formatCurrency(p.wholesalePrice!)}</span>
+                      <span className="font-semibold text-sm tabular-nums text-[var(--status-brand)]">{formatCurrency(p.wholesalePrice!)}</span>
                     </>
                   ) : (
-                    <span className="font-medium text-sm tabular-nums">{formatCurrency(p.price)}</span>
+                    <span className="font-semibold text-sm tabular-nums">{formatCurrency(p.price)}</span>
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground">est. {p.stock}</span>

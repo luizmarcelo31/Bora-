@@ -41,7 +41,7 @@ export function TableCard({
       </div>
 
       {footer ? (
-        <div className="px-1 flex items-center justify-between text-xs font-medium text-muted-foreground tabular-nums">
+          <div className="px-1 flex items-center justify-between text-xs font-semibold text-muted-foreground tabular-nums">
           {footer}
         </div>
       ) : null}

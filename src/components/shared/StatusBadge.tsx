@@ -27,21 +27,21 @@ const statusConfig: Record<
   StatusType,
   { bg: string; text: string; dot: string; defaultLabel: string }
 > = {
-  active:     { bg: "bg-emerald-50 dark:bg-emerald-950/50", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", defaultLabel: "Ativo" },
-  inactive:   { bg: "bg-muted",                             text: "text-muted-foreground",                  dot: "bg-muted-foreground/50", defaultLabel: "Inativo" },
-  open:       { bg: "bg-emerald-50 dark:bg-emerald-950/50", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", defaultLabel: "Aberto" },
-  closed:     { bg: "bg-muted",                             text: "text-muted-foreground",                  dot: "bg-muted-foreground/50", defaultLabel: "Fechado" },
-  paid:       { bg: "bg-emerald-50 dark:bg-emerald-950/50", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", defaultLabel: "Pago" },
-  pending:    { bg: "bg-amber-50 dark:bg-amber-950/50",     text: "text-amber-700 dark:text-amber-400",     dot: "bg-amber-500",   defaultLabel: "Pendente" },
-  ok:         { bg: "bg-emerald-50 dark:bg-emerald-950/50", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", defaultLabel: "Ok" },
-  low:        { bg: "bg-amber-50 dark:bg-amber-950/50",     text: "text-amber-700 dark:text-amber-400",     dot: "bg-amber-500",   defaultLabel: "Baixo" },
-  out:        { bg: "bg-red-50 dark:bg-red-950/50",         text: "text-red-700 dark:text-red-400",         dot: "bg-red-500",     defaultLabel: "Sem estoque" },
-  income:     { bg: "bg-emerald-50 dark:bg-emerald-950/50", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", defaultLabel: "Receita" },
-  expense:    { bg: "bg-red-50 dark:bg-red-950/50",         text: "text-red-700 dark:text-red-400",         dot: "bg-red-500",     defaultLabel: "Despesa" },
-  transfer:   { bg: "bg-blue-50 dark:bg-blue-950/50",       text: "text-blue-700 dark:text-blue-400",       dot: "bg-blue-500",    defaultLabel: "Transferência" },
-  entry:      { bg: "bg-emerald-50 dark:bg-emerald-950/50", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", defaultLabel: "Entrada" },
-  exit:       { bg: "bg-red-50 dark:bg-red-950/50",         text: "text-red-700 dark:text-red-400",         dot: "bg-red-500",     defaultLabel: "Saída" },
-  adjustment: { bg: "bg-amber-50 dark:bg-amber-950/50",     text: "text-amber-700 dark:text-amber-400",     dot: "bg-amber-500",   defaultLabel: "Ajuste" },
+  active:     { bg: "bg-[var(--status-success-bg)]", text: "text-[var(--status-success-fg)]", dot: "bg-[var(--status-success-dot)]", defaultLabel: "Ativo" },
+  inactive:   { bg: "bg-[var(--status-neutral-bg)]",   text: "text-[var(--status-neutral-fg)]",   dot: "bg-[var(--status-neutral-dot)]",   defaultLabel: "Inativo" },
+  open:       { bg: "bg-[var(--status-success-bg)]", text: "text-[var(--status-success-fg)]", dot: "bg-[var(--status-success-dot)]", defaultLabel: "Aberto" },
+  closed:     { bg: "bg-[var(--status-neutral-bg)]",   text: "text-[var(--status-neutral-fg)]",   dot: "bg-[var(--status-neutral-dot)]",   defaultLabel: "Fechado" },
+  paid:       { bg: "bg-[var(--status-success-bg)]", text: "text-[var(--status-success-fg)]", dot: "bg-[var(--status-success-dot)]", defaultLabel: "Pago" },
+  pending:    { bg: "bg-[var(--status-warning-bg)]", text: "text-[var(--status-warning-fg)]", dot: "bg-[var(--status-warning-dot)]", defaultLabel: "Pendente" },
+  ok:         { bg: "bg-[var(--status-success-bg)]", text: "text-[var(--status-success-fg)]", dot: "bg-[var(--status-success-dot)]", defaultLabel: "Ok" },
+  low:        { bg: "bg-[var(--status-warning-bg)]", text: "text-[var(--status-warning-fg)]", dot: "bg-[var(--status-warning-dot)]", defaultLabel: "Baixo" },
+  out:        { bg: "bg-[var(--status-danger-bg)]",   text: "text-[var(--status-danger-fg)]",   dot: "bg-[var(--status-danger-dot)]",   defaultLabel: "Sem estoque" },
+  income:     { bg: "bg-[var(--status-success-bg)]", text: "text-[var(--status-success-fg)]", dot: "bg-[var(--status-success-dot)]", defaultLabel: "Receita" },
+  expense:    { bg: "bg-[var(--status-danger-bg)]",   text: "text-[var(--status-danger-fg)]",   dot: "bg-[var(--status-danger-dot)]",   defaultLabel: "Despesa" },
+  transfer:   { bg: "bg-[var(--status-neutral-bg)]", text: "text-[var(--status-neutral-fg)]", dot: "bg-[var(--status-neutral-dot)]", defaultLabel: "Transferência" },
+  entry:      { bg: "bg-[var(--status-success-bg)]", text: "text-[var(--status-success-fg)]", dot: "bg-[var(--status-success-dot)]", defaultLabel: "Entrada" },
+  exit:       { bg: "bg-[var(--status-danger-bg)]",   text: "text-[var(--status-danger-fg)]",   dot: "bg-[var(--status-danger-dot)]",   defaultLabel: "Saída" },
+  adjustment: { bg: "bg-[var(--status-warning-bg)]", text: "text-[var(--status-warning-fg)]", dot: "bg-[var(--status-warning-dot)]", defaultLabel: "Ajuste" },
 }
 
 export function StatusBadge({ status, label, className }: StatusBadgeProps) {
@@ -51,7 +51,7 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
     <span
       data-slot="status-badge"
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-black/5 px-2.5 py-1 text-xs font-medium dark:border-white/5",
+        "inline-flex items-center gap-1.5 rounded-full border border-black/5 px-2.5 py-1 text-xs font-semibold dark:border-white/5",
         config.bg,
         config.text,
         className

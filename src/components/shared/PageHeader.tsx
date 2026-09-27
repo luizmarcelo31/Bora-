@@ -17,13 +17,13 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-col gap-1 pb-4 border-b border-border/60", className)}>
       <div className="flex flex-wrap items-center gap-2.5">
-        <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
           {title}
         </h1>
         {badge ? (
           <Badge
             variant="secondary"
-            className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
           >
             {badge}
           </Badge>

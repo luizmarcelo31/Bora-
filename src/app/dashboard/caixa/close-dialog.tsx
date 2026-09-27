@@ -76,7 +76,7 @@ export function CloseCashBoxDialog({ openBoxes }: { openBoxes: Box[] }) {
             <Input name="closingBalance" required inputMode="decimal" placeholder="0,00" value={closingRaw} onChange={(e) => setClosingRaw(e.target.value)} />
           </label>
           {selected && closingCents !== undefined ? (
-            <p className={`text-sm ${diff === 0 ? "text-muted-foreground" : diff! > 0 ? "text-emerald-600" : "text-destructive"}`}>
+            <p className={`text-sm ${diff === 0 ? "text-muted-foreground" : diff! > 0 ? "text-[var(--status-success-fg)]" : "text-destructive"}`}>
               Sistema: {formatCurrency(selected.currentBalance)} → Contado: {formatCurrency(closingCents)} — {diffLabel}
             </p>
           ) : null}

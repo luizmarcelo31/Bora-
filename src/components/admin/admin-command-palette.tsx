@@ -252,7 +252,7 @@ export function AdminCommandPalette() {
                 >
                   <r.Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{r.titulo}</span>
+                    <span className="block truncate text-sm font-semibold">{r.titulo}</span>
                     <span className="block truncate text-xs text-muted-foreground">
                       {r.descricao}
                     </span>

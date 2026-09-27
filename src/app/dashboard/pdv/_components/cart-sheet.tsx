@@ -46,7 +46,7 @@ export function CartSheet({
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <Drawer.Content className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col gap-4 bg-background p-6 shadow-lg">
           <div className="flex flex-col gap-1.5">
-            <Drawer.Title className="font-medium leading-none">Confirmar venda</Drawer.Title>
+            <Drawer.Title className="font-semibold leading-none">Confirmar venda</Drawer.Title>
             <Drawer.Description className="text-sm text-muted-foreground">Revise itens e total antes de confirmar. Preço é do cadastro, não do cliente.</Drawer.Description>
           </div>
           <div className="flex-1 overflow-auto py-2">
@@ -69,7 +69,7 @@ export function CartSheet({
           <div className="flex flex-col gap-1 text-sm">
             <div className="flex justify-between"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(subtotal)}</span></div>
             <div className="flex justify-between"><span>Desconto</span><span className="tabular-nums">- {formatCurrency(discountCents)}</span></div>
-            <div className="flex justify-between font-medium text-base"><span>Total</span><span className="tabular-nums">{formatCurrency(total)}</span></div>
+            <div className="flex justify-between font-semibold text-base"><span>Total</span><span className="tabular-nums">{formatCurrency(total)}</span></div>
           </div>
           <Button type="button" onClick={onConfirm} disabled={pending || lines.length === 0}>
             {pending ? "Processando..." : "Confirmar venda"}

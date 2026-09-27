@@ -36,7 +36,7 @@ export function AdminBreadcrumb({ items }: { items: Crumb[] }) {
             ) : (
               <span
                 aria-current={ultimo ? "page" : undefined}
-                className={cn("truncate", ultimo ? "font-medium text-foreground" : "text-muted-foreground")}
+                className={cn("truncate", ultimo ? "font-semibold text-foreground" : "text-muted-foreground")}
               >
                 {item.label}
               </span>

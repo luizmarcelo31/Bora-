@@ -50,7 +50,7 @@ export default async function PermissoesPage() {
           <TableBody>
             {TODAS_PERMISSOES.map((perm) => (
               <TableRow key={perm}>
-                <TableCell className="font-medium">{PERMISSAO_LABEL[perm]}</TableCell>
+                <TableCell className="font-semibold">{PERMISSAO_LABEL[perm]}</TableCell>
                 {FUNCOES.map((f) => (
                   <TableCell key={f}>
                     <span aria-hidden="true">

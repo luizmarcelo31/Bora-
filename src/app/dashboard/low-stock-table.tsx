@@ -20,7 +20,7 @@ export function LowStockTable({
         {items.map((i) => (
           <TableRow key={i.id}>
             <TableCell>{i.product.name}</TableCell>
-            <TableCell className={i.quantity <= i.minimumStock ? "text-destructive font-medium tabular-nums" : "tabular-nums"}>
+            <TableCell className={i.quantity <= i.minimumStock ? "text-destructive font-semibold tabular-nums" : "tabular-nums"}>
               {i.quantity}
             </TableCell>
             <TableCell className="tabular-nums">{i.minimumStock}</TableCell>

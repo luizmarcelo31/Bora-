@@ -9,8 +9,8 @@ export function BrandLogo({ className }: { className?: string }) {
     <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden="true">
       <defs>
         <linearGradient id="bm-gradient" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FB9233" />
-          <stop offset="1" stopColor="#EA580C" />
+          <stop stopColor="var(--accent)" />
+          <stop offset="1" stopColor="var(--accent)" />
         </linearGradient>
       </defs>
       <rect x="2" y="2" width="28" height="28" rx="9" fill="url(#bm-gradient)" />

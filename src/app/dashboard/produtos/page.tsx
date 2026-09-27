@@ -214,7 +214,7 @@ export default async function ProdutosPage({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="font-medium">{p.name}</TableCell>
+                <TableCell className="font-semibold">{p.name}</TableCell>
                 <TableCell>{p.category ?? "—"}</TableCell>
                 <TableCell className="tabular-nums">{formatCurrency(p.price)}</TableCell>
                 <TableCell className="tabular-nums">{qty}</TableCell>

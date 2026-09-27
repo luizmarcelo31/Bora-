@@ -86,7 +86,7 @@ export default async function CategoriasPage() {
           <TableBody>
             {categories.map((c) => (
               <TableRow key={c.id}>
-                <TableCell className="font-medium">{c.name}</TableCell>
+                <TableCell className="font-semibold">{c.name}</TableCell>
                 <TableCell>{c.kind === "PRODUTO" ? "Produto" : "Financeiro"}</TableCell>
                 <TableCell>
                   <StatusBadge status={c.active ? "active" : "inactive"} label={c.active ? "Ativa" : "Inativa"} />

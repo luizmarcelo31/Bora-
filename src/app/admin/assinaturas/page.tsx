@@ -114,7 +114,7 @@ export default async function AssinaturasPage({
         </p>
       ) : null}
       {params.ok ? (
-        <p role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
           Assinatura alterada.
         </p>
       ) : null}
@@ -173,7 +173,7 @@ export default async function AssinaturasPage({
                     <TableCell>
                       <a
                         href={`/admin/empresas/${a.tenant.id}`}
-                        className="font-medium hover:underline"
+                        className="font-semibold hover:underline"
                       >
                         {a.tenant.name}
                       </a>

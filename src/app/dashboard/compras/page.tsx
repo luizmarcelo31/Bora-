@@ -90,7 +90,7 @@ export default async function ComprasPage() {
               <Button type="submit" className="mt-2" disabled={suppliers.length === 0}>
                 Registrar Compra
               </Button>
-              {suppliers.length === 0 && <span className="text-xs text-red-500">Cadastre um fornecedor primeiro.</span>}
+              {suppliers.length === 0 && <span className="text-xs text-[var(--status-danger-fg)]">Cadastre um fornecedor primeiro.</span>}
             </form>
           </CardContent>
         </Card>
@@ -117,7 +117,7 @@ export default async function ComprasPage() {
           <TableBody>
             {purchases.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.supplier.name}</TableCell>
+                <TableCell className="font-semibold">{p.supplier.name}</TableCell>
                 <TableCell className="tabular-nums">{formatCurrency(p.total)}</TableCell>
                 <TableCell>
                   <StatusBadge status={p.status === "RECEBIDA" ? "active" : "pending"} label={p.status} />

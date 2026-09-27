@@ -125,7 +125,7 @@ export default async function SuportePage({
         </p>
       ) : null}
       {params.ok ? (
-        <p role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
           Ticket atualizado.
         </p>
       ) : null}
@@ -227,7 +227,7 @@ export default async function SuportePage({
                     return (
                       <TableRow key={t.id}>
                         <TableCell>
-                          <span className="font-medium">{t.subject}</span>
+                          <span className="font-semibold">{t.subject}</span>
                           <p className="text-xs text-muted-foreground">
                             #{t.id} · {t._count.messages} mensagem(ns) ·{" "}
                             {t.createdAt.toLocaleDateString("pt-BR")}
@@ -250,7 +250,7 @@ export default async function SuportePage({
                         </TableCell>
                         <TableCell className="text-xs">
                           {t.slaDueAt ? (
-                            <span className={slaVencido(t.slaDueAt, t.status) ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}>
+                            <span className={slaVencido(t.slaDueAt, t.status) ? "text-[var(--status-danger-fg)]" : "text-muted-foreground"}>
                               {t.slaDueAt.toLocaleString("pt-BR", {
                                 day: "2-digit",
                                 month: "2-digit",

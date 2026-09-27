@@ -1,0 +1,245 @@
+/*
+ * BoraMais — tokens.css
+ * Único source of truth de cores, tipografia e espaçamento.
+ * Importado por src/app/globals.css.
+ *
+ * Regras do roadmap Fase 1:
+ * - Bege (#F5F0EB, #FDEEE7) → branco #FFFFFF
+ * - Marrom/terracota escuro → preto #111111 nos textos primários
+ * - Laranja #C45C2E exclusivamente em: ativo, acento, botão primário, barra de KPI
+ * - Dark mode: fundo #0A0A0A, cards #141414, brand → #FFFFFF
+ * - Tipografia: título 22px → micro 10px, pesos só 400 e 600
+ * - Group labels: uppercase, 10px, letter-spacing 0.7px, --text-3
+ * - sentence case em 100% da interface
+ */
+
+/* ===== LIGHT MODE ===== */
+:root {
+  --radius: 0.75rem;
+
+  /* --- Cores base --- */
+  --background: #FFFFFF;
+  --foreground: #111111;
+  --card: #FFFFFF;
+  --card-foreground: #111111;
+  --popover: #FFFFFF;
+  --popover-foreground: #111111;
+
+  /* --- Brand --- */
+  --primary: #C45C2E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F5F5;
+  --secondary-foreground: #111111;
+  --muted: #F0F0F0;
+  --muted-foreground: #6B6B6B;
+  --accent: #C45C2E;
+  --accent-foreground: #FFFFFF;
+
+  /* --- Status --- */
+  --status-success-bg: #ECFDF5;
+  --status-success-fg: #047857;
+  --status-success-dot: #10B981;
+  --status-warning-bg: #FFFBEB;
+  --status-warning-fg: #B45309;
+  --status-warning-dot: #F59E0B;
+  --status-danger-bg: #FEF2F2;
+  --status-danger-fg: #B91C1C;
+  --status-danger-dot: #EF4444;
+  --status-brand: #C45C2E;
+  --status-neutral-bg: #F5F5F5;
+  --status-neutral-fg: #6B6B6B;
+  --status-neutral-dot: #9CA3AF;
+
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+
+  /* --- Surface --- */
+  --border: #E5E5E5;
+  --input: #E5E5E5;
+  --ring: #C45C2E;
+
+  /* --- Sidebar --- */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #C45C2E;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #C45C2E;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #E5E5E5;
+  --sidebar-ring: #C45C2E;
+
+  /* --- Charts --- */
+  --chart-1: #C45C2E;
+  --chart-2: #E87050;
+  --chart-3: #22C55E;
+  --chart-4: #3B82F6;
+  --chart-5: #8B5CF6;
+
+  /* --- Tipografia (título 22px → micro 10px) --- */
+  --text-micro: 10px;
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --text-title: 22px;
+
+  /* --- Espaçamento tipográfico --- */
+  --tracking-label: 0.7px;      /* group labels */
+  --tracking-wide: 0.5px;
+
+  /* --- Fontes --- */
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-sora);
+  --font-mono: var(--font-geist-mono);
+
+  /* --- Sombras (tom quente mantido no light) --- */
+  --shadow-2xs: 0px 1px 2px 0px oklch(0.3 0.04 50 / 0.07);
+  --shadow-xs: 0px 1px 3px 0px oklch(0.3 0.04 50 / 0.08);
+  --shadow-sm:
+    0px 1px 3px 0px oklch(0.3 0.04 50 / 0.1),
+    0px 1px 2px -1px oklch(0.3 0.04 50 / 0.1);
+  --shadow:
+    0px 1px 3px 0px oklch(0.3 0.04 50 / 0.1),
+    0px 1px 2px -1px oklch(0.3 0.04 50 / 0.1);
+  --shadow-md:
+    0px 1px 3px 0px oklch(0.3 0.04 50 / 0.1),
+    0px 4px 8px -2px oklch(0.3 0.04 50 / 0.12);
+  --shadow-lg:
+    0px 1px 3px 0px oklch(0.3 0.04 50 / 0.1),
+    0px 8px 16px -4px oklch(0.3 0.04 50 / 0.14);
+  --shadow-xl:
+    0px 1px 3px 0px oklch(0.3 0.04 50 / 0.1),
+    0px 12px 24px -6px oklch(0.3 0.04 50 / 0.16);
+  --shadow-2xl: 0px 20px 44px -12px oklch(0.3 0.05 50 / 0.28);
+}
+
+/* ===== DARK MODE ===== */
+.dark {
+  /* --- Cores base --- */
+  --background: #0A0A0A;
+  --foreground: #FFFFFF;
+  --card: #141414;
+  --card-foreground: #FFFFFF;
+  --popover: #141414;
+  --popover-foreground: #FFFFFF;
+
+  /* --- Brand (roadmap: brand vira #FFFFFF no dark) --- */
+  --primary: #FFFFFF;
+  --primary-foreground: #111111;
+  --secondary: #1F1F1F;
+  --secondary-foreground: #FFFFFF;
+  --muted: #1F1F1F;
+  --muted-foreground: #A0A0A0;
+
+  /* --- Status (dark) --- */
+  --status-success-bg: #052E16;
+  --status-success-fg: #6EE7B7;
+  --status-success-dot: #34D399;
+  --status-warning-bg: #451A03;
+  --status-warning-fg: #FCD34D;
+  --status-warning-dot: #FBBF24;
+  --status-danger-bg: #450A0A;
+  --status-danger-fg: #FCA5A5;
+  --status-danger-dot: #F87171;
+  --status-brand: #C45C2E;
+  --status-neutral-bg: #262626;
+  --status-neutral-fg: #A3A3A3;
+  --status-neutral-dot: #737373;
+
+  --accent: #C45C2E;          /* laranja mantido como accent no dark */
+  --accent-foreground: #FFFFFF;
+
+  /* --- Status --- */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* --- Surface --- */
+  --border: #2A2A2A;
+  --input: #2A2A2A;
+  --ring: #C45C2E;
+
+  /* --- Sidebar --- */
+  --sidebar: #0A0A0A;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #FFFFFF;
+  --sidebar-primary-foreground: #111111;
+  --sidebar-accent: #C45C2E;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #2A2A2A;
+  --sidebar-ring: #C45C2E;
+
+  /* --- Charts --- */
+  --chart-1: #C45C2E;
+  --chart-2: #E87050;
+  --chart-3: #22C55E;
+  --chart-4: #3B82F6;
+  --chart-5: #8B5CF6;
+
+  /* --- Tipografia (pesos mantidos, valores iguais ao light) --- */
+  --text-micro: 10px;
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --text-title: 22px;
+
+  /* --- Espaçamento tipográfico --- */
+  --tracking-label: 0.7px;
+  --tracking-wide: 0.5px;
+
+  /* --- Sombras (neutras no dark) --- */
+  --shadow-2xs: 0px 1px 2px 0px oklch(0 0 0 / 0.4);
+  --shadow-xs: 0px 1px 3px 0px oklch(0 0 0 / 0.45);
+  --shadow-sm:
+    0px 1px 3px 0px oklch(0 0 0 / 0.5),
+    0px 1px 2px -1px oklch(0 0 0 / 0.5);
+  --shadow:
+    0px 1px 3px 0px oklch(0 0 0 / 0.5),
+    0px 1px 2px -1px oklch(0 0 0 / 0.5);
+  --shadow-md:
+    0px 1px 3px 0px oklch(0 0 0 / 0.5),
+    0px 4px 8px -2px oklch(0 0 0 / 0.55);
+  --shadow-lg:
+    0px 1px 3px 0px oklch(0 0 0 / 0.5),
+    0px 8px 16px -4px oklch(0 0 0 / 0.6);
+  --shadow-xl:
+    0px 1px 3px 0px oklch(0 0 0 / 0.5),
+    0px 12px 24px -6px oklch(0 0 0 / 0.65);
+  --shadow-2xl: 0px 20px 44px -12px oklch(0 0 0 / 0.7);
+}
+
+/*
+ * Restrição de peso tipográfico (roadmap Fase 1.2):
+ * Usar somente 400 e 600. Regra base — componentes sobrescrevem conforme necessidade.
+ */
+*,
+*::before,
+*::after {
+  font-weight: 400;
+}
+
+h1, h2, h3, h4, h5, h6,
+[class*="heading"],
+.text-lg, .text-xl, .text-2xl, .text-3xl, .text-title,
+.font-semibold {
+  font-weight: 600;
+}
+
+/*
+ * Group label padrão (roadmap Fase 1.2):
+ * uppercase, 10px, letter-spacing 0.7px, --text-3
+ * Usar como classe auxiliar .label-group.
+ */
+.label-group {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--muted-foreground);
+}

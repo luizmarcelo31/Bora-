@@ -185,7 +185,7 @@ export default async function EstoquePage({
                   const status = getStockStatus(qty, min);
                   return (
                     <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell className="font-semibold">{p.name}</TableCell>
                       <TableCell className="tabular-nums">{qty}</TableCell>
                       <TableCell className="tabular-nums">{min}</TableCell>
                       <TableCell className="tabular-nums">{max ?? "—"}</TableCell>

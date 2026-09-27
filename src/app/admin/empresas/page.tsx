@@ -201,7 +201,7 @@ export default async function EmpresasPage({
                     <Link
                       prefetch={false}
                       href={`/admin/empresas/${t.id}`}
-                      className="font-medium hover:underline"
+                      className="font-semibold hover:underline"
                     >
                       {t.name}
                     </Link>

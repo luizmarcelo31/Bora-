@@ -117,7 +117,7 @@ export default async function PromocoesPage() {
               const valueFormatted = p.type === "VALOR_FIXO" ? formatCurrency(p.value) : p.type === "PERCENTUAL" ? `${p.value}%` : p.value;
               return (
               <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.name}</TableCell>
+                <TableCell className="font-semibold">{p.name}</TableCell>
                 <TableCell>{p.type}</TableCell>
                 <TableCell className="tabular-nums">{valueFormatted}</TableCell>
                 <TableCell>{p.items.length} produto(s)</TableCell>

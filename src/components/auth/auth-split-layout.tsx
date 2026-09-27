@@ -34,7 +34,7 @@ export function AuthSplitLayout({
       <div className="flex w-full items-center justify-center bg-background p-8 lg:w-2/3">
         <div className="w-full max-w-md space-y-8 py-16">
           <div className="space-y-2 text-center">
-            <div className="font-heading text-2xl font-bold tracking-tight">{title}</div>
+            <div className="font-heading text-2xl font-semibold tracking-tight">{title}</div>
             <p className="mx-auto max-w-xl text-muted-foreground">{description}</p>
           </div>
           <div className="space-y-4">

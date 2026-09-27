@@ -72,7 +72,7 @@ export default async function NotificacoesPage({
         </p>
       ) : null}
       {params.ok ? (
-        <p role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
           Comunicação salva.
         </p>
       ) : null}
@@ -155,7 +155,7 @@ export default async function NotificacoesPage({
                 <TableBody>
                   {comunicacoes.map((c) => (
                     <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.subject}</TableCell>
+                      <TableCell className="font-semibold">{c.subject}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {labelDe(alvoNotificacaoLabel, c.target)}
                       </TableCell>

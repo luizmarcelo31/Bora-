@@ -113,7 +113,7 @@ export default async function CaixaPage() {
                   const diff = b.closingBalance !== null ? b.closingBalance - b.currentBalance : null;
                   return (
                   <TableRow key={b.id}>
-                    <TableCell className="font-medium">{b.name}</TableCell>
+                    <TableCell className="font-semibold">{b.name}</TableCell>
                     <TableCell>
                       <StatusBadge status={b.status === "ABERTO" ? "open" : "closed"} />
                     </TableCell>
@@ -123,7 +123,7 @@ export default async function CaixaPage() {
                       {b.closingBalance !== null ? (
                         <span className="flex flex-col">
                           <span>{formatCurrency(b.closingBalance)}</span>
-                          {diff !== null && diff !== 0 ? <span className={`text-xs ${diff > 0 ? "text-emerald-600" : "text-destructive"}`}>{diff > 0 ? `Sobra ${formatCurrency(diff)}` : `Falta ${formatCurrency(Math.abs(diff))}`}</span> : null}
+                          {diff !== null && diff !== 0 ? <span className={`text-xs ${diff > 0 ? "text-[var(--status-success-fg)]" : "text-destructive"}`}>{diff > 0 ? `Sobra ${formatCurrency(diff)}` : `Falta ${formatCurrency(Math.abs(diff))}`}</span> : null}
                         </span>
                       ) : "—"}
                     </TableCell>

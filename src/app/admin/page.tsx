@@ -142,7 +142,7 @@ export default async function AdminHomePage() {
                 {listaTickets.map((t) => (
                   <li key={t.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{t.subject}</p>
+                      <p className="truncate font-semibold">{t.subject}</p>
                       <p className="text-xs text-muted-foreground">
                         {t.tenant.name} · {t.createdAt.toLocaleDateString("pt-BR")}
                       </p>
@@ -183,7 +183,7 @@ export default async function AdminHomePage() {
               <ul className="divide-y">
                 {auditoria.map((a) => (
                   <li key={a.id} className="py-2.5 text-sm">
-                    <p className="font-medium">{labelDe(acaoAuditoriaLabel, a.action)}</p>
+                    <p className="font-semibold">{labelDe(acaoAuditoriaLabel, a.action)}</p>
                     <p className="text-xs text-muted-foreground">
                       {a.actorEmail} · {a.createdAt.toLocaleString("pt-BR")}
                     </p>
@@ -244,7 +244,7 @@ export default async function AdminHomePage() {
                     <Link
                       prefetch={false}
                       href={`/admin/empresas/${e.id}`}
-                      className="truncate font-medium hover:underline"
+                      className="truncate font-semibold hover:underline"
                     >
                       {e.name}
                     </Link>

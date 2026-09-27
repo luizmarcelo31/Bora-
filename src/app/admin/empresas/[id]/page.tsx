@@ -195,7 +195,7 @@ export default async function EmpresaPage({
               <>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Plano</span>
-                  <span className="font-medium">{empresa.subscription.plan.name}</span>
+                  <span className="font-semibold">{empresa.subscription.plan.name}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Cobrança</span>
@@ -203,8 +203,8 @@ export default async function EmpresaPage({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Preço</span>
-                  <span className="font-medium">
-                    {formatCurrency(empresa.subscription.plan.monthlyPrice)}/mês
+<span className="font-semibold">
+                     {formatCurrency(empresa.subscription.plan.monthlyPrice)}/mês
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -274,7 +274,7 @@ export default async function EmpresaPage({
               </span>
             </div>
             {empresa.suspensionReason ? (
-              <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+              <p className="rounded-md bg-[var(--status-warning-bg)] p-2 text-xs text-[var(--status-warning-fg)] dark:bg-[var(--status-warning-bg)]/40">
                 Suspensa: {empresa.suspensionReason}
               </p>
             ) : null}
@@ -348,7 +348,7 @@ export default async function EmpresaPage({
                 <TableRow key={v.id}>
                   <TableCell className="tabular-nums">#{v.id}</TableCell>
                   <TableCell>{v.createdAt.toLocaleString("pt-BR")}</TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
+                  <TableCell className="text-right font-semibold tabular-nums">
                     {formatCurrency(v.total)}
                   </TableCell>
                 </TableRow>
@@ -376,7 +376,7 @@ export default async function EmpresaPage({
               {tickets.map((t) => (
                 <li key={t.id} className="flex items-center justify-between gap-3 p-3 text-sm">
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{t.subject}</p>
+                    <p className="truncate font-semibold">{t.subject}</p>
                     <p className="text-xs text-muted-foreground">
                       {t.createdAt.toLocaleDateString("pt-BR")}
                     </p>
@@ -413,7 +413,7 @@ export default async function EmpresaPage({
                 <li key={a.id} className="flex items-start gap-3 p-3 text-sm">
                   <Activity aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0">
-                    <p className="font-medium">
+                    <p className="font-semibold">
                       {labelDe(acaoAuditoriaLabel, a.action)}
                     </p>
                     <p className="text-xs text-muted-foreground">

@@ -49,7 +49,7 @@ export default async function PlanosPage({
         </p>
       ) : null}
       {params.ok ? (
-        <p role="status" className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
           Plano salvo.
         </p>
       ) : null}
@@ -130,7 +130,7 @@ export default async function PlanosPage({
                   {planos.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
-                        <span className="font-medium">{p.name}</span>
+                        <span className="font-semibold">{p.name}</span>
                         <p className="text-xs text-muted-foreground">
                           {p.trialDays > 0 ? `${p.trialDays} dias de experimentação` : "Sem experimentação"}
                         </p>

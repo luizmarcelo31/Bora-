@@ -29,7 +29,7 @@ export function BrandMark({
       {!compact && (
         <span
           className={cn(
-            "font-heading text-base font-bold tracking-tight",
+            "font-heading text-base font-semibold tracking-tight",
             inverted ? "text-primary-foreground" : "text-foreground"
           )}
         >

@@ -149,7 +149,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
       <PopoverContent align="end" className="w-72 p-1.5 md:w-80" onOpenAutoFocus={(e) => e.preventDefault()}>
         {routes.length > 0 ? (
           <div className="flex flex-col">
-            <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Rotas</p>
+            <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Rotas</p>
             {routes.map((r) => (
               <button
                 key={r.url}
@@ -165,7 +165,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
         ) : null}
         {products.length > 0 ? (
           <div className="flex flex-col">
-            <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Produtos</p>
+            <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Produtos</p>
             {products.map((p) => (
               <button
                 key={p.id}
@@ -185,7 +185,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
         ) : null}
         {categories.length > 0 ? (
           <div className="flex flex-col">
-            <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Categorias</p>
+            <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Categorias</p>
             {categories.map((c) => (
               <button
                 key={c.id}
