@@ -10,19 +10,25 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 /**
  * Shell único das duas roles (Fase 2).
- * Header idêntico: trigger + rótulo de contexto + (busca opcional) + tema + selo.
- * O padding do conteúdo pertence às páginas (contrato documentado em DESIGN.md).
+ * Header: trigger + (trilha) + rótulo de contexto + (ações) + (busca) + tema + selo.
+ * `breadcrumb` e `actions` são opcionais para não acoplar a área do tenant
+ * a concepts que só o admin usa. O padding do conteúdo pertence às páginas
+ * (contrato documentado em DESIGN.md).
  */
 export async function AppShell({
   sidebar,
   contextLabel,
   badge,
+  breadcrumb,
+  actions,
   search,
   children,
 }: {
   sidebar: React.ReactNode;
   contextLabel: string;
   badge: string;
+  breadcrumb?: React.ReactNode;
+  actions?: React.ReactNode;
   search?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -37,8 +43,10 @@ export async function AppShell({
           <div className="flex w-full items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mx-2 h-4" />
+            {breadcrumb}
             <span className="truncate text-sm text-muted-foreground">{contextLabel}</span>
             <div className="ml-auto flex items-center gap-1 sm:gap-2">
+              {actions}
               {search}
               <ThemeToggle />
               <Badge className="hidden sm:inline-flex">{badge}</Badge>
