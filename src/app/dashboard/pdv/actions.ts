@@ -162,6 +162,7 @@ export async function cancelSaleAction(formData: FormData) {
 }
 
 export async function getPdvPageData(tenantId: number) {
+  const { dbUser } = await requireSessionTenant("/dashboard/pdv");
   const [products, cashboxes, todaysSales] = await Promise.all([
     ProductService.listProducts(tenantId),
     prisma.cashBox.findMany({
@@ -170,5 +171,5 @@ export async function getPdvPageData(tenantId: number) {
     }),
     SaleService.getTodaysSales(tenantId),
   ]);
-  return { products, cashboxes, todaysSales };
+  return { products, cashboxes, todaysSales, user: { id: dbUser.id, name: dbUser.name, email: dbUser.email } };
 }

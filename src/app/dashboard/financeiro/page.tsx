@@ -101,6 +101,28 @@ export default async function FinanceiroPage({
         <MetricCard title="Saldo (mês)" value={formatCurrency(resume.saldo)} hint={resume.saldo >= 0 ? "Positivo" : "Negativo"} />
       </div>
 
+      {/* DRE — Demonstrativo de Resultado do Exercício */}
+      <Card>
+        <CardHeader>
+          <CardTitle>DRE — Resultado do Período</CardTitle>
+          <p className="text-sm text-muted-foreground">Receitas menos despesas = resultado.</p>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg bg-green-500/10 border border-green-500/30 p-4">
+            <p className="text-xs text-muted-foreground">Receitas Totais</p>
+            <p className="text-xl font-semibold text-green-600">{formatCurrency(resume.receitas)}</p>
+          </div>
+          <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4">
+            <p className="text-xs text-muted-foreground">Despesas Totais</p>
+            <p className="text-xl font-semibold text-destructive">{formatCurrency(resume.despesas)}</p>
+          </div>
+          <div className={`rounded-lg p-4 border ${resume.saldo >= 0 ? "bg-green-500/10 border-green-500/30" : "bg-destructive/10 border-destructive/30"}`}>
+            <p className="text-xs text-muted-foreground">Resultado Líquido</p>
+            <p className={`text-xl font-semibold ${resume.saldo >= 0 ? "text-green-600" : "text-destructive"}`}>{formatCurrency(resume.saldo)}</p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Novo lançamento</CardTitle>

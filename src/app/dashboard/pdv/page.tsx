@@ -39,28 +39,29 @@ export default async function PdvPage() {
   } catch {
     redirect("/unauthorized");
   }
-  const { products, cashboxes, todaysSales } = await getPdvPageData(tenant.id);
+const { products, cashboxes, todaysSales, user } = await getPdvPageData(tenant.id);
 
-  return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader title="PDV" badge={tenant.name} description="Ponto de venda da conveniência." />
-      <SearchParamToast
-        okText="Venda #{v} registrada com sucesso."
-        okMap={{ cancel: "Venda cancelada e estoque/financeiro estornados." }}
-        errorMap={ERROR_MSG}
-      />
+    return (
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+        <PageHeader title="PDV" badge={tenant.name} description="Ponto de venda da conveniência." />
+        <SearchParamToast
+          okText="Venda #{v} registrada com sucesso."
+          okMap={{ cancel: "Venda cancelada e estoque/financeiro estornados." }}
+          errorMap={ERROR_MSG}
+        />
 
-      <PdvClient
-        products={products.map((p) => ({
-          id: p.id,
-          name: p.name,
-          price: p.price,
-          stock: p.inventory?.quantity ?? 0,
-          category: (p as { category?: string | null }).category ?? null,
-          imageUrl: (p as { imageUrl?: string | null }).imageUrl ?? null,
-        }))}
-        cashboxes={cashboxes.map((c) => ({ id: c.id, name: c.name }))}
-      />
+        <PdvClient
+          products={products.map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            stock: p.inventory?.quantity ?? 0,
+            category: (p as { category?: string | null }).category ?? null,
+            imageUrl: (p as { imageUrl?: string | null }).imageUrl ?? null,
+          }))}
+          cashboxes={cashboxes.map((c) => ({ id: c.id, name: c.name }))}
+          user={user}
+        />
 
       <TableCard
         title="Vendas de hoje"

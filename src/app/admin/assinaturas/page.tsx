@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { TableCard } from "@/components/shared/TableCard";
@@ -102,8 +103,9 @@ export default async function AssinaturasPage({
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        title="Assinaturas"
+<AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Assinaturas" }]} />
+        <PageHeader
+          title="Assinaturas"
         badge="Receita"
         description="Plano contratado por cada empresa. Cancelar nunca apaga o histórico."
       />
@@ -287,3 +289,4 @@ function rotuloAssinatura(s: StatusAssinatura): string {
       return "Alterar";
   }
 }
+

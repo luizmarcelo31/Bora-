@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PAYMENT_OPTIONS } from "@/lib/payments";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/validators";
 import { createSaleAction } from "./actions";
@@ -11,11 +12,13 @@ import { ProductGrid } from "./_components/product-grid";
 import { CartSheet } from "./_components/cart-sheet";
 import { ControlledSelect } from "@/components/ui/controlled-select";
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
+import { Package } from "lucide-react";
 
 export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null; wholesalePrice?: number | null; wholesaleMinQuantity?: number | null };
 export type PdvCashbox = { id: number; name: string };
 
 const PAYMENTS = PAYMENT_OPTIONS;
+const DISCOUNT_PASSWORD = "BoraMais2026"; // Fase 3 — senha de autorização de desconto
 
 const SALE_ERROR_MSG: Record<string, string> = {
   invalid: "Venda inválida. Confira os itens.",
@@ -29,9 +32,11 @@ const SALE_ERROR_MSG: Record<string, string> = {
 export function PdvClient({
   products,
   cashboxes,
+  user,
 }: {
   products: PdvProduct[];
   cashboxes: PdvCashbox[];
+  user: { id: number; name: string; email: string };
 }) {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [payment, setPayment] = useState("CASH");
@@ -41,6 +46,12 @@ export function PdvClient({
   const [search, setSearch] = useState("");
   const [pending, setPending] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [discountPending, setDiscountPending] = useState(false);
+  const [discountPassword, setDiscountPassword] = useState("");
+  const [discountError, setDiscountError] = useState("");
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinError, setPinError] = useState("");
   const idemRef = useRef<string | null>(null);
   function getIdemKey() {
     if (!idemRef.current) idemRef.current = crypto.randomUUID();
@@ -68,6 +79,37 @@ export function PdvClient({
       else next[id] = qty;
       return next;
     });
+  }
+
+  // Fase 3 — Favoritos: top 6 produtos mais caros como quick-add
+  const favorites = useMemo(
+    () => [...products].sort((a, b) => b.price - a.price).slice(0, 6),
+    [products]
+  );
+
+  function addToCart(id: number) {
+    setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
+  }
+
+  async function applyDiscount() {
+    if (discountPending) {
+      if (discountPassword === DISCOUNT_PASSWORD) {
+        setDiscountPending(false);
+        setDiscountPassword("");
+        setDiscountError("");
+        toast.success("Desconto autorizado.");
+      } else {
+        setDiscountError("Senha incorreta.");
+        toast.error("Senha inválida.");
+      }
+      return;
+    }
+    const discountValue = parseFloat(discount.replace(/\./g, "").replace(",", ".").trim());
+    if (discountValue > 0) {
+      setDiscountPending(true);
+      setDiscountPassword("");
+      setDiscountError("");
+    }
   }
 
   const filtered = products.filter((p) =>
@@ -121,10 +163,58 @@ export function PdvClient({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <>
+      {/* Operador — PIN para troca */}
+      <div className="flex items-center justify-between bg-card rounded-lg px-4 py-2 border">
+        <span className="text-sm font-medium">👤 {user.name}</span>
+        <Button variant="ghost" size="sm" onClick={() => setPinOpen(true)}>
+          🔒 Trocar operador
+        </Button>
+      </div>
+      {pinOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setPinOpen(false); setPinValue(""); setPinError(""); }}>
+          <div className="bg-card rounded-lg p-6 w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <CardTitle className="text-lg mb-4">Trocar operador</CardTitle>
+            <Input
+              type="password"
+              placeholder="PIN do operador"
+              value={pinValue}
+              onChange={(e) => { setPinValue(e.target.value); setPinError(""); }}
+              className="mb-3"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && pinValue === "1234") {
+                  setPinOpen(false);
+                  setPinValue("");
+                  toast.success("Operador trocado com sucesso.");
+                } else if (e.key === "Enter") {
+                  setPinError("PIN inválido.");
+                }
+              }}
+            />
+            {pinError && <span className="text-xs text-destructive">{pinError}</span>}
+            <p className="text-xs text-muted-foreground mt-2">PIN: 1234 (demo)</p>
+          </div>
+        </div>
+      )}
+      <div className="grid gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>Catálogo</CardTitle>
+          {/* Fase 3 — Favoritos */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {favorites.map((p) => (
+              <Button
+                key={p.id}
+                variant="outline"
+                size="sm"
+                className="text-xs gap-1"
+                onClick={() => addToCart(p.id)}
+                disabled={p.stock <= 0}
+              >
+                <Package className="size-3" /> {p.name} — {formatCurrency(p.price)}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <Input
@@ -184,8 +274,33 @@ export function PdvClient({
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 Desconto (R$)
-                <Input value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" />
+                <div className="flex gap-1">
+                  <Input value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" disabled={discountPending} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={applyDiscount}
+                    disabled={!discount || discountPending}
+                    className="whitespace-nowrap"
+                  >
+                    {discountPending ? "🔒" : "🔑"}
+                  </Button>
+                </div>
               </label>
+              {discountPending && (
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs text-muted-foreground">Senha do desconto</span>
+                  <Input
+                    type="password"
+                    placeholder="Senha do desconto"
+                    value={discountPassword}
+                    onChange={(e) => setDiscountPassword(e.target.value)}
+                    className="border-destructive/50 focus-visible:ring-destructive"
+                  />
+                  {discountError && <span className="text-xs text-destructive">{discountError}</span>}
+                </label>
+              )}
               <label className="flex flex-col gap-1 text-sm">
                 Cliente (opcional)
                 <Input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nome" />
@@ -196,5 +311,6 @@ export function PdvClient({
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DailySummary } from "@/components/shared/DailySummary";
+import { LowStockTable } from "@/app/dashboard/low-stock-table";
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { StatusPill } from "@/components/shared/StatusPill";
@@ -47,6 +48,7 @@ export default async function AdminHomePage() {
     ticketsCriticos,
     empresasComMovimento,
     auditoria,
+    lowStockItems,
   ] = await Promise.all([
     prisma.tenant.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.tenant.count(),
@@ -74,6 +76,11 @@ export default async function AdminHomePage() {
       include: { _count: { select: { sales: true } } },
     }),
     prisma.platformAuditLog.findMany({ orderBy: { createdAt: "desc" }, take: 6 }),
+    prisma.inventory.findMany({
+      where: { quantity: { lte: 0 } },
+      include: { product: { select: { name: true } } },
+      take: 10,
+    }),
   ]);
 
   const porStatus = new Map(statusEmpresas.map((e) => [e.status, e._count._all]));
@@ -88,6 +95,12 @@ export default async function AdminHomePage() {
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
         <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
         <DailySummary />
+        {lowStockItems.length > 0 && (
+          <section>
+            <h2 className="text-lg font-semibold mb-2">⚠️ Estoque Crítico</h2>
+            <LowStockTable items={lowStockItems} />
+          </section>
+        )}
         <PageHeader
           title="Visão geral da plataforma"
           badge="Plataforma"
