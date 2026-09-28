@@ -318,6 +318,23 @@ export function PdvClient({
         </CardContent>
       </Card>
     </div>
+      {/* P0 mobile — total + carrinho sempre visíveis */}
+      {lines.length > 0 && (
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t bg-background/95 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur md:bottom-0 lg:hidden">
+          <div className="mx-auto flex max-w-6xl items-center gap-3">
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">
+                {lines.reduce((n, l) => n + l.qty, 0)} {lines.reduce((n, l) => n + l.qty, 0) === 1 ? "item" : "itens"}
+              </span>
+              <span className="text-lg font-semibold tabular-nums">{formatCurrency(subtotal)}</span>
+            </div>
+            <Button type="button" className="ml-auto min-h-11 flex-1 sm:flex-none" onClick={() => setCartOpen(true)}>
+              Ver carrinho
+            </Button>
+          </div>
+        </div>
+      )}
+      {lines.length > 0 && <div aria-hidden="true" className="h-36 md:h-20 lg:hidden" />}
     </>
   );
 }

@@ -166,6 +166,34 @@ export default async function EstoquePage({
               <EmptyState title="Nenhum produto" description={q || filter !== "all" ? "Nenhum resultado para o filtro." : "Cadastre em Produtos primeiro."} icon={Package} />
             </div>
           ) : (
+            <>
+            {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+            <ul className="flex flex-col gap-2 p-3 md:hidden">
+              {products.map((p) => {
+                const qty = p.inventory?.quantity ?? 0;
+                const min = p.inventory?.minimumStock ?? 0;
+                const max = p.inventory?.maximumStock ?? null;
+                const status = getStockStatus(qty, min);
+                return (
+                  <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-semibold">{p.name}</span>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {qty} un. · mín {min}{max !== null ? ` · máx ${max}` : ""}
+                      </span>
+                    </div>
+                    <StatusBadge status={status} label={getStockStatusLabel(qty, min)} />
+                    <EditInventoryDialog
+                      productId={p.id}
+                      productName={p.name}
+                      minimumStock={min}
+                      maximumStock={max}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -205,6 +233,8 @@ export default async function EstoquePage({
                 })}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -233,6 +233,53 @@ export default async function FinanceiroPage({
               <EmptyState title="Sem lançamentos" description="Registre o primeiro acima." icon={Wallet} />
             </div>
           ) : (
+            <>
+            {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+            <ul className="flex flex-col gap-2 p-3 md:hidden">
+              {movements.map((m) => (
+                <li key={m.id} className="flex flex-col gap-2 rounded-lg border p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-semibold">{m.description}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(m.movementDate).toLocaleDateString("pt-BR")} · {m.category}
+                      </span>
+                    </div>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(m.amount)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={m.paid ? "paid" : "pending"} />
+                    <StatusBadge
+                      status={m.type === "RECEITA" ? "income" : m.type === "DESPESA" ? "expense" : "transfer"}
+                    />
+                    <div className="ml-auto flex shrink-0 gap-1">
+                      <form action={togglePaidAction}>
+                        <input type="hidden" name="movementId" value={m.id} />
+                        <input type="hidden" name="paid" value={m.paid ? "false" : "true"} />
+                        <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                          {m.paid ? "Desmarcar" : "Dar baixa"}
+                        </Button>
+                      </form>
+                      <EditFinancialDialog
+                        movement={{
+                          id: m.id,
+                          type: m.type,
+                          category: m.category,
+                          description: m.description,
+                          amount: m.amount,
+                          movementDate: m.movementDate.toISOString(),
+                          cashBoxId: m.cashBoxId,
+                        }}
+                        categories={finCategories}
+                        cashboxes={cashboxes}
+                      />
+                      <DeleteFinancialDialog id={m.id} />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -289,6 +336,8 @@ export default async function FinanceiroPage({
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

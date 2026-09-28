@@ -71,8 +71,8 @@ export default async function DashboardPage() {
         description="Acompanhe vendas, estoque, caixa e financeiro em tempo real."
       />
 
-      {/* Metric Cards — assinatura BoraMais (MetricCard com ícone + badge) */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+      {/* Metric Cards — strip compacto no mobile (2 col), 4 col no desktop */}
+      <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
         <MetricCard
           title="Faturado hoje"
           value={formatCurrency(faturadoHoje)}

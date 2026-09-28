@@ -98,6 +98,24 @@ export default async function CaixaPage() {
               <EmptyState title="Nenhum caixa" description="Abra o primeiro acima." icon={Wallet} />
             </div>
           ) : (
+            <>
+            {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+            <ul className="flex flex-col gap-2 p-3 md:hidden">
+              {boxes.map((b) => (
+                <li key={b.id} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-semibold">{b.name}</span>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      Abertura {formatCurrency(b.openingBalance)}
+                      {b.closingBalance !== null ? ` · Fech. ${formatCurrency(b.closingBalance)}` : ""}
+                    </span>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(b.currentBalance)}</span>
+                  <StatusBadge status={b.status === "ABERTO" ? "open" : "closed"} />
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -131,6 +149,8 @@ export default async function CaixaPage() {
                 )})}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

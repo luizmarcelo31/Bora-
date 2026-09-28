@@ -53,18 +53,22 @@ async function getTodaySummary(): Promise<DailySummaryData> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [sales, products] = await Promise.all([
+  const [sales, products, revenue] = await Promise.all([
     prisma.sale.count({
       where: { createdAt: { gte: today } },
     }),
     prisma.product.count({
       where: { active: true },
     }),
+    prisma.sale.aggregate({
+      _sum: { total: true },
+      where: { createdAt: { gte: today }, status: "CONCLUIDA" },
+    }),
   ]);
 
   return {
     todaySales: sales,
-    todayRevenue: 0,
+    todayRevenue: revenue._sum.total ?? 0,
     todayProducts: products,
   };
 }

@@ -30,11 +30,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BoraMais — SaaS de Gestão para Conveniências",
   description: "Gestão de produtos, estoque, PDV, caixa e financeiro para conveniências.",
+  appleWebApp: { capable: true, title: "BoraMais", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#C45C2E",
 };
 

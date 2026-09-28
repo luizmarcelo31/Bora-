@@ -22,6 +22,7 @@ export async function AppShell({
   breadcrumb,
   actions,
   search,
+  bottomNav,
   children,
 }: {
   sidebar: React.ReactNode;
@@ -30,6 +31,7 @@ export async function AppShell({
   breadcrumb?: React.ReactNode;
   actions?: React.ReactNode;
   search?: React.ReactNode;
+  bottomNav?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
@@ -39,12 +41,18 @@ export async function AppShell({
     <SidebarProvider defaultOpen={defaultOpen}>
       {sidebar}
       <SidebarInset className="min-w-0">
+        <a
+          href="#conteudo"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:text-primary-foreground"
+        >
+          Pular para o conteúdo
+        </a>
         <header className="flex h-12 shrink-0 items-center gap-2 border-b">
           <div className="flex w-full items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mx-2 h-4" />
             {breadcrumb}
-            <span className="truncate text-sm text-muted-foreground">{contextLabel}</span>
+            <span className="hidden truncate text-sm text-muted-foreground min-[480px]:block">{contextLabel}</span>
             <div className="ml-auto flex items-center gap-1 sm:gap-2">
               {actions}
               {search}
@@ -53,8 +61,9 @@ export async function AppShell({
             </div>
           </div>
         </header>
-        <div className="min-w-0 flex-1">{children}</div>
+        <div id="conteudo" className="min-w-0 flex-1 scroll-mt-14 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
       </SidebarInset>
+      {bottomNav}
     </SidebarProvider>
   );
 }

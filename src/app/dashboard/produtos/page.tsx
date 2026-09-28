@@ -2,7 +2,7 @@ import { ProductService } from "@/services";
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -86,11 +86,12 @@ export default async function ProdutosPage({
         <MetricCard title="Estoque baixo" value={String(baixo)} hint={baixo > 0 ? "Repor em breve" : "Tudo ok"} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Novo produto</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <details className="rounded-xl border border-border/50 bg-card shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+          Novo produto
+          <span className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground">+ Expandir</span>
+        </summary>
+        <div className="px-4 pb-4">
           <form action={createProductAction} className="grid gap-3 sm:grid-cols-3">
             <label className="flex flex-col gap-1 text-sm sm:col-span-2">
               Nome*
@@ -133,8 +134,8 @@ export default async function ProdutosPage({
               <Button type="submit">Cadastrar produto</Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </details>
 
       <Card>
         <CardContent className="pt-6">
@@ -180,6 +181,63 @@ export default async function ProdutosPage({
           description="Preço, estoque e status por produto."
           footer={`${products.length} produto(s)`}
         >
+        {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+        <ul className="flex flex-col gap-2 p-3 md:hidden">
+          {products.map((p) => {
+            const qty = p.inventory?.quantity ?? 0;
+            const min = p.inventory?.minimumStock ?? 0;
+            const status = getStockStatus(qty, min);
+            return (
+              <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
+                {p.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- miniatura remota do Storage, sem remotePatterns
+                  <img
+                    src={p.imageUrl}
+                    alt=""
+                    className="size-10 shrink-0 rounded-lg border object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+                    <Package className="size-4" />
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">{p.name}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {formatCurrency(p.price)} · {qty} un.
+                  </span>
+                  <span className="mt-1">
+                    <StatusBadge status={status} label={getStockStatusLabel(qty, min)} />
+                  </span>
+                </div>
+                <div className="flex shrink-0 flex-col gap-1">
+                  <EditProductDialog
+                    product={{
+                      id: p.id,
+                      name: p.name,
+                      sku: p.sku,
+                      barcode: p.barcode,
+                      description: p.description,
+                      price: p.price,
+                      cost: p.cost,
+                      category: p.category,
+                      imageUrl: p.imageUrl,
+                    }}
+                    categories={productCategories}
+                  />
+                  <form action={toggleProductAction}>
+                    <input type="hidden" name="productId" value={p.id} />
+                    <Button variant="outline" size="sm" type="submit" className="hit-area-44 w-full">
+                      {p.active ? "Desativar" : "Ativar"}
+                    </Button>
+                  </form>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -252,6 +310,7 @@ export default async function ProdutosPage({
             )})}
           </TableBody>
         </Table>
+        </div>
         </TableCard>
       )}
     </main>

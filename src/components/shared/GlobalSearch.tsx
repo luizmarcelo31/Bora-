@@ -148,7 +148,7 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
   return (
     <Popover open={showResults} onOpenChange={setOpen}>
       <PopoverAnchor asChild>
-        <div className="relative w-36 sm:w-52 md:w-72">
+        <div className="relative w-28 min-[420px]:w-36 sm:w-52 md:w-72">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             ref={inputRef}
