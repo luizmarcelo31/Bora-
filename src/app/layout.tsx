@@ -31,6 +31,7 @@ export const metadata: Metadata = {
   title: "BoraMais — SaaS de Gestão para Conveniências",
   description: "Gestão de produtos, estoque, PDV, caixa e financeiro para conveniências.",
   appleWebApp: { capable: true, title: "BoraMais", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

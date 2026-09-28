@@ -104,6 +104,28 @@ export default async function ComprasPage() {
           description="Entradas recentes de mercadoria."
           footer={`${purchases.length} compra(s)`}
         >
+        {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+        <ul className="flex flex-col gap-2 p-3 md:hidden">
+          {purchases.map((p) => (
+            <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-semibold">{p.supplier.name}</span>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {p.createdAt.toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(p.total)}</span>
+              <StatusBadge status={p.status === "RECEBIDA" ? "active" : "pending"} label={p.status} />
+              {p.status === "PENDENTE" && (
+                <form action={receivePurchaseAction} className="shrink-0">
+                  <input type="hidden" name="purchaseId" value={p.id} />
+                  <Button variant="outline" size="sm" type="submit" className="hit-area-44">Confirmar</Button>
+                </form>
+              )}
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -135,6 +157,7 @@ export default async function ComprasPage() {
             ))}
           </TableBody>
         </Table>
+        </div>
         </TableCard>
       )}
     </main>

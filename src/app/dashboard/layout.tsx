@@ -16,10 +16,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
       search={<GlobalSearch tenantId={tenant.id} />}
       bottomNav={
         <BottomNav
+          fabImage="/icons/botao-168.png"
           items={[
             { title: "Início", url: "/dashboard", icon: LayoutDashboard },
-            { title: "PDV", url: "/dashboard/pdv", icon: ShoppingCart },
             { title: "Estoque", url: "/dashboard/estoque", icon: Boxes },
+            { title: "PDV", url: "/dashboard/pdv", icon: ShoppingCart },
             { title: "Caixa", url: "/dashboard/caixa", icon: Wallet },
             { title: "Finan.", url: "/dashboard/financeiro", icon: Landmark },
           ]}

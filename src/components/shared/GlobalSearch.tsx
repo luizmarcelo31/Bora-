@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, Package, Tag, LayoutDashboard } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -231,6 +231,11 @@ export function GlobalSearch({ tenantId }: { tenantId: number }) {
         ) : null}
         {loading ? <p className="px-2 py-2 text-sm text-muted-foreground">Buscando…</p> : null}
         {empty ? <p className="px-2 py-2 text-sm text-muted-foreground">Nenhum resultado.</p> : null}
+        <div className="flex items-center gap-3 border-t px-2 py-1.5 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1"><Kbd>/</Kbd> buscar</span>
+          <span className="flex items-center gap-1"><Kbd>n</Kbd> produto</span>
+          <span className="flex items-center gap-1"><Kbd>v</Kbd> PDV</span>
+        </div>
       </PopoverContent>
     </Popover>
   );

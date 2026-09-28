@@ -180,6 +180,9 @@ export function PdvClient({
             <Input
               type="password"
               placeholder="PIN do operador"
+              aria-label="PIN do operador"
+              aria-invalid={pinError ? true : undefined}
+              aria-describedby={pinError ? "pin-error" : undefined}
               value={pinValue}
               onChange={(e) => { setPinValue(e.target.value); setPinError(""); }}
               className="mb-3"
@@ -194,7 +197,7 @@ export function PdvClient({
               }}
             />
             </label>
-            {pinError && <span className="text-xs text-destructive">{pinError}</span>}
+            {pinError && <span id="pin-error" role="alert" className="text-xs text-destructive">{pinError}</span>}
             <p className="text-xs text-muted-foreground mt-2">PIN: 1234 (demo)</p>
           </div>
         </div>
@@ -301,11 +304,14 @@ export function PdvClient({
                   <Input
                     type="password"
                     placeholder="Senha do desconto"
+                    aria-label="Senha do desconto"
+                    aria-invalid={discountError ? true : undefined}
+                    aria-describedby={discountError ? "discount-error" : undefined}
                     value={discountPassword}
                     onChange={(e) => setDiscountPassword(e.target.value)}
                     className="border-destructive/50 focus-visible:ring-destructive"
                   />
-                  {discountError && <span className="text-xs text-destructive">{discountError}</span>}
+                  {discountError && <span id="discount-error" role="alert" className="text-xs text-destructive">{discountError}</span>}
                 </label>
               )}
               <label className="flex flex-col gap-1 text-sm">
@@ -320,7 +326,7 @@ export function PdvClient({
     </div>
       {/* P0 mobile — total + carrinho sempre visíveis */}
       {lines.length > 0 && (
-        <div className="fixed inset-x-0 bottom-16 z-40 border-t bg-background/95 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur md:bottom-0 lg:hidden">
+        <div className="fixed inset-x-0 bottom-20 z-40 border-t bg-background/95 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur md:bottom-0 lg:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-3">
             <div className="flex flex-col">
               <span className="text-xs text-muted-foreground">

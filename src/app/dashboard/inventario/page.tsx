@@ -72,6 +72,27 @@ export default async function InventarioPage() {
           description="Contagens de estoque realizadas."
           footer={`${counts.length} registro(s)`}
         >
+        {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+        <ul className="flex flex-col gap-2 p-3 md:hidden">
+          {counts.map((c) => (
+            <li key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-semibold">{tipoInventarioLabel[c.type]}</span>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {c.startedAt.toLocaleString('pt-BR')} · {c.items.length} {c.items.length === 1 ? "item" : "itens"}
+                </span>
+              </div>
+              <StatusBadge status={c.status === "CONCLUIDO" ? "active" : c.status === "ABERTO" ? "pending" : "inactive"} label={c.status} />
+              {c.status === "ABERTO" && (
+                <form action={finalizeInventoryCountAction} className="shrink-0">
+                  <input type="hidden" name="countId" value={c.id} />
+                  <Button variant="outline" size="sm" type="submit" className="hit-area-44">Finalizar</Button>
+                </form>
+              )}
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -103,6 +124,7 @@ export default async function InventarioPage() {
             ))}
           </TableBody>
         </Table>
+        </div>
         </TableCard>
       )}
     </main>

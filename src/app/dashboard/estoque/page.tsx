@@ -245,6 +245,24 @@ export default async function EstoquePage({
             <CardTitle>Últimas movimentações</CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-0">
+            {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+            <ul className="flex flex-col gap-2 p-3 md:hidden">
+              {history.map((m) => (
+                <li key={m.id} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-semibold">{m.inventory.product.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {new Date(m.createdAt).toLocaleString("pt-BR")} · {m.reason ?? "—"}
+                    </span>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold tabular-nums">{m.type === "ENTRADA" ? `+${m.quantity}` : `-${m.quantity}`}</span>
+                  <StatusBadge
+                    status={m.type === "ENTRADA" ? "entry" : m.type === "SAIDA" ? "exit" : "adjustment"}
+                  />
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -271,6 +289,7 @@ export default async function EstoquePage({
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       ) : null}

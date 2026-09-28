@@ -101,6 +101,30 @@ export default async function PromocoesPage() {
           description="Promoções cadastradas."
           footer={`${promotions.length} promoção(ões)`}
         >
+        {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+        <ul className="flex flex-col gap-2 p-3 md:hidden">
+          {promotions.map((p) => {
+            const valueFormatted = p.type === "VALOR_FIXO" ? formatCurrency(p.value) : p.type === "PERCENTUAL" ? `${p.value}%` : p.value;
+            return (
+              <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">{p.name}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {valueFormatted} · {p.items.length} produto(s)
+                  </span>
+                </div>
+                <StatusBadge status={p.active ? "active" : "inactive"} />
+                <form action={togglePromotionAction} className="shrink-0">
+                  <input type="hidden" name="promotionId" value={p.id} />
+                  <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                    {p.active ? "Desativar" : "Ativar"}
+                  </Button>
+                </form>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -136,6 +160,7 @@ export default async function PromocoesPage() {
             )})}
           </TableBody>
         </Table>
+        </div>
         </TableCard>
       )}
     </main>

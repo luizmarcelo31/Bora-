@@ -179,6 +179,24 @@ export default async function RelatoriosPage({
               <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
             </div>
           ) : (
+            <>
+            {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+            <ul className="flex flex-col gap-2 p-3 md:hidden">
+              {periodSales.map((s) => (
+                <li key={s.id} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-semibold">
+                      #{s.id} · {s.items.reduce((n, i) => n + i.quantity, 0)} {s.items.reduce((n, i) => n + i.quantity, 0) === 1 ? "item" : "itens"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(s.createdAt).toLocaleString("pt-BR")} · {paymentLabel(s.paymentMethod)}
+                    </span>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(s.total)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -201,6 +219,8 @@ export default async function RelatoriosPage({
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
         {totalPages > 1 ? (

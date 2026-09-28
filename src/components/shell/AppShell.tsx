@@ -61,7 +61,7 @@ export async function AppShell({
             </div>
           </div>
         </header>
-        <div id="conteudo" className="min-w-0 flex-1 scroll-mt-14 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
+        <div id="conteudo" className="min-w-0 flex-1 scroll-mt-14 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
       </SidebarInset>
       {bottomNav}
     </SidebarProvider>

@@ -74,6 +74,30 @@ export default async function CategoriasPage() {
       {categories.length === 0 ? (
         <EmptyState title="Nenhuma categoria" description="Crie a primeira acima." icon={Tags} />
       ) : (
+        <>
+        {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+        <ul className="flex flex-col gap-2 p-3 md:hidden">
+          {categories.map((c) => (
+            <li key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-semibold">{c.name}</span>
+                <span className="text-xs text-muted-foreground">{c.kind === "PRODUTO" ? "Produto" : "Financeiro"}</span>
+              </div>
+              <StatusBadge status={c.active ? "active" : "inactive"} label={c.active ? "Ativa" : "Inativa"} />
+              <div className="flex shrink-0 gap-1">
+                <EditCategoryDialog id={c.id} name={c.name} />
+                <form action={toggleCategoryAction}>
+                  <input type="hidden" name="id" value={c.id} />
+                  <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                    {c.active ? "Desativar" : "Ativar"}
+                  </Button>
+                </form>
+                <DeleteCategoryDialog id={c.id} name={c.name} />
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -107,6 +131,8 @@ export default async function CategoriasPage() {
             ))}
           </TableBody>
         </Table>
+        </div>
+        </>
       )}
     </main>
   );
