@@ -3,7 +3,6 @@ import { TenantSidebar } from "@/components/tenant/tenant-sidebar";
 import { AppShell } from "@/components/shell/AppShell";
 import { BottomNav } from "@/components/shell/BottomNav";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
-import { LayoutDashboard, ShoppingCart, Boxes, Wallet, Landmark } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard");
@@ -18,11 +17,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <BottomNav
           fabImage="/icons/botao-168.png"
           items={[
-            { title: "Início", url: "/dashboard", icon: LayoutDashboard },
-            { title: "Estoque", url: "/dashboard/estoque", icon: Boxes },
-            { title: "PDV", url: "/dashboard/pdv", icon: ShoppingCart },
-            { title: "Caixa", url: "/dashboard/caixa", icon: Wallet },
-            { title: "Finan.", url: "/dashboard/financeiro", icon: Landmark },
+            { title: "Início", url: "/dashboard", icon: "inicio" },
+            { title: "Estoque", url: "/dashboard/estoque", icon: "estoque" },
+            { title: "PDV", url: "/dashboard/pdv", icon: "pdv" },
+            { title: "Caixa", url: "/dashboard/caixa", icon: "caixa" },
+            { title: "Finan.", url: "/dashboard/financeiro", icon: "financeiro" },
           ]}
         />
       }

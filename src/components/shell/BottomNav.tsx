@@ -2,13 +2,59 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
+import {
+  Boxes,
+  Building2,
+  CreditCard,
+  Landmark,
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/**
+ * O ícone vai por CHAVE, nunca por referência.
+ *
+ * `BottomNav` é Client Component, mas é montado pelos layouts de
+ * `/dashboard` e `/admin`, que são Server Components. Repassar
+ * `icon: LayoutDashboard` cruza a fronteira RSC e o serializador recusa:
+ * ícone do lucide é `forwardRef` (objeto com método), então React lança
+ * "Only plain objects can be passed to Client Components" e "Functions
+ * cannot be passed directly to Client Components" — e a página inteira
+ * respondia 500 com React #441. String serializa; o mapa fica aqui,
+ * dentro do bundle do cliente.
+ */
+export type BottomNavIconKey =
+  | "inicio"
+  | "estoque"
+  | "pdv"
+  | "caixa"
+  | "financeiro"
+  | "empresas"
+  | "usuarios"
+  | "assinaturas"
+  | "planos";
+
+const BOTTOM_NAV_ICONS: Record<BottomNavIconKey, LucideIcon> = {
+  inicio: LayoutDashboard,
+  estoque: Boxes,
+  pdv: ShoppingCart,
+  caixa: Wallet,
+  financeiro: Landmark,
+  empresas: Building2,
+  usuarios: Users,
+  assinaturas: CreditCard,
+  planos: Package,
+};
 
 export interface BottomNavItem {
   title: string;
   url: string;
-  icon: LucideIcon;
+  icon: BottomNavIconKey;
 }
 
 /**
@@ -52,7 +98,7 @@ export function BottomNav({ items, fabImage }: { items: readonly BottomNavItem[]
               </Link>
             );
           }
-          const Icon = item.icon;
+          const Icon = BOTTOM_NAV_ICONS[item.icon];
           return (
             <Link
               key={item.url}
