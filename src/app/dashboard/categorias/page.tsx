@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TableCard } from "@/components/shared/TableCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -34,7 +34,7 @@ export default async function CategoriasPage() {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader
         title="Categorias"
         badge={tenant.name}
@@ -42,11 +42,12 @@ export default async function CategoriasPage() {
       />
       <SearchParamToast okText="Categoria criada." errorMap={ERROR_MSG} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Nova categoria</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <details className="rounded-xl border border-border/50 bg-card shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+          Nova categoria
+          <span className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground">+ Expandir</span>
+        </summary>
+        <div className="px-4 pb-4">
           <form action={createCategoryAction} className="grid gap-3 sm:grid-cols-3">
             <label className="flex flex-col gap-1 text-sm sm:col-span-2">
               Nome*
@@ -68,12 +69,17 @@ export default async function CategoriasPage() {
               <Button type="submit">Criar</Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </details>
 
       {categories.length === 0 ? (
         <EmptyState title="Nenhuma categoria" description="Crie a primeira acima." icon={Tags} />
       ) : (
+        <TableCard
+          title="Categorias"
+          description="Tipo e status por categoria."
+          footer={`${categories.length} categoria(s)`}
+        >
         <>
         {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
         <ul className="flex flex-col gap-2 p-3 md:hidden">
@@ -133,6 +139,7 @@ export default async function CategoriasPage() {
         </Table>
         </div>
         </>
+        </TableCard>
       )}
     </main>
   );

@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { updateFinancialAction, deleteFinancialAction } from "./actions";
 import { centsToReais } from "@/lib/validators";
 import { SelectField } from "@/components/ui/select-field";
@@ -39,16 +40,21 @@ export function EditFinancialDialog({
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const dateStr = movement.movementDate.slice(0, 10);
+  // Bottom sheet no phone, painel lateral no desktop (skill §9).
+  const isMobile = useIsMobile();
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={false}>Editar</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Editar lançamento</DialogTitle>
-          <DialogDescription>Não é possível editar lançamentos já pagos — dê baixa reversa antes.</DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" disabled={false} className="hit-area-44">Editar</Button>
+      </SheetTrigger>
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={isMobile ? "max-h-[90dvh] overflow-y-auto rounded-t-2xl" : "sm:max-w-lg"}
+      >
+        <SheetHeader>
+          <SheetTitle>Editar lançamento</SheetTitle>
+          <SheetDescription>Não é possível editar lançamentos já pagos — dê baixa reversa antes.</SheetDescription>
+        </SheetHeader>
         <form
           action={async (fd: FormData) => {
             setPending(true);
@@ -107,8 +113,8 @@ export function EditFinancialDialog({
             <Button type="submit" disabled={pending}>{pending ? "Salvando..." : "Salvar"}</Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 

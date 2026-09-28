@@ -154,6 +154,29 @@ export default async function AssinaturasPage({
             description="Vincule um plano a uma empresa no painel da empresa."
           />
         ) : (
+          <>
+          {/* Mobile: lista compacta — tabela só no desktop */}
+          <ul className="flex flex-col gap-2 p-3 md:hidden">
+            {assinaturas.map((a) => (
+              <li key={a.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <a
+                    href={`/admin/empresas/${a.tenant.id}`}
+                    className="truncate text-sm font-semibold hover:underline"
+                  >
+                    {a.tenant.name}
+                  </a>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {a.plan.name} · {formatCurrency(a.plan.monthlyPrice)}
+                  </span>
+                </div>
+                <StatusPill tom={statusAssinaturaTom[a.status]}>
+                  {labelDe(statusAssinaturaLabel, a.status)}
+                </StatusPill>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -241,6 +264,8 @@ export default async function AssinaturasPage({
               })}
             </TableBody>
           </Table>
+          </div>
+          </>
         )}
 
         {total > POR_PAGINA ? (

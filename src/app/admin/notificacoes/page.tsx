@@ -144,6 +144,24 @@ export default async function NotificacoesPage({
                 Nenhuma comunicação enviada ainda.
               </p>
             ) : (
+              <>
+              {/* Mobile: lista compacta — tabela só no desktop */}
+              <ul className="flex flex-col gap-2 p-3 md:hidden">
+                {comunicacoes.map((c) => (
+                  <li key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-semibold">{c.subject}</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {labelDe(alvoNotificacaoLabel, c.target)} · {c.recipients} dest. · {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR")}
+                      </span>
+                    </div>
+                    <StatusPill tom={TOM_ENVIO[c.status] ?? "neutro"}>
+                      {labelDe(statusEnvioLabel, c.status)}
+                    </StatusPill>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -174,6 +192,8 @@ export default async function NotificacoesPage({
                   ))}
                 </TableBody>
               </Table>
+              </div>
+              </>
             )}
           </TableCard>
 

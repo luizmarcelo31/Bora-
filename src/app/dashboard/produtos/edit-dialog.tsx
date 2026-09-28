@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { updateProductAction, uploadProductImageAction, removeProductImageAction } from "./actions";
 import { centsToReais } from "@/lib/validators";
 import { Package } from "lucide-react";
@@ -38,19 +39,24 @@ export function EditProductDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  // Bottom sheet no phone, painel lateral no desktop (skill §9).
+  const isMobile = useIsMobile();
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" className="hit-area-44">
           Editar
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Editar produto</DialogTitle>
-          <DialogDescription>Altere os dados e salve. SKU e código de barras são únicos por empresa.</DialogDescription>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={isMobile ? "max-h-[90dvh] overflow-y-auto rounded-t-2xl" : "sm:max-w-lg"}
+      >
+        <SheetHeader>
+          <SheetTitle>Editar produto</SheetTitle>
+          <SheetDescription>Altere os dados e salve. SKU e código de barras são únicos por empresa.</SheetDescription>
+        </SheetHeader>
         <form
           action={async (formData: FormData) => {
             setPending(true);
@@ -170,7 +176,7 @@ export function EditProductDialog({
           ) : null}
         </div>
         <p className="text-xs text-muted-foreground">JPG, PNG ou WebP até 2MB.</p>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

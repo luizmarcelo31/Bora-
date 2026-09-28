@@ -119,6 +119,23 @@ export default async function AuditoriaPage({
             description="As ações administrativas aparecem aqui assim que acontecerem."
           />
         ) : (
+          <>
+          {/* Mobile: lista compacta — tabela só no desktop */}
+          <ul className="flex flex-col gap-2 p-3 md:hidden">
+            {logs.map((l) => (
+              <li key={l.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">
+                    {acaoAuditoriaLabel[l.action]} · {ENTIDADE[l.entity] ?? l.entity}{l.entityId ? ` #${l.entityId}` : ""}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {l.createdAt.toLocaleString("pt-BR")} · {l.actorEmail}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -171,6 +188,8 @@ export default async function AuditoriaPage({
               ))}
             </TableBody>
           </Table>
+          </div>
+          </>
         )}
 
         {totalPaginas > 1 ? (

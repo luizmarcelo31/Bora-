@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { TableCard } from "@/components/shared/TableCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -240,11 +241,11 @@ export default async function EstoquePage({
       </Card>
 
       {history.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Últimas movimentações</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
+        <TableCard
+          title="Últimas movimentações"
+          description="Entradas, saídas e ajustes."
+          footer={`${history.length} movimentação(ões)`}
+        >
             {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
             <ul className="flex flex-col gap-2 p-3 md:hidden">
               {history.map((m) => (
@@ -290,8 +291,7 @@ export default async function EstoquePage({
               </TableBody>
             </Table>
             </div>
-          </CardContent>
-        </Card>
+        </TableCard>
       ) : null}
     </main>
   );

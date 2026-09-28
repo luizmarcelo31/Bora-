@@ -116,6 +116,26 @@ export default async function PlanosPage({
                 Nenhum plano criado. Comece pelo formulário ao lado.
               </p>
             ) : (
+              <>
+              {/* Mobile: lista compacta — tabela só no desktop */}
+              <ul className="flex flex-col gap-2 p-3 md:hidden">
+                {planos.map((p) => (
+                  <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <Link href={`/admin/planos/${p.id}`} className="truncate text-sm font-semibold hover:underline">
+                        {p.name}
+                      </Link>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {formatCurrency(p.monthlyPrice)}/mês · {p._count.subscriptions} empresas
+                      </span>
+                    </div>
+                    <StatusPill tom={p.active ? "positivo" : "neutro"}>
+                      {p.active ? "Disponível" : "Indisponível"}
+                    </StatusPill>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -169,8 +189,10 @@ export default async function PlanosPage({
                       </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
+                  </TableBody>
               </Table>
+              </div>
+              </>
             )}
           </TableCard>
         </div>

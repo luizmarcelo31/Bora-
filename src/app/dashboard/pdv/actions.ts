@@ -11,7 +11,7 @@ import { createSaleSchema, cancelSaleSchema, ValidationError } from "@/lib/valid
 import { parseBRLToCents } from "@/lib/money";
 import { paymentLabel } from "@/lib/payments";
 
-const PAYMENTS = ["CASH", "PIX", "CREDIT", "DEBIT"] as const;
+const PAYMENTS = ["DINHEIRO", "PIX", "CREDITO", "DEBITO"] as const;
 
 export type CreateSaleResult = { ok: number } | { error: string };
 
@@ -38,7 +38,7 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
     return { error: "empty" };
   }
 
-  const paymentMethod = String(formData.get("paymentMethod") ?? "CASH");
+  const paymentMethod = String(formData.get("paymentMethod") ?? "DINHEIRO");
   if (!PAYMENTS.includes(paymentMethod as (typeof PAYMENTS)[number])) {
     return { error: "invalid" };
   }
@@ -46,6 +46,22 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
   const cashBoxRaw = String(formData.get("cashBoxId") ?? "");
   const cashBoxId = cashBoxRaw ? parseInt(cashBoxRaw, 10) : undefined;
   const discount = parseBRLToCents(formData.get("discount")) ?? 0;
+
+  // Split dinheiro+pix (PDV Expresso). Omitido = pagamento único via paymentMethod.
+  let payments: { method: string; amount: number }[] | undefined;
+  const paymentsRaw = String(formData.get("payments") ?? "");
+  if (paymentsRaw) {
+    try {
+      const arr = JSON.parse(paymentsRaw);
+      if (!Array.isArray(arr) || arr.length === 0 || arr.length > 2) return { error: "invalid" };
+      payments = arr.map((p) => ({ method: String(p.method), amount: Math.round(Number(p.amount)) }));
+      if (payments.some((p) => !PAYMENTS.includes(p.method as (typeof PAYMENTS)[number]) || !Number.isFinite(p.amount) || p.amount <= 0)) {
+        return { error: "invalid" };
+      }
+    } catch {
+      return { error: "invalid" };
+    }
+  }
 
   // Preço sempre do banco (nunca do cliente) + ownership por tenant.
   // 1 query batch em vez de N getProduct (dedup por request via React.cache não cobre loops).
@@ -83,6 +99,7 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
       items,
       discount,
       paymentMethod,
+      payments,
       customerName: String(formData.get("customerName") ?? ""),
       idempotencyKey,
     });
@@ -143,6 +160,17 @@ export async function cancelSaleAction(formData: FormData) {
         movementDate: new Date(),
         cashBoxId: saleBefore.cashBoxId ?? undefined,
       });
+      // Estorno da taxa maquineta: a DESPESA da taxa vira RECEITA de estorno
+      if (saleBefore.feeAmount > 0) {
+        await FinancialService2.registerMovement(tenant.id, {
+          type: "RECEITA",
+          category: "Estorno taxa maquineta",
+          description: `Estorno taxa venda #${saleBefore.id}`,
+          amount: saleBefore.feeAmount,
+          movementDate: new Date(),
+          cashBoxId: saleBefore.cashBoxId ?? undefined,
+        });
+      }
     }
     const { logAudit: logAuditCancel } = await import("@/lib/audit");
     await logAuditCancel({
@@ -163,13 +191,20 @@ export async function cancelSaleAction(formData: FormData) {
 
 export async function getPdvPageData(tenantId: number) {
   const { dbUser } = await requireSessionTenant("/dashboard/pdv");
-  const [products, cashboxes, todaysSales] = await Promise.all([
+  const [products, cashboxes, todaysSales, settings] = await Promise.all([
     ProductService.listProducts(tenantId),
     prisma.cashBox.findMany({
       where: { tenantId, status: "ABERTO" },
       orderBy: { createdAt: "desc" },
     }),
     SaleService.getTodaysSales(tenantId),
+    prisma.tenantSettings.findUnique({ where: { tenantId } }),
   ]);
-  return { products, cashboxes, todaysSales, user: { id: dbUser.id, name: dbUser.name, email: dbUser.email } };
+  return {
+    products,
+    cashboxes,
+    todaysSales,
+    user: { id: dbUser.id, name: dbUser.name, email: dbUser.email },
+    settings: { feeCredit: settings?.feeCredit ?? 0, feeDebit: settings?.feeDebit ?? 0 },
+  };
 }

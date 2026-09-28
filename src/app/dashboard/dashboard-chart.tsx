@@ -16,7 +16,7 @@ export function DashboardChart({ data }: { data: { date: string; total: number }
         <CardDescription>Últimos 7 dias</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={config} className="aspect-auto h-64 w-full">
+        <ChartContainer config={config} className="aspect-auto h-48 w-full sm:h-64">
           <ComposedChart data={data} margin={{ top: 0, left: 0, right: 0 }}>
             <defs>
               <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">

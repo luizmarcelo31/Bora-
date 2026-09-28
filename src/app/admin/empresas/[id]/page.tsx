@@ -335,6 +335,20 @@ export default async function EmpresaPage({
         {vendas.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">Nenhuma venda registrada.</p>
         ) : (
+          <>
+          {/* Mobile: lista compacta — tabela só no desktop */}
+          <ul className="flex flex-col gap-2 p-3 md:hidden">
+            {vendas.map((v) => (
+              <li key={v.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-sm font-semibold tabular-nums">#{v.id}</span>
+                  <span className="text-xs text-muted-foreground">{v.createdAt.toLocaleString("pt-BR")}</span>
+                </div>
+                <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(v.total)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -355,6 +369,8 @@ export default async function EmpresaPage({
               ))}
             </TableBody>
           </Table>
+          </div>
+          </>
         )}
       </TableCard>
 

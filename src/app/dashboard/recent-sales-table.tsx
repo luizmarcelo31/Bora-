@@ -12,7 +12,25 @@ export function RecentSalesTable({
     return <EmptyState title="Nenhuma venda hoje" description="As vendas aparecerão aqui ao longo do dia." />;
   }
   return (
-    <Table>
+    <>
+      {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
+      <ul className="flex flex-col gap-2 p-3 md:hidden">
+        {sales.map((s) => (
+          <li key={s.id} className="flex items-center gap-3 rounded-lg border p-3">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-semibold">
+                #{s.id} · {s.items.reduce((n, i) => n + i.quantity, 0)} {s.items.reduce((n, i) => n + i.quantity, 0) === 1 ? "item" : "itens"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · {paymentLabel(s.paymentMethod)}
+              </span>
+            </div>
+            <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(s.total)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="hidden md:block">
+      <Table>
       <TableHeader>
         <TableRow>
           <TableHead>#</TableHead>
@@ -34,5 +52,7 @@ export function RecentSalesTable({
         ))}
       </TableBody>
     </Table>
+      </div>
+    </>
   );
 }

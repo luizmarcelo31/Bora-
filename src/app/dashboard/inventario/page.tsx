@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { tipoInventarioLabel } from "@/lib/labels";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/ui/select-field";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -35,7 +34,7 @@ export default async function InventarioPage() {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader
         title="Inventário de Estoque"
         badge={tenant.name}
@@ -43,11 +42,12 @@ export default async function InventarioPage() {
       />
       <SearchParamToast okText="Contagem iniciada." errorMap={ERROR_MSG} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Nova Contagem</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <details className="rounded-xl border border-border/50 bg-card shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+          Nova Contagem
+          <span className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground">+ Expandir</span>
+        </summary>
+        <div className="px-4 pb-4">
           <form action={createInventoryCountAction} className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm w-48">
               Tipo
@@ -61,8 +61,8 @@ export default async function InventarioPage() {
             </label>
             <Button type="submit">Iniciar Contagem</Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </details>
 
       {counts.length === 0 ? (
         <EmptyState title="Nenhum inventário" description="Inicie sua primeira contagem de estoque acima." icon={ClipboardList} />

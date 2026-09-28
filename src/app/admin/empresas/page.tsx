@@ -184,6 +184,30 @@ export default async function EmpresasPage({
             description="Ajuste os filtros ou cadastre a primeira empresa."
           />
         ) : (
+          <>
+          {/* Mobile: lista compacta — tabela só no desktop */}
+          <ul className="flex flex-col gap-2 p-3 md:hidden">
+            {paginaAtual.map((t) => (
+              <li key={t.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <Link
+                    prefetch={false}
+                    href={`/admin/empresas/${t.id}`}
+                    className="truncate text-sm font-semibold hover:underline"
+                  >
+                    {t.name}
+                  </Link>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {t._count.users} usuários · {t._count.sales} vendas
+                  </span>
+                </div>
+                <StatusPill tom={statusEmpresaTom[t.status]}>
+                  {labelDe(statusEmpresaLabel, t.status)}
+                </StatusPill>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -240,6 +264,8 @@ export default async function EmpresasPage({
               ))}
             </TableBody>
           </Table>
+          </div>
+          </>
         )}
 
         {totalPaginas > 1 ? (

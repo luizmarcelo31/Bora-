@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Drawer } from "vaul";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Separator } from "@/components/ui/separator";
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { formatCurrency } from "@/lib/validators";
@@ -34,9 +35,11 @@ export function CartSheet({
   }
   const discountCents = parseDiscount(discountRaw);
   const total = Math.max(0, subtotal - discountCents);
+  // Bottom sheet no phone (skill §9), drawer lateral no desktop.
+  const isMobile = useIsMobile();
 
   return (
-    <Drawer.Root direction="right" open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root direction={isMobile ? "bottom" : "right"} open={open} onOpenChange={onOpenChange}>
       <Drawer.Trigger asChild>
         <Button type="button" disabled={lines.length === 0 || pending} className="w-full">
           <ShoppingCart className="size-4" /> Revisar e finalizar ({lines.length})
@@ -44,7 +47,13 @@ export function CartSheet({
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        <Drawer.Content className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col gap-4 bg-background p-6 shadow-lg">
+        <Drawer.Content
+          className={
+            isMobile
+              ? "fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col gap-4 rounded-t-2xl bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg"
+              : "fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col gap-4 bg-background p-6 shadow-lg"
+          }
+        >
           <div className="flex flex-col gap-1.5">
             <Drawer.Title className="font-semibold leading-none">Confirmar venda</Drawer.Title>
             <Drawer.Description className="text-sm text-muted-foreground">Revise itens e total antes de confirmar. Preço é do cadastro, não do cliente.</Drawer.Description>

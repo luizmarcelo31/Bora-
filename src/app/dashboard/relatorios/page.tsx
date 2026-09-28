@@ -5,6 +5,7 @@ import { SaleService, FinancialService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { TableCard } from "@/components/shared/TableCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportActions } from "@/components/shared/ReportActions";
 import { paymentLabel } from "@/lib/payments";
@@ -252,11 +253,11 @@ export default async function RelatoriosPage({
         ) : null}
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Top produtos por quantidade</CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
+      <TableCard
+        title="Top produtos por quantidade"
+        description="Mais vendidos no período."
+        footer={`${topProducts.length} produto(s)`}
+      >
           {topProducts.length === 0 ? (
             <div className="px-6 pb-6">
               <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
@@ -281,14 +282,13 @@ export default async function RelatoriosPage({
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+      </TableCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Financeiro por categoria</CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
+      <TableCard
+        title="Financeiro por categoria"
+        description="Receitas e despesas no período."
+        footer={`${Object.keys(financialResume.movementsByCategory).length} categoria(s)`}
+      >
           {Object.keys(financialResume.movementsByCategory).length === 0 ? (
             <div className="px-6 pb-6">
               <EmptyState title="Sem movimentações no período" description="Ajuste o intervalo acima." icon={BarChart3} />
@@ -313,8 +313,7 @@ export default async function RelatoriosPage({
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+      </TableCard>
     </main>
   );
 }

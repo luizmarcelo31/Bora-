@@ -6,6 +6,13 @@ import { PAYMENT_OPTIONS } from "@/lib/payments";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/validators";
 import { createSaleAction } from "./actions";
 import { ProductGrid } from "./_components/product-grid";
@@ -18,7 +25,7 @@ export type PdvProduct = { id: number; name: string; price: number; stock: numbe
 export type PdvCashbox = { id: number; name: string };
 
 const PAYMENTS = PAYMENT_OPTIONS;
-const DISCOUNT_PASSWORD = "BoraMais2026"; // Fase 3 — senha de autorização de desconto
+export const DISCOUNT_PASSWORD = "BoraMais2026"; // Fase 3 — senha de autorização de desconto
 
 const SALE_ERROR_MSG: Record<string, string> = {
   invalid: "Venda inválida. Confira os itens.",
@@ -39,7 +46,7 @@ export function PdvClient({
   user: { id: number; name: string; email: string };
 }) {
   const [cart, setCart] = useState<Record<number, number>>({});
-  const [payment, setPayment] = useState("CASH");
+  const [payment, setPayment] = useState("DINHEIRO");
   const [cashBoxId, setCashBoxId] = useState("");
   const [discount, setDiscount] = useState("");
   const [customer, setCustomer] = useState("");
@@ -171,10 +178,12 @@ export function PdvClient({
           <span aria-hidden="true">🔒</span> Trocar operador
         </Button>
       </div>
-      {pinOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setPinOpen(false); setPinValue(""); setPinError(""); }}>
-          <div className="bg-card rounded-lg p-4 sm:p-6 w-[calc(100%-2rem)] max-w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <CardTitle className="text-lg mb-4">Trocar operador</CardTitle>
+      <Dialog open={pinOpen} onOpenChange={(o) => { setPinOpen(o); if (!o) { setPinValue(""); setPinError(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Trocar operador</DialogTitle>
+            <DialogDescription>Digite o PIN para trocar de operador.</DialogDescription>
+          </DialogHeader>
             <label className="flex flex-col gap-1 text-sm">
               PIN do operador
             <Input
@@ -199,9 +208,8 @@ export function PdvClient({
             </label>
             {pinError && <span id="pin-error" role="alert" className="text-xs text-destructive">{pinError}</span>}
             <p className="text-xs text-muted-foreground mt-2">PIN: 1234 (demo)</p>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
       <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader>

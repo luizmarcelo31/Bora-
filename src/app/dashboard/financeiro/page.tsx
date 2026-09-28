@@ -6,6 +6,7 @@ import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { MetricCard } from "@/components/shared/MetricCard";
+import { TableCard } from "@/components/shared/TableCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -87,7 +88,7 @@ export default async function FinanceiroPage({
   const today = now.toISOString().slice(0, 10);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader
         title="Financeiro"
         badge={tenant.name}
@@ -123,11 +124,12 @@ export default async function FinanceiroPage({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Novo lançamento</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <details className="rounded-xl border border-border/50 bg-card shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+          Novo lançamento
+          <span className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground">+ Expandir</span>
+        </summary>
+        <div className="px-4 pb-4">
           <form action={createFinancialAction} className="grid gap-3 sm:grid-cols-3">
             <label className="flex flex-col gap-1 text-sm">
               Tipo*
@@ -181,14 +183,15 @@ export default async function FinanceiroPage({
               <Button type="submit">Lançar</Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </details>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Últimos lançamentos</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
+      <TableCard
+        title="Últimos lançamentos"
+        description="Filtre, exporte e gerencie."
+        footer={`${movements.length} lançamento(s)`}
+        toolbar={
+          <div className="flex flex-col gap-4">
           <ReportActions
             title="Relatório financeiro"
             subtitle={`${tenant.name} — mês atual · receitas ${formatCurrency(resume.receitas)} · despesas ${formatCurrency(resume.despesas)} · saldo ${formatCurrency(resume.saldo)}`}
@@ -226,8 +229,9 @@ export default async function FinanceiroPage({
             <Button type="submit" variant="outline">Filtrar</Button>
             {(q || typeFilterRaw !== "all") ? <a href="/dashboard/financeiro" className="text-sm text-muted-foreground underline">Limpar</a> : null}
           </form>
-        </CardContent>
-        <CardContent className="px-0 pb-0">
+          </div>
+        }
+      >
           {movements.length === 0 ? (
             <div className="px-6 pb-6">
               <EmptyState title="Sem lançamentos" description="Registre o primeiro acima." icon={Wallet} />
@@ -339,8 +343,7 @@ export default async function FinanceiroPage({
             </div>
             </>
           )}
-        </CardContent>
-      </Card>
+      </TableCard>
     </main>
   );
 }

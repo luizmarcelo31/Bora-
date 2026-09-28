@@ -205,6 +205,27 @@ export default async function SuportePage({
             {tickets.length === 0 ? (
               <EmptyState title="Nenhum ticket" description="Não há chamados com esses filtros." />
             ) : (
+              <>
+              {/* Mobile: lista compacta — tabela só no desktop */}
+              <ul className="flex flex-col gap-2 p-3 md:hidden">
+                {tickets.map((t) => (
+                  <li key={t.id} className="flex items-center gap-3 rounded-lg border p-3">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-semibold">{t.subject}</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        #{t.id} · {t.tenant.name}
+                      </span>
+                    </div>
+                    <StatusPill tom={prioridadeTicketTom[t.priority]}>
+                      {labelDe(prioridadeTicketLabel, t.priority)}
+                    </StatusPill>
+                    <StatusPill tom={statusTicketTom[t.status]}>
+                      {labelDe(statusTicketLabel, t.status)}
+                    </StatusPill>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -289,6 +310,8 @@ export default async function SuportePage({
                   })}
                 </TableBody>
               </Table>
+              </div>
+              </>
             )}
 
             {total > POR_PAGINA ? (

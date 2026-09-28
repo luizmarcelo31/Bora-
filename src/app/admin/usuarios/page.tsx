@@ -107,6 +107,19 @@ export default async function UsuariosPage({
           description="Função e vínculo por empresa."
           footer={`${users.length} usuário(s)`}
         >
+        {/* Mobile: lista compacta — tabela só no desktop */}
+        <ul className="flex flex-col gap-2 p-3 md:hidden">
+          {users.map((u) => (
+            <li key={u.id} className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-semibold">{u.name}</span>
+                <span className="truncate text-xs text-muted-foreground">{u.email} · {u.tenant.name}</span>
+              </div>
+              <StatusBadge status={u.active ? "active" : "inactive"} />
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -131,6 +144,7 @@ export default async function UsuariosPage({
             ))}
           </TableBody>
         </Table>
+        </div>
         </TableCard>
       )}
     </main>

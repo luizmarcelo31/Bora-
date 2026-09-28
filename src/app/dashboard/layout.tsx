@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           items={[
             { title: "Início", url: "/dashboard", icon: "inicio" },
             { title: "Estoque", url: "/dashboard/estoque", icon: "estoque" },
-            { title: "PDV", url: "/dashboard/pdv", icon: "pdv" },
+            { title: "PDV", url: "/dashboard/pdv/express", icon: "pdv" },
             { title: "Caixa", url: "/dashboard/caixa", icon: "caixa" },
             { title: "Finan.", url: "/dashboard/financeiro", icon: "financeiro" },
           ]}

@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/ui/select-field";
@@ -42,7 +41,7 @@ export default async function ComprasPage() {
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader
         title="Compras e Fornecedores"
         badge={tenant.name}
@@ -50,12 +49,13 @@ export default async function ComprasPage() {
       />
       <SearchParamToast okText="Registro criado." errorMap={ERROR_MSG} />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Novo Fornecedor</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+        <details className="rounded-xl border border-border/50 bg-card shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+            Novo Fornecedor
+            <span className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground">+ Expandir</span>
+          </summary>
+          <div className="px-4 pb-4">
             <form action={createSupplierAction} className="grid gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 Nome do Fornecedor*
@@ -67,14 +67,15 @@ export default async function ComprasPage() {
               </label>
               <Button type="submit" className="mt-2">Cadastrar fornecedor</Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </details>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Nova Compra</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <details className="rounded-xl border border-border/50 bg-card shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+            Nova Compra
+            <span className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground">+ Expandir</span>
+          </summary>
+          <div className="px-4 pb-4">
             <form action={createPurchaseAction} className="grid gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 Fornecedor*
@@ -92,8 +93,8 @@ export default async function ComprasPage() {
               </Button>
               {suppliers.length === 0 && <span className="text-xs text-[var(--status-danger-fg)]">Cadastre um fornecedor primeiro.</span>}
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </details>
       </div>
 
       {purchases.length === 0 ? (

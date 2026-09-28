@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { TableCard } from "@/components/shared/TableCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export default async function CaixaPage() {
   const saldoAbertos = openBoxes.reduce((s, b) => s + b.currentBalance, 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader title="Caixa" badge={tenant.name} description="Abertura, saldo e fechamento — com preview de sobra/falta." />
       <SearchParamToast okText="Operação registrada." errorMap={ERROR_MSG} />
 
@@ -58,12 +59,13 @@ export default async function CaixaPage() {
         <MetricCard title="Total caixas" value={String(boxes.length)} hint={boxes.length > 0 ? `Último: ${boxes[0].name}` : "Nenhum ainda"} />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Abrir caixa</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+        <details className="rounded-xl border border-border/50 bg-card shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+            Abrir caixa
+            <span className="rounded-md border px-2 py-0.5 text-xs text-muted-foreground">+ Expandir</span>
+          </summary>
+          <div className="px-4 pb-4">
             <form action={openCashBoxAction} className="flex flex-col gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 Nome*
@@ -75,8 +77,8 @@ export default async function CaixaPage() {
               </label>
               <Button type="submit">Abrir</Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </details>
 
         <Card>
           <CardHeader>
@@ -88,11 +90,11 @@ export default async function CaixaPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de caixas</CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
+      <TableCard
+        title="Histórico de caixas"
+        description="Abertura, saldo e fechamento."
+        footer={`${boxes.length} caixa(s)`}
+      >
           {boxes.length === 0 ? (
             <div className="px-6 pb-6">
               <EmptyState title="Nenhum caixa" description="Abra o primeiro acima." icon={Wallet} />
@@ -152,8 +154,7 @@ export default async function CaixaPage() {
             </div>
             </>
           )}
-        </CardContent>
-      </Card>
+      </TableCard>
     </main>
   );
 }
