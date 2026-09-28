@@ -68,7 +68,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
           )}
         />
       </FieldGroup>
-      <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
+      <Button className="min-h-11 w-full" type="submit" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Entrando..." : "Entrar"}
       </Button>
     </form>

@@ -25,7 +25,7 @@ export default async function SignupPage({
     >
       <RegisterForm />
       {params.error ? (
-        <p className="text-center text-sm text-destructive">
+        <p role="alert" className="text-center text-sm text-destructive">
           Não foi possível criar a conta. Tente outro email.
         </p>
       ) : null}

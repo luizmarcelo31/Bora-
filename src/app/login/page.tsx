@@ -36,7 +36,7 @@ export default async function LoginPage({
     >
       <LoginForm redirectTo={params.redirect ?? "/dashboard"} />
       {params.error ? (
-        <p className="text-center text-sm text-destructive">
+        <p role="alert" className="text-center text-sm text-destructive">
           Não foi possível entrar. Verifique email e senha.
         </p>
       ) : null}

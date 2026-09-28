@@ -30,8 +30,7 @@ export function MetricCard({
         className
       )}
     >
-      {/* Glow decorativo no canto superior */}
-      <div className="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full bg-primary/8 blur-xl" />
+      {/* Glow removido (skill §15: sem blobs decorativos) */}
 
       <CardHeader className="pb-2">
         {Icon ? (

@@ -91,7 +91,7 @@ export function RegisterForm() {
           )}
         />
       </FieldGroup>
-      <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
+      <Button className="min-h-11 w-full" type="submit" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Criando..." : "Criar conta"}
       </Button>
     </form>
