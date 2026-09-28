@@ -29,11 +29,6 @@ function rateLimited(ip: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Túnel do Sentry (ad-blocker bypass): passa direto, até deslogado.
-  if (pathname.startsWith("/monitoring")) {
-    return NextResponse.next({ request });
-  }
-
   // Rate-limit básico só para APIs (páginas e assets passam direto).
   if (pathname.startsWith("/api/")) {
     const ip =
