@@ -197,7 +197,7 @@ export default async function FinanceiroPage({
             subtitle={`${tenant.name} — mês atual · receitas ${formatCurrency(resume.receitas)} · despesas ${formatCurrency(resume.despesas)} · saldo ${formatCurrency(resume.saldo)}`}
             columns={["Data", "Tipo", "Categoria", "Descrição", "Valor", "Pago"]}
             rows={movements.map((m) => [
-              new Date(m.movementDate).toLocaleDateString("pt-BR"),
+              new Date(m.movementDate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }),
               m.type,
               m.category,
               m.description,
@@ -246,7 +246,7 @@ export default async function FinanceiroPage({
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate text-sm font-semibold">{m.description}</span>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(m.movementDate).toLocaleDateString("pt-BR")} · {m.category}
+                        {new Date(m.movementDate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {m.category}
                       </span>
                     </div>
                     <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(m.amount)}</span>
@@ -299,7 +299,7 @@ export default async function FinanceiroPage({
               <TableBody>
                 {movements.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell>{new Date(m.movementDate).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell>{new Date(m.movementDate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</TableCell>
                     <TableCell>
                       <StatusBadge
                         status={m.type === "RECEITA" ? "income" : m.type === "DESPESA" ? "expense" : "transfer"}

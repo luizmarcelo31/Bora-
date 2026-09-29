@@ -32,6 +32,7 @@ const SALE_ERROR_MSG: Record<string, string> = {
   empty: "Adicione ao menos um item.",
   stock: "Estoque insuficiente para um ou mais itens.",
   discount: "Desconto acima do permitido ou maior que o subtotal.",
+  amount: "Valores de pagamento não conferem. Confira e tente de novo.",
   cashbox: "Caixa selecionado está fechado ou inexistente.",
   sale: "Não foi possível concluir a venda. Tente novamente.",
 };

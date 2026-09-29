@@ -253,7 +253,7 @@ export default async function EstoquePage({
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-sm font-semibold">{m.inventory.product.name}</span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {new Date(m.createdAt).toLocaleString("pt-BR")} · {m.reason ?? "—"}
+                      {new Date(m.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {m.reason ?? "—"}
                     </span>
                   </div>
                   <span className="shrink-0 text-sm font-semibold tabular-nums">{m.type === "ENTRADA" ? `+${m.quantity}` : `-${m.quantity}`}</span>
@@ -277,7 +277,7 @@ export default async function EstoquePage({
               <TableBody>
                 {history.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell className="tabular-nums">{new Date(m.createdAt).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="tabular-nums">{new Date(m.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</TableCell>
                     <TableCell>{m.inventory.product.name}</TableCell>
                     <TableCell>
                       <StatusBadge

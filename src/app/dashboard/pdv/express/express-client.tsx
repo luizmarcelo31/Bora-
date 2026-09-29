@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PAYMENT_OPTIONS } from "@/lib/payments";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/validators";
 import { createSaleAction } from "../actions";
+import { calcChange, calcSplit, calcTotals } from "@/lib/pdv-math";
 import { DISCOUNT_PASSWORD } from "../pdv-client";
 import { NumericKeypad } from "./_components/numeric-keypad";
 import { ControlledSelect } from "@/components/ui/controlled-select";
@@ -21,6 +23,7 @@ const SALE_ERROR_MSG: Record<string, string> = {
   empty: "Adicione ao menos um item.",
   stock: "Estoque insuficiente para um ou mais itens.",
   discount: "Desconto acima do permitido ou maior que o subtotal.",
+  amount: "Valores não conferem: soma dos pagamentos ou recebido divergem do total.",
   cashbox: "Caixa selecionado está fechado ou inexistente.",
   sale: "Não foi possível concluir a venda. Tente novamente.",
 };
@@ -60,6 +63,7 @@ export function ExpressPdvClient({
   const [discountPassword, setDiscountPassword] = useState("");
   const [discountError, setDiscountError] = useState("");
   const [pending, setPending] = useState(false);
+  const router = useRouter();
   const idemRef = useRef<string | null>(null);
   function getIdemKey() {
     if (!idemRef.current) idemRef.current = crypto.randomUUID();
@@ -79,16 +83,20 @@ export function ExpressPdvClient({
   );
   const subtotal = lines.reduce((s, l) => s + l.total, 0);
   const discountCents = parseBRLCents(discount);
-  const total = Math.max(0, subtotal - discountCents);
   const feeRate = payment === "CREDITO" ? feeCredit : payment === "DEBITO" ? feeDebit : 0;
-  const feePreview = payMode === "single" ? Math.round((total * feeRate) / 100) : 0;
-  const customerTotal = total + feePreview;
+  const { total, fee: feePreview, customerTotal } = calcTotals({
+    subtotal,
+    discount: discountCents,
+    method: payment,
+    single: payMode === "single",
+    feeCredit,
+    feeDebit,
+  });
   const receivedCents = parseBRLCents(received);
   const cashCents = parseBRLCents(cashAmount);
-  const pixCents = Math.max(0, total - cashCents);
-  // Troco: recebido menos o que o cliente deve (total) ou menos a parte dinheiro (split).
+  const pixCents = Math.max(0, calcSplit({ total, cash: cashCents }).pix);
   const trocoBase = payMode === "single" ? customerTotal : cashCents;
-  const troco = receivedCents - trocoBase;
+  const { change: troco, missing: falta } = calcChange({ received: receivedCents, due: trocoBase });
 
   function selectLine(id: number) {
     setSelectedId(id);
@@ -222,11 +230,17 @@ export function ExpressPdvClient({
       }
       fd.set("cashBoxId", cashBoxId);
       fd.set("discount", discount);
+      if (receivedCents > 0) fd.set("received", received);
       fd.set("customerName", "");
       fd.set("idempotencyKey", getIdemKey());
       const res = await createSaleAction(fd);
       if ("ok" in res) {
-        toast.success(`Venda #${res.ok} registrada. Troco ${formatCurrency(Math.max(0, troco))}.`);
+        toast.success(`Venda #${res.ok} registrada. Troco ${formatCurrency(Math.max(0, troco))}.`, {
+          action: {
+            label: "Recibo",
+            onClick: () => router.push(`/dashboard/pdv/recibo/${res.ok}`),
+          },
+        });
         clearSale();
       } else {
         toast.error(SALE_ERROR_MSG[res.error] ?? SALE_ERROR_MSG.sale);
@@ -580,7 +594,7 @@ export function ExpressPdvClient({
                 </Button>
               </div>
               <p className={`text-lg font-semibold tabular-nums ${troco < 0 ? "text-destructive" : ""}`}>
-                Troco {formatCurrency(Math.max(0, troco))}
+                {troco < 0 ? `Falta ${formatCurrency(falta)}` : `Troco ${formatCurrency(troco)}`}
               </p>
             </>
           ) : null}

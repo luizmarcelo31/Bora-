@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Funcao } from "@prisma/client";
 import { requireSessionTenant } from "@/lib/tenant";
@@ -15,7 +16,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { TableCard } from "@/components/shared/TableCard";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { paymentLabel } from "@/lib/payments";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Receipt } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
 import { getPdvPageData } from "./actions";
 import { CancelSaleDialog } from "./cancel-dialog";
@@ -83,10 +84,17 @@ const { products, cashboxes, todaysSales, user } = await getPdvPageData(tenant.i
                       #{s.id} · {s.items.reduce((n, i) => n + i.quantity, 0)} {s.items.reduce((n, i) => n + i.quantity, 0) === 1 ? "item" : "itens"}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · {paymentLabel(s.paymentMethod)}
+                      {new Date(s.createdAt).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })} · {paymentLabel(s.paymentMethod)}
                     </span>
                   </div>
                   <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(s.total)}</span>
+                  <Link
+                    href={`/dashboard/pdv/recibo/${s.id}`}
+                    aria-label={`Recibo da venda #${s.id}`}
+                    className="rounded-md border p-2 text-muted-foreground hit-area-44"
+                  >
+                    <Receipt className="size-4" />
+                  </Link>
                   <CancelSaleDialog saleId={s.id} />
                 </li>
               ))}
@@ -108,13 +116,22 @@ const { products, cashboxes, todaysSales, user } = await getPdvPageData(tenant.i
                   <TableRow key={s.id}>
                     <TableCell className="tabular-nums">{s.id}</TableCell>
                     <TableCell>
-                      {new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(s.createdAt).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })}
                     </TableCell>
                     <TableCell className="tabular-nums">{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
                     <TableCell>{paymentLabel(s.paymentMethod)}</TableCell>
                     <TableCell className="tabular-nums">{formatCurrency(s.total)}</TableCell>
                     <TableCell>
-                      <CancelSaleDialog saleId={s.id} />
+                      <div className="flex gap-1">
+                        <Link
+                          href={`/dashboard/pdv/recibo/${s.id}`}
+                          aria-label={`Recibo da venda #${s.id}`}
+                          className="rounded-md border p-2 text-muted-foreground hit-area-44"
+                        >
+                          <Receipt className="size-4" />
+                        </Link>
+                        <CancelSaleDialog saleId={s.id} />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -253,7 +253,7 @@ export default async function SuportePage({
                           <span className="font-semibold">{t.subject}</span>
                           <p className="text-xs text-muted-foreground">
                             #{t.id} · {t._count.messages} mensagem(ns) ·{" "}
-                            {t.createdAt.toLocaleDateString("pt-BR")}
+                            {t.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                           </p>
                         </TableCell>
                         <TableCell>

@@ -171,6 +171,8 @@ export const createSaleSchema = z.object({
     .optional()
     .or(z.literal('')),
   idempotencyKey: z.string().min(1).max(100).optional(),
+  // Recibo: recebido do cliente (troco calculado no servidor). Omitido = sem troco.
+  receivedAmount: z.number().int().min(0).optional(),
 });
 
 export const cancelSaleSchema = z.object({

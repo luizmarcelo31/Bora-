@@ -80,7 +80,7 @@ export function ReportActions({
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.text(
-        `Gerado em ${new Date().toLocaleString("pt-BR")} — Página ${i}/${pageCount}`,
+        `Gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} — Página ${i}/${pageCount}`,
         14,
         doc.internal.pageSize.height - 8
       );
@@ -169,7 +169,7 @@ export function ReportActions({
                   </tfoot>
                 ) : null}
               </table>
-              <p style={{ fontSize: 10, color: "#555" }}>Gerado em {new Date().toLocaleString("pt-BR")}</p>
+              <p style={{ fontSize: 10, color: "#555" }}>Gerado em {new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
             </div>
           </div>,
           document.body

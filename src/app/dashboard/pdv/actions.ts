@@ -46,6 +46,8 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
   const cashBoxRaw = String(formData.get("cashBoxId") ?? "");
   const cashBoxId = cashBoxRaw ? parseInt(cashBoxRaw, 10) : undefined;
   const discount = parseBRLToCents(formData.get("discount")) ?? 0;
+  const receivedRaw = String(formData.get("received") ?? "").trim();
+  const receivedAmount = receivedRaw ? parseBRLToCents(receivedRaw) ?? undefined : undefined;
 
   // Split dinheiro+pix (PDV Expresso). Omitido = pagamento único via paymentMethod.
   let payments: { method: string; amount: number }[] | undefined;
@@ -100,6 +102,7 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
       discount,
       paymentMethod,
       payments,
+      receivedAmount,
       customerName: String(formData.get("customerName") ?? ""),
       idempotencyKey,
     });
@@ -122,8 +125,11 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
       if (e.type === "INSUFFICIENT_STOCK") return { error: "stock" };
       if (e.type === "INVALID_DISCOUNT") return { error: "discount" };
       if (e.type === "CLOSED_CASHBOX") return { error: "cashbox" };
+      if (e.type === "INVALID_AMOUNT") return { error: "amount" };
       return { error: "invalid" };
     }
+    // Zod: entrada malformada (pagamento, parcelas, recebido) — erro acionável, sem detalhe técnico
+    if (e instanceof Error && e.name === "ZodError") return { error: "invalid" };
     console.error("[createSaleAction] falha inesperada", {
       tenantId: tenant.id,
       items: rawItems,

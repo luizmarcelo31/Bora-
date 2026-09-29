@@ -223,6 +223,11 @@ model Sale {
   payments Json?
   // Taxa maquineta (centavos) cobrada do cliente no cartão; no financeiro vira DESPESA separada.
   feeAmount Int @default(0)
+  // Cupom não-fiscal: sequência diária por tenant + valores de troco.
+  couponSeq     Int?
+  couponDate    DateTime?
+  receivedAmount Int?
+  changeAmount   Int? @default(0)
 
   customerName  String?
   customerPhone String?
@@ -235,6 +240,7 @@ model Sale {
   items SaleItem[]
 
   @@unique([tenantId, idempotencyKey])
+  @@unique([tenantId, couponDate, couponSeq])
   @@index([tenantId])
   @@index([userId])
   @@index([status])

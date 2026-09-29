@@ -86,10 +86,10 @@ export default async function AuditoriaPage({
       />
       <ReportActions
         title="Relatório de auditoria (LOG)"
-        subtitle={`${tenant.name} — gerado em ${new Date().toLocaleString("pt-BR")} · página ${pagina} de ${totalPaginas}`}
+        subtitle={`${tenant.name} — gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · página ${pagina} de ${totalPaginas}`}
         columns={["Data", "Ação", "Entidade", "ID", "Usuário", "Detalhes"]}
         rows={logs.map((l) => [
-          new Date(l.createdAt).toLocaleString("pt-BR"),
+          new Date(l.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
           auditActionLabel(l.action),
           auditEntityLabel(l.entity),
           `#${l.entityId}`,
@@ -159,7 +159,7 @@ export default async function AuditoriaPage({
                     {auditActionLabel(l.action)} · {auditEntityLabel(l.entity)} #{l.entityId}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {new Date(l.createdAt).toLocaleString("pt-BR")} · {l.userEmail ?? `#${l.userId ?? "—"}`}
+                    {new Date(l.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {l.userEmail ?? `#${l.userId ?? "—"}`}
                   </span>
                 </div>
                 <Badge variant={auditActionVariant(l.action)} className="shrink-0">{auditActionLabel(l.action)}</Badge>
@@ -181,7 +181,7 @@ export default async function AuditoriaPage({
             <TableBody>
               {logs.map((l) => (
                 <TableRow key={l.id}>
-                  <TableCell className="tabular-nums">{new Date(l.createdAt).toLocaleString("pt-BR")}</TableCell>
+                  <TableCell className="tabular-nums">{new Date(l.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</TableCell>
                   <TableCell><Badge variant={auditActionVariant(l.action)}>{auditActionLabel(l.action)}</Badge></TableCell>
                   <TableCell><Badge variant="outline">{auditEntityLabel(l.entity)}</Badge></TableCell>
                   <TableCell className="tabular-nums">#{l.entityId}</TableCell>

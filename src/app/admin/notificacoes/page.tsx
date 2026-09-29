@@ -152,7 +152,7 @@ export default async function NotificacoesPage({
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate text-sm font-semibold">{c.subject}</span>
                       <span className="truncate text-xs text-muted-foreground">
-                        {labelDe(alvoNotificacaoLabel, c.target)} · {c.recipients} dest. · {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR")}
+                        {labelDe(alvoNotificacaoLabel, c.target)} · {c.recipients} dest. · {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </span>
                     </div>
                     <StatusPill tom={TOM_ENVIO[c.status] ?? "neutro"}>
@@ -186,7 +186,7 @@ export default async function NotificacoesPage({
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{c.recipients}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR")}
+                        {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </TableCell>
                     </TableRow>
                   ))}

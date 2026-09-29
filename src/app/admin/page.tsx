@@ -161,7 +161,7 @@ export default async function AdminHomePage() {
                     <div className="min-w-0">
                       <p className="truncate font-semibold">{t.subject}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t.tenant.name} · {t.createdAt.toLocaleDateString("pt-BR")}
+                        {t.tenant.name} · {t.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-1.5">
@@ -202,7 +202,7 @@ export default async function AdminHomePage() {
                   <li key={a.id} className="py-2.5 text-sm">
                     <p className="font-semibold">{labelDe(acaoAuditoriaLabel, a.action)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {a.actorEmail} · {a.createdAt.toLocaleString("pt-BR")}
+                      {a.actorEmail} · {a.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                     </p>
                   </li>
                 ))}

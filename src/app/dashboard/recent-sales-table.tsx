@@ -22,7 +22,7 @@ export function RecentSalesTable({
                 #{s.id} · {s.items.reduce((n, i) => n + i.quantity, 0)} {s.items.reduce((n, i) => n + i.quantity, 0) === 1 ? "item" : "itens"}
               </span>
               <span className="text-xs text-muted-foreground">
-                {new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · {paymentLabel(s.paymentMethod)}
+                {new Date(s.createdAt).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })} · {paymentLabel(s.paymentMethod)}
               </span>
             </div>
             <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(s.total)}</span>
@@ -44,7 +44,7 @@ export function RecentSalesTable({
         {sales.map((s) => (
           <TableRow key={s.id}>
             <TableCell className="tabular-nums">{s.id}</TableCell>
-            <TableCell>{new Date(s.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</TableCell>
+            <TableCell>{new Date(s.createdAt).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })}</TableCell>
             <TableCell className="tabular-nums">{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
             <TableCell>{paymentLabel(s.paymentMethod)}</TableCell>
             <TableCell className="tabular-nums">{formatCurrency(s.total)}</TableCell>

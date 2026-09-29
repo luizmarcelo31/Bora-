@@ -140,7 +140,7 @@ export default async function ConfiguracoesPage({
                     <p className="text-xs text-muted-foreground">
                       {i.externalAccount ?? "Conta não informada"}
                       {i.lastSyncAt
-                        ? ` · sincronizado ${i.lastSyncAt.toLocaleString("pt-BR")}`
+                        ? ` · sincronizado ${i.lastSyncAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`
                         : ""}
                       {i.lastError ? ` · erro: ${i.lastError}` : ""}
                     </p>

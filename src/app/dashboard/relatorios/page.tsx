@@ -164,7 +164,7 @@ export default async function RelatoriosPage({
             subtitle={`${tenant.name} — ${startStr} a ${endStr} · ${salesCount} vendas no filtro (exporta até ${printSales.length})`}
             columns={["Data", "#", "Itens", "Pagamento", "Total"]}
             rows={printSales.map((s) => [
-              new Date(s.createdAt).toLocaleString("pt-BR"),
+              new Date(s.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
               `#${s.id}`,
               String(s.items.reduce((n, i) => n + i.quantity, 0)),
               paymentLabel(s.paymentMethod),
@@ -190,7 +190,7 @@ export default async function RelatoriosPage({
                       #{s.id} · {s.items.reduce((n, i) => n + i.quantity, 0)} {s.items.reduce((n, i) => n + i.quantity, 0) === 1 ? "item" : "itens"}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(s.createdAt).toLocaleString("pt-BR")} · {paymentLabel(s.paymentMethod)}
+                      {new Date(s.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {paymentLabel(s.paymentMethod)}
                     </span>
                   </div>
                   <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(s.total)}</span>
@@ -211,7 +211,7 @@ export default async function RelatoriosPage({
               <TableBody>
                 {periodSales.map((s) => (
                   <TableRow key={s.id}>
-                    <TableCell className="tabular-nums">{new Date(s.createdAt).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="tabular-nums">{new Date(s.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</TableCell>
                     <TableCell className="tabular-nums">#{s.id}</TableCell>
                     <TableCell className="tabular-nums">{s.items.reduce((n, i) => n + i.quantity, 0)}</TableCell>
                     <TableCell>{paymentLabel(s.paymentMethod)}</TableCell>

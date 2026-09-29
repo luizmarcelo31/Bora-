@@ -129,7 +129,7 @@ export default async function AuditoriaPage({
                     {acaoAuditoriaLabel[l.action]} · {ENTIDADE[l.entity] ?? l.entity}{l.entityId ? ` #${l.entityId}` : ""}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {l.createdAt.toLocaleString("pt-BR")} · {l.actorEmail}
+                    {l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {l.actorEmail}
                   </span>
                 </div>
               </li>
@@ -151,7 +151,7 @@ export default async function AuditoriaPage({
               {logs.map((l) => (
                 <TableRow key={l.id}>
                   <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                    {l.createdAt.toLocaleString("pt-BR")}
+                    {l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">{acaoAuditoriaLabel[l.action]}</span>

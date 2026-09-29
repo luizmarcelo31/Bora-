@@ -342,7 +342,7 @@ export default async function EmpresaPage({
               <li key={v.id} className="flex items-center gap-3 rounded-lg border p-3">
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="text-sm font-semibold tabular-nums">#{v.id}</span>
-                  <span className="text-xs text-muted-foreground">{v.createdAt.toLocaleString("pt-BR")}</span>
+                  <span className="text-xs text-muted-foreground">{v.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span>
                 </div>
                 <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(v.total)}</span>
               </li>
@@ -361,7 +361,7 @@ export default async function EmpresaPage({
               {vendas.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="tabular-nums">#{v.id}</TableCell>
-                  <TableCell>{v.createdAt.toLocaleString("pt-BR")}</TableCell>
+                  <TableCell>{v.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</TableCell>
                   <TableCell className="text-right font-semibold tabular-nums">
                     {formatCurrency(v.total)}
                   </TableCell>
@@ -394,7 +394,7 @@ export default async function EmpresaPage({
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{t.subject}</p>
                     <p className="text-xs text-muted-foreground">
-                      {t.createdAt.toLocaleDateString("pt-BR")}
+                      {t.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                     </p>
                   </div>
                   <StatusPill tom={statusTicketTom[t.status]}>
@@ -433,7 +433,7 @@ export default async function EmpresaPage({
                       {labelDe(acaoAuditoriaLabel, a.action)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {a.actorEmail} · {a.createdAt.toLocaleString("pt-BR")}
+                      {a.actorEmail} · {a.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                     </p>
                   </div>
                 </li>

@@ -79,7 +79,7 @@ export default async function InventarioPage() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-semibold">{tipoInventarioLabel[c.type]}</span>
                 <span className="text-xs tabular-nums text-muted-foreground">
-                  {c.startedAt.toLocaleString('pt-BR')} · {c.items.length} {c.items.length === 1 ? "item" : "itens"}
+                  {c.startedAt.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} · {c.items.length} {c.items.length === 1 ? "item" : "itens"}
                 </span>
               </div>
               <StatusBadge status={c.status === "CONCLUIDO" ? "active" : c.status === "ABERTO" ? "pending" : "inactive"} label={c.status} />
@@ -110,7 +110,7 @@ export default async function InventarioPage() {
                 <TableCell>
                   <StatusBadge status={c.status === "CONCLUIDO" ? "active" : c.status === "ABERTO" ? "pending" : "inactive"} label={c.status} />
                 </TableCell>
-                <TableCell className="tabular-nums">{c.startedAt.toLocaleString('pt-BR')}</TableCell>
+                <TableCell className="tabular-nums">{c.startedAt.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</TableCell>
                 <TableCell>{c.items.length}</TableCell>
                 <TableCell>
                   {c.status === "ABERTO" && (

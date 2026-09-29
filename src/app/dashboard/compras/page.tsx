@@ -112,7 +112,7 @@ export default async function ComprasPage() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-semibold">{p.supplier.name}</span>
                 <span className="text-xs tabular-nums text-muted-foreground">
-                  {p.createdAt.toLocaleDateString('pt-BR')}
+                  {p.createdAt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                 </span>
               </div>
               <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(p.total)}</span>
@@ -145,7 +145,7 @@ export default async function ComprasPage() {
                 <TableCell>
                   <StatusBadge status={p.status === "RECEBIDA" ? "active" : "pending"} label={p.status} />
                 </TableCell>
-                <TableCell className="tabular-nums">{p.createdAt.toLocaleDateString('pt-BR')}</TableCell>
+                <TableCell className="tabular-nums">{p.createdAt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</TableCell>
                 <TableCell>
                   {p.status === "PENDENTE" && (
                     <form action={receivePurchaseAction}>

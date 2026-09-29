@@ -473,6 +473,26 @@ export class SaleService {
     // Método primário = maior parcela (relatórios seguem compatíveis).
     const primaryMethod = [...payments].sort((a, b) => b.amount - a.amount)[0].method;
 
+    // Cupom diário (SP): sequência por tenant+dia com retry em corrida.
+    const spDay = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    spDay.setHours(0, 0, 0, 0);
+    let couponSeq =
+      (await prisma.sale.count({ where: { tenantId, couponDate: spDay } })) + 1;
+
+    // Recebido/troco: servidor calcula o troco; recebido menor que o total é inválido.
+    let receivedAmount: number | null = null;
+    let changeAmount = 0;
+    if (data.receivedAmount !== undefined) {
+      if (data.receivedAmount < customerTotal) {
+        throw new ValidationError(
+          ValidationErrorType.INVALID_AMOUNT,
+          'Valor recebido menor que o total'
+        );
+      }
+      receivedAmount = data.receivedAmount;
+      changeAmount = data.receivedAmount - customerTotal;
+    }
+
     // Idempotência: se já existe venda com mesma chave para este tenant, retorna existente (evita duplicação por F5/duplo clique)
     if (data.idempotencyKey) {
       const existing = await prisma.sale.findFirst({
@@ -482,8 +502,9 @@ export class SaleService {
       if (existing) return existing;
     }
 
-    let sale: Sale & { items: import("@prisma/client").SaleItem[] };
-    try {
+    let sale: (Sale & { items: import("@prisma/client").SaleItem[] }) | undefined;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
       sale = await prisma.$transaction(async (tx) => {
         const s = await tx.sale.create({
           data: {
@@ -497,6 +518,10 @@ export class SaleService {
             paymentMethod: primaryMethod,
             payments: payments as unknown as Prisma.InputJsonValue,
             feeAmount,
+            couponSeq,
+            couponDate: spDay,
+            receivedAmount,
+            changeAmount,
             customerName: data.customerName || null,
             customerPhone: data.customerPhone || null,
             idempotencyKey: data.idempotencyKey || null,
@@ -598,7 +623,17 @@ export class SaleService {
 
         return s;
       });
+      break;
     } catch (e) {
+      // Corrida no cupom diário: outra venda levou a sequência, tenta a próxima
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002" &&
+        JSON.stringify((e as { meta?: unknown }).meta ?? "").includes("couponSeq")
+      ) {
+        couponSeq += 1;
+        continue;
+      }
       // Corrida: outra requisição criou com mesma idempotencyKey entre o findFirst inicial e o create
       if (data.idempotencyKey && e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
         const existing = await prisma.sale.findFirst({
@@ -608,6 +643,11 @@ export class SaleService {
         if (existing) return existing;
       }
       throw e;
+    }
+    }
+
+    if (!sale) {
+      throw new Error('Não foi possível numerar o cupom, tente novamente');
     }
 
     return sale;
