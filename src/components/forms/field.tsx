@@ -27,7 +27,7 @@ export function Field({
   const describedBy = [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
   return (
     <div className={cn("flex flex-col gap-1 text-sm", className)}>
-      <label htmlFor={id} className="font-medium">
+      <label htmlFor={id} className="font-semibold">
         {label}
         {required ? <span aria-hidden="true" className="text-destructive"> *</span> : null}
       </label>

@@ -109,17 +109,17 @@ export default async function FinanceiroPage({
           <p className="text-sm text-muted-foreground">Receitas menos despesas = resultado.</p>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg bg-green-500/10 border border-green-500/30 p-4">
+          <div className="rounded-lg bg-[var(--status-success-bg)] border border-[var(--status-success-dot)]/30 p-4">
             <p className="text-xs text-muted-foreground">Receitas Totais</p>
-            <p className="text-xl font-semibold text-green-600">{formatCurrency(resume.receitas)}</p>
+            <p className="text-xl font-semibold text-[var(--status-success-fg)]">{formatCurrency(resume.receitas)}</p>
           </div>
           <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4">
             <p className="text-xs text-muted-foreground">Despesas Totais</p>
             <p className="text-xl font-semibold text-destructive">{formatCurrency(resume.despesas)}</p>
           </div>
-          <div className={`rounded-lg p-4 border ${resume.saldo >= 0 ? "bg-green-500/10 border-green-500/30" : "bg-destructive/10 border-destructive/30"}`}>
+          <div className={`rounded-lg p-4 border ${resume.saldo >= 0 ? "bg-[var(--status-success-bg)] border-[var(--status-success-dot)]/30" : "bg-destructive/10 border-destructive/30"}`}>
             <p className="text-xs text-muted-foreground">Resultado Líquido</p>
-            <p className={`text-xl font-semibold ${resume.saldo >= 0 ? "text-green-600" : "text-destructive"}`}>{formatCurrency(resume.saldo)}</p>
+            <p className={`text-xl font-semibold ${resume.saldo >= 0 ? "text-[var(--status-success-fg)]" : "text-destructive"}`}>{formatCurrency(resume.saldo)}</p>
           </div>
         </CardContent>
       </Card>

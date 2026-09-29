@@ -52,3 +52,5 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+/.qa/
+# screenshots de QA local (scripts/inspecao-fase1.mjs)

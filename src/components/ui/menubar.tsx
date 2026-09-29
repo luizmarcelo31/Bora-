@@ -55,7 +55,7 @@ function MenubarTrigger({
     <MenubarPrimitive.Trigger
       data-slot="menubar-trigger"
       className={cn(
-        "flex items-center rounded-sm px-1.5 py-[2px] text-sm font-medium outline-hidden select-none hover:bg-muted aria-expanded:bg-muted",
+        "flex items-center rounded-sm px-1.5 py-[2px] text-sm font-semibold outline-hidden select-none hover:bg-muted aria-expanded:bg-muted",
         className
       )}
       {...props}
@@ -179,7 +179,7 @@ function MenubarLabel({
       data-slot="menubar-label"
       data-inset={inset}
       className={cn(
-        "px-1.5 py-1 text-sm font-medium data-inset:pl-7",
+        "px-1.5 py-1 text-sm font-semibold data-inset:pl-7",
         className
       )}
       {...props}

@@ -1,4 +1,4 @@
-﻿-- AlterTable
+-- AlterTable
 ALTER TABLE "Sale" ADD COLUMN "idempotencyKey" TEXT;
 
 -- CreateIndex

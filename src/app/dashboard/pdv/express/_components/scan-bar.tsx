@@ -68,7 +68,7 @@ export function ScanBar({
         </Button>
       </div>
       {warning ? (
-        <p role="alert" className={cn("text-sm font-medium text-destructive")}>
+        <p role="alert" className={cn("text-sm font-semibold text-destructive")}>
           {warning}
         </p>
       ) : null}

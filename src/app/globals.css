@@ -86,21 +86,6 @@
   :focus:not(:focus-visible) {
     outline: none;
   }
-
-  /* Fase 2 — Sidebar animation */
-  .sidebar-overlay {
-    position: fixed;
-    inset: 0;
-    background: black;
-    opacity: 0;
-    transition: opacity 180ms ease;
-    pointer-events: none;
-    z-index: 40;
-  }
-  .sidebar-overlay.open {
-    opacity: 0.5;
-    pointer-events: auto;
-  }
 }
 
 .stagger-1 { animation-delay: 50ms; }
@@ -241,10 +226,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in-up,
-  .sidebar-overlay {
+  .animate-fade-in-up {
     animation: none;
     transition: none;
+  }
+
+  /* O overlay da sidebar mobile vem do Sheet (Radix Dialog), que anima com
+     animate-in/animate-out. Respeitar a preferência aqui também. */
+  [data-slot="sheet-overlay"],
+  [data-slot="sheet-content"] {
+    animation: none !important;
+    transition: none !important;
   }
 }
 

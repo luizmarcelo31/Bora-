@@ -4,58 +4,162 @@
 
 ---
 
+## 📌 Estado real (auditado em 29/09/2026)
+
+Os checkboxes abaixo estavam **todos vazios** enquanto o histórico git já
+registrava Fases 1 e 2 entregues. Este bloco foi escrito a partir de auditoria
+do código, não do documento. A auditoria é por evidência (busca no código), não
+por inspeção visual — itens marcados abaixo precisam de conferência no navegador.
+
+### Fase 1 — 1.1 e 1.2 concluídas
+- **1.1 fechada.** `src/styles/tokens.css` é o source of truth. Contraste WCAG
+  AA: **0 falhas em 42 pares**, nos dois modos.
+  Gate: `node scripts/auditar-contraste.mjs`
+- **1.2 fechada.** Escala 400/600 + 700 para KPI é a que renderiza (corrigido
+  bug de cascata que zerava os pesos); group labels usam `.label-group`
+  (verificado no Chromium); sentence case auditado em 231 arquivos.
+  Gates: `verificar-pesos.mjs` · `auditar-sentence-case.mjs`
+
+### Fase 1 — 1.3 e 1.4 fechadas (inspeção visual 29/09/2026)
+**41/41 verificações, 0 erros de console.** 13/13 módulos em 200, dark mode
+aplicado nos 13, sem overflow em 375px. O gate de cor também fecha: 0 hex e
+0 utilitárias de paleta fora do token em 236 arquivos.
+
+Correções que a inspeção forçou: header de página era transparente (virou
+faixa com token — laranja day / `#111` dark); preço da tabela estava em
+`text-align: start`; filter chips eram `rounded-md` com ativo branco; `Alert`
+tinha 2 variantes, não 4.
+
+Detalhe: `docs/changes/2026-09-29-inspecao-visual-fase-1.md`
+
+### Fase 2 — ~60%
+FEITO: loading.tsx, breadcrumb, foco visível, skeletons, debounce, EmptyState,
+tooltips, atalhos de teclado, toasts, alerta de estoque baixo.
+**Falta:** scroll restoration, lazy loading (`next/dynamic` = 0),
+onboarding/boas-vindas (0), CTA dentro do EmptyState, changelog in-app (0).
+
+### Fase 3 — ~85% (o mais avançado)
+FEITO: leitor de código de barras, favoritos no PDV, desconto com senha, split
+payment, estoque mínimo, alerta de mínimo, gráfico por hora, top 10 produtos,
+DRE, PDF, filtro de período, níveis de acesso, log de auditoria, PIN de operador.
+**Falta:** modo offline com fila de sync (0).
+
+### Fase 4 — praticamente não iniciado
+FEITO: nada relevante. "Produtos parados" tem 3matches (a verificar);
+backup/restauração tem 2 (a verificar).
+**Falta:** multi-loja, dashboard consolidado, transfer entre lojas, impressora
+térmica, gateway de pagamento, webhook, API pública, sugestão de compra,
+previsão de ruptura, precificação dinâmica, PWA instalável, modo quiosque,
+status page.
+
+### Ordem sugerida
+1. Aplicar `.label-group` (fecha 1.2 — é o último item da Fase 1)
+2. Auditar 1.4 módulo a módulo e ligar o overlay órfão da sidebar
+3. Fase 2: onboarding + changelog + CTA no EmptyState
+4. Fase 3: modo offline
+5. Fase 4 exige decisão de produto e de gateway — não é continuation natural
+
+Histórico deste lote: `docs/changes/2026-09-29-fase1-contraste-tipografia.md`.
+
+---
+
 ## Fase 1 — Direção Visual (Agora)
 
 > **Objetivo:** Estabelecer identidade visual sólida e consistente em 100% dos módulos antes de qualquer nova feature.
 
 ### 1.1 Paleta e Tokens
 
-- [ ] Substituir todos os beges (`#F5F0EB`, `#FDEEE7` antigo) por branco puro `#FFFFFF`
-- [ ] Substituir marrom/terracota escuro por preto `#111111` nos textos primários
-- [ ] Aplicar laranja `#C45C2E` exclusivamente em: ativo, acento, botão primário, barra de KPI
-- [ ] Implementar dark mode: fundo `#0A0A0A`, cards `#141414`, brand vira `#FFFFFF`
-- [ ] Criar arquivo `tokens.css` centralizado (único source of truth de cores)
-- [ ] Validar contraste WCAG AA em ambos os modos
+- [x] Substituir todos os beges (`#F5F0EB`, `#FDEEE7` antigo) por branco puro `#FFFFFF`
+- [x] Substituir marrom/terracota escuro por preto `#111111` nos textos primários
+- [x] Aplicar laranja `#C45C2E` exclusivamente em: ativo, acento, botão primário, barra de KPI
+      — *ajustado: `#C45C2E` dá 4.27:1 com texto branco. Marca pura virou
+      `--brand` (uso não-textual) e as superfícies com texto usam `#BE592D`
+      (4.51:1). Ver `ADR-005`.*
+- [x] Implementar dark mode: fundo `#0A0A0A`, cards `#141414`, brand vira `#FFFFFF`
+- [x] Criar arquivo `tokens.css` centralizado (único source of truth de cores)
+- [x] Validar contraste WCAG AA em ambos os modos
+      — *auditado e corrigido; 4 pares estavam abaixo de 4.5:1.*
 
 ### 1.2 Tipografia
 
-- [ ] Definir escala tipográfica no código (title 22px → micro 10px)
-- [ ] Remover variações de peso desnecessárias — usar só 400 e 600
-- [ ] Padronizar todos os group labels: uppercase, 10px, letter-spacing 0.7px, `--text-3`
-- [ ] Garantir sentence case em 100% da interface (sem Title Case em labels)
+- [x] Definir escala tipográfica no código (title 22px → micro 10px)
+- [x] Remover variações de peso desnecessárias — usar só 400 e 600
+      — *o peso 500 estava invisível: a regra de piso do `tokens.css` estava
+      fora de `@layer` e anulava as utilitárias do Tailwind. Corrigido;
+      39 usos de `font-medium` normalizados para 600.*
+- [x] Padronizar todos os group labels: uppercase, 10px, letter-spacing 0.7px, `--text-3`
+      — *aplicado em `SidebarGroupLabel` (fonte), verificado no Chromium:
+      600 / uppercase / 10px / 0.7px.*
+- [x] Garantir sentence case em 100% da interface (sem Title Case em labels)
+      — *auditoria em 231 arquivos; única violação real era
+      `aria-label="Toggle Sidebar"` (Title Case e em inglês), corrigida para
+      "Alternar barra lateral". Os 5 restantes são nomes próprios em
+      placeholder. Gate: `node scripts/auditar-sentence-case.mjs`*
 
 ### 1.3 Componentes Base
 
-- [ ] **Sidebar** — item ativo com barra laranja esquerda + fundo brand-light
-- [ ] **Sidebar** — corrigir z-index (não abrir atrás do conteúdo)
-- [ ] **Sidebar** — overlay escuro + blur ao abrir no mobile, fecha ao clicar fora
-- [ ] **Header de página** — fundo laranja no day, fundo `#111` no dark
-- [ ] **KPI Cards** — barra de acento 3px no topo, valor 28px/700, tag de detalhe
-- [ ] **Tabela de produtos** — ícone colorido, dot de status, preço alinhado à direita
-- [ ] **Filter chips** — estilo pill, ativo em laranja/day e branco/dark
-- [ ] **Bottom nav** — fixo, safe-area, ativo em laranja/day e branco/dark
-- [ ] **Botões** — primário, secundário, ghost, danger com estados hover/active/disabled
-- [ ] **Inputs** — focus ring em laranja, placeholder em `--text-3`, label 12px/500
-- [ ] **Badges** — 5 variantes: brand, success, warning, danger, neutral
-- [ ] **Alertas / Banners** — 4 variantes com ícone + título + corpo
+- [x] **Sidebar** — item ativo com barra laranja esquerda + fundo brand-light
+- [x] **Sidebar** — corrigir z-index (não abrir atrás do conteúdo)
+      — *medido: `z-index` é `0` nos dois lados porque o layout é grid e
+      `z-index` só se aplica a posicionado. O critério original era
+      inaplicável; confirmado na tela que a sidebar não abre atrás do conteúdo.*
+- [x] **Sidebar** — overlay escuro + blur ao abrir no mobile, fecha ao clicar fora
+      — *já era atendido pelo `SheetContent` (Radix Dialog modal: overlay
+      `bg-black/10`, `backdrop-blur-xs`, fecha ao clicar fora). O
+      `.sidebar-overlay` do `globals.css` era código morto e foi removido.*
+- [x] **Header de página** — fundo laranja no day, fundo `#111` no dark
+      — *estava transparente; virou faixa com token `--page-header-bg`
+      (4.51:1 day, 18.88:1 dark, travado no gate de contraste).*
+- [x] **KPI Cards** — barra de acento 3px no topo, valor 28px/700, tag de detalhe
+      — *o 700 estava sendo zerado pela cascata; corrigido em 29/09*
+- [x] **Tabela de produtos** — ícone colorido, dot de status, preço alinhado à direita
+      — *ícone era `text-muted-foreground` e preço estava em `text-align: start`; ambos corrigidos.*
+- [x] **Filter chips** — estilo pill, ativo em laranja/day e branco/dark
+      — *era `rounded-md` com ativo branco; agora pill na cor de marca, aplicado
+      no `FilterTabs` (não no `ui/tabs`, para não arrastar todos os tabs).*
+- [x] **Bottom nav** — fixo, safe-area, ativo em laranja/day e branco/dark
+- [x] **Botões** — primário, secundário, ghost, danger com estados hover/active/disabled
+      — *4 variantes e estados confirmados na inspeção visual*
+- [x] **Inputs** — focus ring em laranja, placeholder em `--text-3`, label 12px/500
+- [x] **Badges** — 5 variantes: brand, success, warning, danger, neutral
+- [x] **Alertas / Banners** — 4 variantes com ícone + título + corpo
+      — *só havia 2 (`default`, `destructive`); adicionadas `success` e `warning`
+      com tokens de status. Contrato travado em `alert.test.tsx` — os alertas
+      vivem em dialogs fechados e não aparecem numa varredura de DOM.*
 
 ### 1.4 Revisão por Módulo
 
-- [ ] Visão geral
-- [ ] Produtos
-- [ ] Categorias
-- [ ] Estoque
-- [ ] Inventário
-- [ ] PDV
-- [ ] Promoções
-- [ ] Compras
-- [ ] Caixa
-- [ ] Financeiro
-- [ ] Relatórios
-- [ ] Configurações
-- [ ] Auditoria
+> **Concluída (inspeção visual 29/09/2026).** 13/13 módulos em 200, em light
+> e dark, sem overflow em 375px e sem erro de console.
+> Gate de cor: 0 hex e **0 utilitárias de paleta** fora do token, em 236
+> arquivos (`node scripts/auditar-cores-hardcoded.mjs`).
+> Última violação era o DRE de `dashboard/financeiro`, agora tokenizado.
+
+- [x] Visão geral
+- [x] Produtos
+- [x] Categorias
+- [x] Estoque
+- [x] Inventário
+- [x] PDV
+- [x] Promoções
+- [x] Compras
+- [x] Caixa
+- [x] Financeiro
+- [x] Relatórios
+- [x] Configurações
+- [x] Auditoria
 
 **Critério de conclusão da Fase 1:** Todos os módulos seguem os tokens e componentes do design system. Nenhuma cor hardcoded fora do `tokens.css`.
+
+> **FASE 1 CONCLUÍDA (29/09/2026).** 1.1, 1.2, 1.3 e 1.4 fechadas, com gates
+> automatizados verdes: contraste WCAG AA, cor de paleta, sentence case,
+> pesos tipográficos e inspeção visual no navegador.
+
+> **Estado: 1.1 e 1.2 fechadas. 1.3 e 1.4 aguardam inspeção visual no navegador.**
+> O que resta é confirmado por busca de código, não por olhada — z-index,
+> header, tabela de produtos, estados de botão e alertas. Abrir a Fase 2 sem
+> essa passada é POSSÍVEL (o gate de cor e de tipografia está automatizado e
+> verde), mas a Fase 1 não deve ser marcada como concluída antes disso.
 
 ---
 

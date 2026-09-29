@@ -25,14 +25,20 @@
   --popover: #FFFFFF;
   --popover-foreground: #111111;
 
-  /* --- Brand --- */
-  --primary: #C45C2E;
+  /* --- Brand ---
+   * --brand é a cor de marca pura (#C45C2E) e fica reservada a usos
+   * NÃO-textuais: barra de KPI, item ativo, ícones, anéis, gráficos
+   * (esses passam do limiar de 3:1 para texto grande/UI).
+   * --primary/--accent são a versão sobre a qual o app assenta texto branco,
+   * escurecida o mínimo para fechar WCAG AA 4.5:1 (#C45C2E dava 4.27). */
+  --brand: #C45C2E;
+  --primary: #BE592D;
   --primary-foreground: #FFFFFF;
   --secondary: #F5F5F5;
   --secondary-foreground: #111111;
   --muted: #F0F0F0;
   --muted-foreground: #6B6B6B;
-  --accent: #C45C2E;
+  --accent: #BE592D;
   --accent-foreground: #FFFFFF;
 
   /* --- Status --- */
@@ -61,9 +67,9 @@
   /* --- Sidebar --- */
   --sidebar: #FFFFFF;
   --sidebar-foreground: #111111;
-  --sidebar-primary: #C45C2E;
+  --sidebar-primary: #BE592D;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #C45C2E;
+  --sidebar-accent: #BE592D;
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: #E5E5E5;
   --sidebar-ring: #C45C2E;
@@ -74,6 +80,11 @@
   --chart-3: #22C55E;
   --chart-4: #3B82F6;
   --chart-5: #8B5CF6;
+
+  /* --- Faixa do header de página (roadmap 1.3) ---
+   * Laranja de ação no day, quase-preto no dark, sempre com texto branco. */
+  --page-header-bg: #BE592D;
+  --page-header-fg: #FFFFFF;
 
   /* --- Tipografia (título 22px → micro 10px) --- */
   --text-micro: 10px;
@@ -126,7 +137,9 @@
   --popover: #141414;
   --popover-foreground: #FFFFFF;
 
-  /* --- Brand (roadmap: brand vira #FFFFFF no dark) --- */
+  /* --- Brand (roadmap: brand vira #FFFFFF no primary no dark) ---
+   * --brand segue a cor de marca pura para usos não-textuais. */
+  --brand: #C45C2E;
   --primary: #FFFFFF;
   --primary-foreground: #111111;
   --secondary: #1F1F1F;
@@ -149,11 +162,11 @@
   --status-neutral-fg: #A3A3A3;
   --status-neutral-dot: #737373;
 
-  --accent: #C45C2E;          /* laranja mantido como accent no dark */
+  --accent: #BE592D;          /* laranja escurecido p/ fechar AA com texto branco */
   --accent-foreground: #FFFFFF;
 
   /* --- Status --- */
-  --destructive: #EF4444;
+  --destructive: #D73D3D;     /* #EF4444 dava 3.76 com branco */
   --destructive-foreground: #FFFFFF;
 
   /* --- Surface --- */
@@ -166,7 +179,7 @@
   --sidebar-foreground: #FFFFFF;
   --sidebar-primary: #FFFFFF;
   --sidebar-primary-foreground: #111111;
-  --sidebar-accent: #C45C2E;
+  --sidebar-accent: #BE592D;
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: #2A2A2A;
   --sidebar-ring: #C45C2E;
@@ -177,6 +190,11 @@
   --chart-3: #22C55E;
   --chart-4: #3B82F6;
   --chart-5: #8B5CF6;
+
+  /* --- Faixa do header de página (roadmap 1.3) ---
+   * No dark o roadmap pede #111 — quase-preto sobre o fundo #0A0A0A. */
+  --page-header-bg: #111111;
+  --page-header-fg: #FFFFFF;
 
   /* --- Tipografia (pesos mantidos, valores iguais ao light) --- */
   --text-micro: 10px;
@@ -215,31 +233,41 @@
 }
 
 /*
- * Restrição de peso tipográfico (roadmap Fase 1.2):
- * Usar somente 400 e 600. Regra base — componentes sobrescrevem conforme necessidade.
+ * Restrição de peso tipográfico (roadmap Fase 1.2).
+ *
+ * IMPORTANTE — precisa ficar dentro de @layer base.
+ * O Tailwind v4 emite as utilitárias (.font-medium, .font-bold...) dentro de
+ * @layer utilities, e na cascata CSS estilos NÃO-layerizados vencem os
+ * layerizados. Se esta regra ficasse solta no arquivo, o `*` sobrescreveria
+ * toda utilitária de peso e a UI inteira cairia para 400 — foi exatamente o que
+ * aconteceu. Em @layer base, a regra define o piso e as utilitárias vencem.
+ *
+ * Escala da Fase 1: 400 (corpo) e 600 (ênfase). O roadmap 1.3 reserva 700
+ * para o valor numérico do KPI e para números em destaque (preço, quantidade).
  */
-*,
-*::before,
-*::after {
-  font-weight: 400;
-}
+@layer base {
+  *,
+  *::before,
+  *::after {
+    font-weight: 400;
+  }
 
-h1, h2, h3, h4, h5, h6,
-[class*="heading"],
-.text-lg, .text-xl, .text-2xl, .text-3xl, .text-title,
-.font-semibold {
-  font-weight: 600;
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+  }
 }
 
 /*
  * Group label padrão (roadmap Fase 1.2):
- * uppercase, 10px, letter-spacing 0.7px, --text-3
- * Usar como classe auxiliar .label-group.
+ * uppercase, 10px, letter-spacing 0.7px, --text-3.
+ * Em @layer components para continuar sobrescrevível por utilitárias.
  */
-.label-group {
-  font-size: var(--text-micro);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  color: var(--muted-foreground);
+@layer components {
+  .label-group {
+    font-size: var(--text-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--muted-foreground);
+  }
 }

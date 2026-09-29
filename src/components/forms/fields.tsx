@@ -30,7 +30,7 @@ export function ChipSelect({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span id={label} className="text-sm font-medium">
+      <span id={label} className="text-sm font-semibold">
         {label}
       </span>
       <div className="flex flex-wrap gap-2" role="group" aria-labelledby={label}>

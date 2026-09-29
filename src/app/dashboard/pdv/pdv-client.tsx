@@ -174,7 +174,7 @@ export function PdvClient({
     <>
       {/* Operador — PIN para troca */}
       <div className="flex items-center justify-between bg-card rounded-lg px-4 py-2 border">
-        <span className="text-sm font-medium">👤 {user.name}</span>
+        <span className="text-sm font-semibold">👤 {user.name}</span>
         <Button variant="ghost" size="sm" onClick={() => setPinOpen(true)} className="hit-area-44" aria-label="Trocar operador">
           <span aria-hidden="true">🔒</span> Trocar operador
         </Button>

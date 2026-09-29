@@ -244,7 +244,7 @@ export default async function ProdutosPage({
               <TableHead>Foto</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Categoria</TableHead>
-              <TableHead>Preço</TableHead>
+              <TableHead className="text-right">Preço</TableHead>
               <TableHead>Estoque</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Ação</TableHead>
@@ -267,14 +267,14 @@ export default async function ProdutosPage({
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex size-10 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+                    <div className="flex size-10 items-center justify-center rounded-lg border bg-muted text-primary">
                       <Package className="size-4" />
                     </div>
                   )}
                 </TableCell>
                 <TableCell className="font-semibold">{p.name}</TableCell>
                 <TableCell>{p.category ?? "—"}</TableCell>
-                <TableCell className="tabular-nums">{formatCurrency(p.price)}</TableCell>
+                <TableCell className="tabular-nums text-right">{formatCurrency(p.price)}</TableCell>
                 <TableCell className="tabular-nums">{qty}</TableCell>
                 <TableCell>
                   <StatusBadge status={status} label={getStockStatusLabel(qty, min)} />

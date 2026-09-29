@@ -1,0 +1,43 @@
+# Normalização de line-ending.
+#
+# Por que isso existe: com core.autocrlf=true, o checkout no Windows converte
+# LF -> CRLF. Isso muda os bytes de prisma/migrations/**/migration.sql e,
+# portanto, o sha256 que o Prisma guarda em `_prisma_migrations.checksum`.
+# Resultado: em 29/09/2026, 5 das 8 migrations divergiam do banco sem que
+# nenhuma delas tivesse sido editada — o único culpado era o checkout.
+#
+# Migrations devem ser LF em qualquer plataforma. Ver AI_RULES.md.
+
+* text=auto
+
+# Crítico: migration.sql alimenta o checksum de migração no Prisma.
+prisma/migrations/** text eol=lf
+
+# SQL e config que não devem variar por plataforma
+*.sql text eol=lf
+*.prisma text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.md text eol=lf
+
+# Código-fonte: LF no repositório, CRLF opcional só no Windows via autocrlf.
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.css text eol=lf
+
+# Binários: nunca converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.zip binary

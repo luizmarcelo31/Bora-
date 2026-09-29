@@ -61,7 +61,7 @@ export function LastItemStrip({
         type="button"
         onClick={onOpenTicket}
         disabled={itemCount === 0}
-        className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm font-medium disabled:opacity-50"
+        className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm font-semibold disabled:opacity-50"
       >
         <span>
           ▲ {itemCount} {itemCount === 1 ? "item" : "itens"} · ver ticket
