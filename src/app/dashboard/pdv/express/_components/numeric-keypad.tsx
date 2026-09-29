@@ -17,7 +17,7 @@ export function NumericKeypad({
   onClear: () => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-2" role="group" aria-label="Teclado numérico">
+    <div className="grid grid-cols-3 gap-2 touch-manipulation" role="group" aria-label="Teclado numérico">
       {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
         <Button
           key={d}

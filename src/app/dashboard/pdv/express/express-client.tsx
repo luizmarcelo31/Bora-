@@ -1,39 +1,25 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useDeferredValue, useState } from "react";
 import { toast } from "sonner";
 import { PAYMENT_OPTIONS } from "@/lib/payments";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/validators";
-import { createSaleAction } from "../actions";
-import { calcChange, calcSplit, calcTotals } from "@/lib/pdv-math";
-import { DISCOUNT_PASSWORD } from "../pdv-client";
 import { NumericKeypad } from "./_components/numeric-keypad";
+import { ScanBar } from "./_components/scan-bar";
+import { ProductTiles } from "./_components/product-tiles";
+import { LastItemStrip } from "./_components/last-item-strip";
+import { TicketSheet } from "./_components/ticket-sheet";
+import { QuantitySheet } from "./_components/quantity-sheet";
+import { ExpressShell } from "./_components/express-shell";
 import { ControlledSelect } from "@/components/ui/controlled-select";
 import { Minus, Plus, X } from "lucide-react";
+import { useExpressSale } from "./_lib/use-express-sale";
+import type { ExpressProduct, ExpressCashbox } from "./_lib/use-express-sale";
 
-export type ExpressProduct = { id: number; name: string; price: number; stock: number; barcode: string | null };
-export type ExpressCashbox = { id: number; name: string };
-
-const SALE_ERROR_MSG: Record<string, string> = {
-  invalid: "Venda inválida. Confira itens e pagamentos.",
-  empty: "Adicione ao menos um item.",
-  stock: "Estoque insuficiente para um ou mais itens.",
-  discount: "Desconto acima do permitido ou maior que o subtotal.",
-  amount: "Valores não conferem: soma dos pagamentos ou recebido divergem do total.",
-  cashbox: "Caixa selecionado está fechado ou inexistente.",
-  sale: "Não foi possível concluir a venda. Tente novamente.",
-};
-
-function parseBRLCents(raw: string): number {
-  const n = raw.replace(/\./g, "").replace(",", ".").trim();
-  if (!n) return 0;
-  const v = Number(n);
-  return Number.isFinite(v) && v >= 0 ? Math.round(v * 100) : 0;
-}
+export type { ExpressProduct, ExpressCashbox };
 
 export function ExpressPdvClient({
   products,
@@ -48,296 +34,137 @@ export function ExpressPdvClient({
   feeDebit: number;
   topSellerIds: number[];
 }) {
-  const [cart, setCart] = useState<Record<number, number>>({});
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [keypadMode, setKeypadMode] = useState<"qty" | "received">("qty");
-  const [qtyBuffer, setQtyBuffer] = useState("");
-  const [received, setReceived] = useState("");
-  const [search, setSearch] = useState("");
-  const [payMode, setPayMode] = useState<"single" | "split">("single");
-  const [payment, setPayment] = useState("DINHEIRO");
-  const [cashAmount, setCashAmount] = useState("");
-  const [cashBoxId, setCashBoxId] = useState(cashboxes[0] ? String(cashboxes[0].id) : "");
-  const [discount, setDiscount] = useState("");
-  const [discountPending, setDiscountPending] = useState(false);
-  const [discountPassword, setDiscountPassword] = useState("");
-  const [discountError, setDiscountError] = useState("");
-  const [pending, setPending] = useState(false);
-  const router = useRouter();
-  const idemRef = useRef<string | null>(null);
-  function getIdemKey() {
-    if (!idemRef.current) idemRef.current = crypto.randomUUID();
-    return idemRef.current;
-  }
-
-  const lines = useMemo(
-    () =>
-      Object.entries(cart)
-        .map(([id, qty]) => {
-          const p = products.find((x) => x.id === Number(id));
-          if (!p || qty <= 0) return null;
-          return { ...p, qty, total: p.price * qty };
-        })
-        .filter((x) => x !== null),
-    [cart, products]
-  );
-  const subtotal = lines.reduce((s, l) => s + l.total, 0);
-  const discountCents = parseBRLCents(discount);
-  const feeRate = payment === "CREDITO" ? feeCredit : payment === "DEBITO" ? feeDebit : 0;
-  const { total, fee: feePreview, customerTotal } = calcTotals({
+  const {
+    cart,
+    selectedId,
+    keypadMode,
+    setKeypadMode,
+    received,
+    setReceived,
+    search,
+    setSearch,
+    payMode,
+    setPayMode,
+    payment,
+    setPayment,
+    cashAmount,
+    setCashAmount,
+    cashBoxId,
+    setCashBoxId,
+    discount,
+    setDiscount,
+    discountPending,
+    discountPassword,
+    setDiscountPassword,
+    discountError,
+    pending,
+    lines,
     subtotal,
-    discount: discountCents,
-    method: payment,
-    single: payMode === "single",
-    feeCredit,
-    feeDebit,
-  });
-  const receivedCents = parseBRLCents(received);
-  const cashCents = parseBRLCents(cashAmount);
-  const pixCents = Math.max(0, calcSplit({ total, cash: cashCents }).pix);
-  const trocoBase = payMode === "single" ? customerTotal : cashCents;
-  const { change: troco, missing: falta } = calcChange({ received: receivedCents, due: trocoBase });
+    discountCents,
+    total,
+    feeRate,
+    feePreview,
+    customerTotal,
+    cashCents,
+    pixCents,
+    trocoBase,
+    troco,
+    falta,
+    topSellers,
+    canConfirmSingle,
+    canConfirmSplit,
+    selectLine,
+    addToCart,
+    commitQty,
+    onDigit,
+    onBackspace,
+    onClear,
+    applyDiscount,
+    clearSale,
+    restoreCart,
+    confirmSale,
+    submitSearch,
+  } = useExpressSale({ products, cashboxes, feeCredit, feeDebit, topSellerIds });
 
-  function selectLine(id: number) {
-    setSelectedId(id);
-    setQtyBuffer(String(cart[id] ?? 1));
-    setKeypadMode("qty");
-  }
 
-  function addToCart(id: number) {
-    const q = (cart[id] ?? 0) + 1;
-    setCart((c) => ({ ...c, [id]: q }));
-    setSelectedId(id);
-    setQtyBuffer(String(q));
-  }
 
-  function commitQty(id: number, q: number) {
-    if (q <= 0 || q > 999) {
-      if (q <= 0) {
-        setCart((c) => {
-          const next = { ...c };
-          delete next[id];
-          return next;
-        });
-        if (selectedId === id) {
-          setSelectedId(null);
-          setQtyBuffer("");
-        }
-      }
-      return;
-    }
-    setCart((c) => ({ ...c, [id]: q }));
-    setQtyBuffer(String(q));
-  }
+  const [scanWarning, setScanWarning] = useState<string | null>(null);
+  const [scanFocus, setScanFocus] = useState(0);
+  const [category, setCategory] = useState("★");
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [qtyFor, setQtyFor] = useState<{ id: number; name: string; qty: number } | null>(null);
+  const deferredSearch = useDeferredValue(search);
 
-  function onDigit(d: string) {
-    if (keypadMode === "received") {
-      setReceived((r) => {
-        const cents = parseBRLCents(r) * 100 + parseInt(d, 10);
-        return (cents / 100).toFixed(2).replace(".", ",");
-      });
-      return;
-    }
-    if (selectedId === null) return;
-    const nb = (qtyBuffer + d).slice(-3);
-    const q = parseInt(nb, 10);
-    if (Number.isFinite(q)) {
-      if (q === 0) commitQty(selectedId, 0);
-      else {
-        setCart((c) => ({ ...c, [selectedId]: q }));
-        setQtyBuffer(String(q));
-      }
+  function handleSubmitSearch() {
+    const r = submitSearch();
+    if (r === "added") {
+      setScanWarning(null);
+      setScanFocus((k) => k + 1);
+    } else if (r === "not-found") {
+      setScanWarning(`Código ${search.trim()} não está cadastrado.`);
+    } else if (r === "no-stock") {
+      setScanWarning("Sem estoque para este código.");
     }
   }
 
-  function onBackspace() {
-    if (keypadMode === "received") {
-      setReceived((r) => {
-        const cents = Math.floor(parseBRLCents(r) / 10);
-        return cents === 0 ? "" : (cents / 100).toFixed(2).replace(".", ",");
-      });
-      return;
-    }
-    if (selectedId === null) return;
-    const nb = qtyBuffer.slice(0, -1);
-    if (nb === "") {
-      setCart((c) => ({ ...c, [selectedId]: 1 }));
-      setQtyBuffer("1");
-    } else {
-      setCart((c) => ({ ...c, [selectedId]: parseInt(nb, 10) }));
-      setQtyBuffer(nb);
-    }
+  function handleRemove(id: number) {
+    const l = lines.find((x) => x.id === id);
+    if (!l) return;
+    commitQty(id, 0);
+    toast(`${l.name} removida.`, {
+      action: {
+        label: "Desfazer",
+        onClick: () => {
+          restoreCart({ [id]: l.qty });
+        },
+      },
+    });
   }
 
-  function onClear() {
-    if (keypadMode === "received") setReceived("");
-    else setQtyBuffer("");
+  function handleAdd(id: number) {
+    addToCart(id);
+    setScanFocus((k) => k + 1);
   }
 
-  function applyDiscount() {
-    setDiscountError("");
-    if (discountPending) {
-      if (discountPassword === DISCOUNT_PASSWORD) {
-        setDiscountPending(false);
-        setDiscountPassword("");
-        toast.success("Desconto autorizado.");
-      } else {
-        setDiscountError("Senha incorreta.");
-        toast.error("Senha inválida.");
-      }
-      return;
-    }
-    if (parseBRLCents(discount) > 0) {
-      setDiscountPending(true);
-      setDiscountPassword("");
-    }
-  }
-
-  function clearSale() {
-    setCart({});
-    setSelectedId(null);
-    setQtyBuffer("");
-    setReceived("");
-    setCashAmount("");
-    setDiscount("");
-    setDiscountPending(false);
-    setDiscountPassword("");
-    setDiscountError("");
-    idemRef.current = null;
-  }
-
-  const canConfirmSingle =
-    lines.length > 0 &&
-    (payment !== "DINHEIRO" || receivedCents >= customerTotal) &&
-    !discountPending;
-  const canConfirmSplit =
-    lines.length > 0 && cashCents > 0 && pixCents >= 0 && cashCents + pixCents === total && receivedCents >= cashCents && !discountPending;
-
-  async function confirmSale() {
-    if (pending || lines.length === 0) return;
-    setPending(true);
-    try {
-      const fd = new FormData();
-      fd.set("items", JSON.stringify(lines.map((l) => ({ productId: l.id, quantity: l.qty }))));
-      if (payMode === "split") {
-        fd.set("paymentMethod", cashCents >= pixCents ? "DINHEIRO" : "PIX");
-        fd.set("payments", JSON.stringify([
-          { method: "DINHEIRO", amount: cashCents },
-          { method: "PIX", amount: pixCents },
-        ]));
-      } else {
-        fd.set("paymentMethod", payment);
-      }
-      fd.set("cashBoxId", cashBoxId);
-      fd.set("discount", discount);
-      if (receivedCents > 0) fd.set("received", received);
-      fd.set("customerName", "");
-      fd.set("idempotencyKey", getIdemKey());
-      const res = await createSaleAction(fd);
-      if ("ok" in res) {
-        toast.success(`Venda #${res.ok} registrada. Troco ${formatCurrency(Math.max(0, troco))}.`, {
-          action: {
-            label: "Recibo",
-            onClick: () => router.push(`/dashboard/pdv/recibo/${res.ok}`),
-          },
-        });
-        clearSale();
-      } else {
-        toast.error(SALE_ERROR_MSG[res.error] ?? SALE_ERROR_MSG.sale);
-      }
-    } finally {
-      setPending(false);
-    }
-  }
-
-  const filtered = products.filter((p) => {
-    const q = search.toLowerCase().trim();
-    if (!q) return true;
-    return p.name.toLowerCase().includes(q) || (p.barcode ?? "").includes(q);
-  });
-  const topSellers = useMemo(
-    () =>
-      topSellerIds
-        .flatMap((id) => {
-          const p = products.find((x) => x.id === id);
-          return p !== undefined && p.stock > 0 ? [p] : [];
-        })
-        .slice(0, 4),
-    [topSellerIds, products]
-  );
-
-  function submitSearch() {
-    const q = search.trim();
-    if (!q) return;
-    const exact = products.find((p) => p.barcode === q);
-    if (exact && exact.stock > 0) {
-      addToCart(exact.id);
-      setSearch("");
-      toast.success(`${exact.name} adicionado.`);
-    }
-  }
+  const categories = [...new Set(products.map((p) => p.category).filter((c): c is string => !!c))];
+  const qd = deferredSearch.toLowerCase().trim();
+  const visible = qd
+    ? products.filter((p) => p.name.toLowerCase().includes(qd) || (p.barcode ?? "").includes(qd))
+    : category === "★"
+      ? topSellers
+      : products.filter((p) => p.category === category);
 
   const QUICK_BILLS = [1000, 2000, 5000, 10000, 20000];
 
+  const cashboxName = cashboxes.find((c) => String(c.id) === cashBoxId)?.name ?? "PDV Expresso";
+
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <ExpressShell cashboxName={cashboxName}>
+    <div className="grid gap-4 p-4 md:p-6 lg:grid-cols-2">
       {/* Catálogo + busca */}
       <Card>
         <CardHeader>
           <CardTitle>Produtos</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Buscar nome ou código de barras..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") submitSearch();
-              }}
-              aria-label="Buscar produto"
-            />
-            <Button type="button" variant="outline" onClick={submitSearch} aria-label="Adicionar por código">
-              +
-            </Button>
-          </div>
-          {topSellers.length > 0 && search.trim() === "" && (
-            <div className="flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Mais vendidos">
-              {topSellers.map((p) => (
-                <Button
-                  key={p.id}
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="shrink-0 hit-area-44"
-                  disabled={p.stock <= 0}
-                  onClick={() => addToCart(p.id)}
-                >
-                  ★ {p.name}
-                </Button>
-              ))}
-            </div>
-          )}
-          <ul className="flex max-h-60 flex-col gap-1.5 overflow-y-auto">
-            {filtered.slice(0, 50).map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  onClick={() => addToCart(p.id)}
-                  disabled={p.stock <= 0}
-                  className="flex w-full items-center gap-3 rounded-lg border p-2.5 text-left disabled:opacity-50"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">{p.name}</span>
-                    <span className="text-xs tabular-nums text-muted-foreground">
-                      {formatCurrency(p.price)} · est. {p.stock}
-                    </span>
-                  </span>
-                  <Plus className="size-4 shrink-0 text-muted-foreground" />
-                </button>
-              </li>
-            ))}
-          </ul>
+          <ScanBar
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              setScanWarning(null);
+            }}
+            onEnter={handleSubmitSearch}
+            warning={scanWarning}
+            focusKey={scanFocus}
+          />
+          <ProductTiles
+            products={visible}
+            categories={categories}
+            activeCategory={qd ? "" : category}
+            onCategory={(c) => setCategory(c)}
+            cartQty={(id) => cart[id] ?? 0}
+            onAdd={handleAdd}
+          />
           {/* Ticket */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">Ticket ({lines.reduce((n, l) => n + l.qty, 0)})</span>
@@ -347,6 +174,16 @@ export function ExpressPdvClient({
               </Button>
             )}
           </div>
+          <LastItemStrip
+            line={(() => {
+              const last = lines[lines.length - 1];
+              return last ? { id: last.id, name: last.name, qty: last.qty, total: last.total } : null;
+            })()}
+            itemCount={lines.reduce((n, l) => n + l.qty, 0)}
+            subtotal={subtotal}
+            onQty={(id, q) => commitQty(id, q)}
+            onOpenTicket={() => setTicketOpen(true)}
+          />
           {lines.length === 0 ? (
             <p className="text-sm text-muted-foreground">Toque num produto para adicionar.</p>
           ) : (
@@ -368,14 +205,7 @@ export function ExpressPdvClient({
                     variant="ghost"
                     size="sm"
                     className="hit-area-44 px-2"
-                    onClick={() => {
-                      const q = l.qty - 1;
-                      if (q <= 0) commitQty(l.id, 0);
-                      else {
-                        setCart((c) => ({ ...c, [l.id]: q }));
-                        if (selectedId === l.id) setQtyBuffer(String(q));
-                      }
-                    }}
+                    onClick={() => commitQty(l.id, l.qty - 1)}
                     aria-label={`Diminuir ${l.name}`}
                   >
                     <Minus className="size-4" />
@@ -395,7 +225,7 @@ export function ExpressPdvClient({
                     variant="ghost"
                     size="sm"
                     className="hit-area-44 px-2"
-                    onClick={() => commitQty(l.id, 0)}
+                    onClick={() => handleRemove(l.id)}
                     aria-label={`Remover ${l.name}`}
                   >
                     <X className="size-4" />
@@ -625,6 +455,31 @@ export function ExpressPdvClient({
         </div>
       )}
       {lines.length > 0 && <div aria-hidden="true" className="h-36 md:h-20 lg:hidden" />}
+      <TicketSheet
+        open={ticketOpen}
+        onOpenChange={setTicketOpen}
+        lines={lines}
+        subtotal={subtotal}
+        onQty={(id, q) => commitQty(id, q)}
+        onQtyTap={(id, qty) => {
+          const l = lines.find((x) => x.id === id);
+          setQtyFor({ id, name: l?.name ?? "", qty });
+        }}
+        onRemove={(id) => handleRemove(id)}
+        onClear={clearSale}
+      />
+      <QuantitySheet
+        open={qtyFor !== null}
+        onOpenChange={(o) => {
+          if (!o) setQtyFor(null);
+        }}
+        productName={qtyFor?.name ?? ""}
+        initialQty={qtyFor?.qty ?? 1}
+        onConfirm={(q) => {
+          if (qtyFor) commitQty(qtyFor.id, q);
+        }}
+      />
     </div>
+    </ExpressShell>
   );
 }

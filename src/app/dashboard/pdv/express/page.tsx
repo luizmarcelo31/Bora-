@@ -32,13 +32,18 @@ export default async function PdvExpressPage() {
   }
   const { products, cashboxes, settings } = await getPdvPageData(tenant.id);
 
-  // Mais vendidos (top 4 por quantidade, todos os tempos — guia rápido do operador)
+  // Mais vendidos dos últimos 30 dias (top 24 por quantidade — leitura só p/ atalhos)
+  const monthAgo = new Date();
+  monthAgo.setDate(monthAgo.getDate() - 30);
   const topGroups = await prisma.saleItem.groupBy({
     by: ["productId"],
-    where: { tenantId: tenant.id, sale: { tenantId: tenant.id, status: "CONCLUIDA" } },
+    where: {
+      tenantId: tenant.id,
+      sale: { tenantId: tenant.id, status: "CONCLUIDA", createdAt: { gte: monthAgo } },
+    },
     _sum: { quantity: true },
     orderBy: { _sum: { quantity: "desc" } },
-    take: 4,
+    take: 24,
   });
   const topSellerIds = topGroups.map((g) => g.productId);
 
@@ -56,6 +61,8 @@ export default async function PdvExpressPage() {
           price: p.price,
           stock: p.inventory?.quantity ?? 0,
           barcode: p.barcode ?? null,
+          category: p.category ?? null,
+          imageUrl: p.imageUrl ?? null,
         }))}
         cashboxes={cashboxes.map((c) => ({ id: c.id, name: c.name }))}
         feeCredit={settings.feeCredit}
