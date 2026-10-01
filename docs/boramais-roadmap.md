@@ -4,7 +4,7 @@
 
 ---
 
-## 📌 Estado real (auditado em 29/09/2026)
+## 📌 Estado real (Fases 1–3 auditadas; Fase 3 reconciliada em 01/10/2026)
 
 Os checkboxes abaixo estavam **todos vazios** enquanto o histórico git já
 registrava Fases 1 e 2 entregues. Este bloco foi escrito a partir de auditoria
@@ -42,11 +42,18 @@ Pendente de medição: os dois critérios de conclusão da fase (200 ms
 percebido, 80% de onboarding) exigem telemetry que o projeto não tem.
 Detalhe: `docs/changes/2026-10-01-fase-2-onboarding-retencao.md`
 
-### Fase 3 — ~85% (o mais avançado)
+### Fase 3 — 14 de 15 itens (o mais avançado)
 FEITO: leitor de código de barras, favoritos no PDV, desconto com senha, split
-payment, estoque mínimo, alerta de mínimo, gráfico por hora, top 10 produtos,
-DRE, PDF, filtro de período, níveis de acesso, log de auditoria, PIN de operador.
-**Falta:** modo offline com fila de sync (0).
+payment, estoque mínimo, alerta de mínimo (in-app), gráfico por hora, top 10
+produtos, DRE, PDF, filtro de período, níveis de acesso, log de auditoria, PIN
+de operador.
+**Falta:** modo offline com fila de sync.
+
+Checkboxes reconciliados em 01/10/2026. Três itens ficaram marcados **com
+ressalva explícita** na seção da fase: alerta de estoque por e-mail não
+existe (só in-app), o PDF não tem logo da loja, e os perfis de acesso não foram
+conferidos um a um. Marcar como entregue é afirmação de código, não de UX —
+os critérios de conclusão por uso medido continuam em aberto.
 
 ### Fase 4 — praticamente não iniciado
 FEITO: nada relevante. "Produtos parados" tem 3matches (a verificar);
@@ -55,13 +62,15 @@ backup/restauração tem 2 (a verificar).
 térmica, gateway de pagamento, webhook, API pública, sugestão de compra,
 previsão de ruptura, precificação dinâmica, PWA instalável, modo quiosque,
 status page.
+Os checkboxes da Fase 4 seguem vazios de propósito: aqui nada foi auditado
+com evidência suficiente para marcar.
 
 ### Ordem sugerida
-1. Aplicar `.label-group` (fecha 1.2 — é o último item da Fase 1)
-2. Auditar 1.4 módulo a módulo e ligar o overlay órfão da sidebar
-3. Fase 2: onboarding + changelog + CTA no EmptyState
-4. Fase 3: modo offline
-5. Fase 4 exige decisão de produto e de gateway — não é continuation natural
+1. ~~Aplicar `.label-group`~~ — feito na Fase 1
+2. ~~Auditar 1.4 e ligar o overlay órfão~~ — overlay era código morto, removido
+3. ~~Fase 2~~ — código completo em 01/10
+4. **Fase 3: modo offline** — único item pendente
+5. Fase 4 exige decisão de produto e de gateway — não é continuação natural
 
 Histórico deste lote: `docs/changes/2026-09-29-fase1-contraste-tipografia.md`.
 
@@ -272,34 +281,52 @@ inventar número seria pior que deixar em aberto. O que dá para afirmar hoje:
 ### 3.1 PDV Avançado
 
 - [ ] **Modo offline** — continua vendendo sem internet, fila de sync ao reconectar
-- [ ] **Leitor de código de barras** — câmera do celular via biblioteca JS (sem app nativo)
-- [ ] **Atalho de produto favorito** — fixar os 6 mais vendidos na tela do PDV
-- [ ] **Aplicação de desconto por item ou total** com senha de autorização
-- [ ] **Divisão de pagamento** — parte no dinheiro, parte no cartão
+      — **único item pendente da Fase 3.** É o item mais caro da fase: fila
+      local, resolução de conflito na reconexão (o mesmo estoque vendido duas
+      vezes) e idempotência. O `sale_idempotency` do PDV já dá a base.
+- [x] **Leitor de código de barras** — câmera do celular via biblioteca JS (sem app nativo)
+- [x] **Atalho de produto favorito** — fixar os 6 mais vendidos na tela do PDV
+- [x] **Aplicação de desconto por item ou total** com senha de autorização
+- [x] **Divisão de pagamento** — parte no dinheiro, parte no cartão
+      — *split dinheiro/Pix + taxa de maquineta já no PDV Expresso.*
 
 ### 3.2 Estoque Inteligente
 
-- [ ] Mínimo de estoque configurável por produto
-- [ ] Alerta automático ao atingir mínimo (notificação in-app + e-mail opcional)
-- [ ] Histórico de movimentação por produto (entradas, saídas, ajustes)
-- [ ] Inventário com contagem física e ajuste de divergência
+- [x] Mínimo de estoque configurável por produto
+- [x] Alerta automático ao atingir mínimo (notificação in-app + e-mail opcional)
+      — *alerta in-app sim; **e-mail opcional não existe*** — ver ressalva no
+      fim da fase.
+- [x] Histórico de movimentação por produto (entradas, saídas, ajustes)
+- [x] Inventário com contagem física e ajuste de divergência
 
 ### 3.3 Relatórios e Financeiro
 
-- [ ] Gráfico de vendas por hora do dia (identificar picos)
-- [ ] Ranking dos 10 produtos mais vendidos do mês
-- [ ] DRE simplificado: receita − custo − despesas = lucro estimado
-- [ ] Exportação de relatório em PDF com logo da loja
-- [ ] Filtro por período customizado em todos os relatórios
+- [x] Gráfico de vendas por hora do dia (identificar picos)
+- [x] Ranking dos 10 produtos mais vendidos do mês
+- [x] DRE simplificado: receita − custo − despesas = lucro estimado
+      — *tokenizado na Fase 1 (o verde hardcoded era ilegível no dark mode).*
+- [x] Exportação de relatório em PDF com logo da loja
+      — *PDF existe e agora entra por `LazyReportActions` (Fase 2). **Logo da
+      loja no PDF não** — ver ressalva.*
+- [x] Filtro por período customizado em todos os relatórios
 
 ### 3.4 Gestão de Equipe
 
-- [ ] Múltiplos usuários por loja com níveis de acesso:
+- [x] Múltiplos usuários por loja com níveis de acesso:
   - Operador — acesso apenas ao PDV
   - Gerente — PDV + Estoque + Compras
   - Admin — acesso total
-- [ ] Log de auditoria — quem fez o quê e quando, com filtro por usuário
-- [ ] PIN rápido para troca de operador no PDV sem logout
+- [x] Log de auditoria — quem fez o quê e quando, com filtro por usuário
+- [x] PIN rápido para troca de operador no PDV sem logout
+
+**Ressalva sobre as marcações acima.** A auditoria que marcou estes itens é
+por **busca no código**, não por inspeção no navegador — é o mesmo critério da
+Fase 2. Três itens têm ressalva explícita: o alerta por e-mail não existe (só
+o in-app), o PDF não tem logo da loja, e os perfis de acesso existem por
+`requirePermission` mas não foram conferidos um a um contra a tabela de papel
+acima. Estão marcados porque a functionality existe; se a Fase 3 for
+concluída, esses três pontos merecem conferência visual antes de fechar o
+critério.
 
 **Critério de conclusão da Fase 3:** Pelo menos 3 funcionalidades desta fase em produção e com uso ativo medido.
 
