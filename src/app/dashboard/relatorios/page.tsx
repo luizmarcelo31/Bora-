@@ -7,13 +7,15 @@ import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TableCard } from "@/components/shared/TableCard";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ReportActions } from "@/components/shared/ReportActions";
+import { LazyReportActions } from "@/components/shared/LazyReportActions";
 import { paymentLabel } from "@/lib/payments";
 import { BarChart3 } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { OnboardingReportVisit } from "@/components/onboarding/OnboardingReportVisit";
 import {
   Table,
   TableHeader,
@@ -127,6 +129,8 @@ export default async function RelatoriosPage({
         description="Vendas, produtos e financeiro no período."
       />
 
+      <OnboardingReportVisit />
+
       <Card>
         <CardContent className="pt-6">
           <form className="flex flex-wrap items-end gap-3">
@@ -159,7 +163,7 @@ export default async function RelatoriosPage({
           </p>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ReportActions
+          <LazyReportActions
             title="Relatório de vendas"
             subtitle={`${tenant.name} — ${startStr} a ${endStr} · ${salesCount} vendas no filtro (exporta até ${printSales.length})`}
             columns={["Data", "#", "Itens", "Pagamento", "Total"]}
@@ -177,7 +181,16 @@ export default async function RelatoriosPage({
         <CardContent className="px-0 pb-0">
           {periodSales.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
+              <EmptyState
+                title="Sem vendas no período"
+                description="Ajuste o intervalo acima ou registre a primeira venda."
+                icon={BarChart3}
+                action={
+                  <Button asChild size="sm">
+                    <Link href="/dashboard/pdv/express">Registrar venda</Link>
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <>
@@ -260,7 +273,16 @@ export default async function RelatoriosPage({
       >
           {topProducts.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Sem vendas no período" description="Ajuste o intervalo acima." icon={BarChart3} />
+              <EmptyState
+                title="Sem vendas no período"
+                description="Ajuste o intervalo acima ou registre a primeira venda."
+                icon={BarChart3}
+                action={
+                  <Button asChild size="sm">
+                    <Link href="/dashboard/pdv/express">Registrar venda</Link>
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <Table>

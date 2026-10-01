@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { ReportActions } from "@/components/shared/ReportActions";
+import { LazyReportActions } from "@/components/shared/LazyReportActions";
 import { paymentLabel } from "@/lib/payments";
 import { formatCurrency } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
@@ -128,7 +128,7 @@ export default async function ReciboPage({ params }: { params: Promise<{ id: str
         </p>
       </div>
 
-      <ReportActions
+      <LazyReportActions
         title={`Cupom ${coupon} — ${tenant.name}`}
         subtitle={`${when} · Venda #${sale.id} · ${paymentLabel(sale.paymentMethod)}`}
         columns={["Item", "Unitário", "Total"]}

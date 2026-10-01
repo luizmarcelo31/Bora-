@@ -1,6 +1,6 @@
 # PROJECT_STATE — fonte da verdade
 
-**Atualizado:** 29/09/2026 · **Fase:** **Fase 1 do roadmap BoraMais CONCLUÍDA** (1.1–1.4, com inspeção visual no navegador) · Próxima: Fase 2 (UX/Retenção)
+**Atualizado:** 01/10/2026 · **Fase:** **Fase 1 CONCLUÍDA** (1.1–1.4, com inspeção visual) · **Fase 2: código completo** (20 de 20 itens, 1 parcial) · Próxima: Fase 3 (modo offline)
 
 ## Implementado ✅
 - Next.js 16 + TS + Tailwind v4 + shadcn + `lib` (`payments`, `audit-labels`, `labels`, `plataforma`)
@@ -26,10 +26,13 @@
 - Nenhum.
 
 ## Não implementado ⬜
-- Fase 1 do roadmap: **concluída** (1.1–1.4). Detalhe e evidência em
-  `docs/changes/2026-09-29-inspecao-visual-fase-1.md`
-- Fases 2 (UX/Retenção), 3 (Features) e 4 (Elite) do roadmap — inventário real
-  em `docs/boramais-roadmap.md`
+- Fases 3 (Features) e 4 (Elite) do roadmap — inventário real em
+  `docs/boramais-roadmap.md`. Fase 3 falta **modo offline**; Fase 4 está
+  praticamente do zero e exige decisão de produto (gateway, multi-loja)
+- **Medição dos critérios de conclusão da Fase 2:** navegação abaixo de
+  200 ms percebido e conclusão de onboarding acima de 80%. Exigem telemetry
+  que o projeto não tem — registrados como pendentes, não preenchidos com
+  número inventado
 - `npx prisma migrate dev` segue quebrado: 7 modelos não têm migration que crie
   a tabela (`Promotion`, `PromotionItem`, `Supplier`, `Purchase`, `PurchaseItem`,
   `InventoryCount`, `InventoryCountItem`). Detalhes em
@@ -39,14 +42,26 @@
 ## Bugs conhecidos
 - Nenhum aberto.
 
+## Pendência de segurança
+- A senha do Postgres apareceu em claro na saída de um comando de terminal
+  durante a sessão de 29/09 (não em arquivo versionado — `.env*` está no
+  `.gitignore` e foi conferido). **Rotacionar a senha** e atualizar
+  `DATABASE_URL`/`DIRECT_URL` no `.env` e `.env.local`.
+
 ## Próxima tarefa
-- **Abrir a Fase 2 do roadmap.** Pendências medidas na auditoria: onboarding /
-  boas-vindas (0 no código), changelog in-app (0), CTA dentro do `EmptyState`,
-  scroll restoration (0) e lazy loading (`next/dynamic` = 0).
+- **Abrir a Fase 3** — falta só o **modo offline com fila de sync**, o
+  único item pendente dela.
+- Antes disso: decidir gateway de pagamento e modelo multi-loja, que travam
+  a Fase 4 inteira. É decisão de negócio, não continuação natural.
 
 ## Notas de verificação
-O clone local estava 5 dias atrás de `origin/main` e o `node_modules` defasado
-(`jsdom` ausente → 18 suítes coletadas sem executar; `prisma generate` não
-rodado → 45 falhas de enum). Baseline correto: **150 testes / 20 suítes**,
-`tsc` limpo, `next build` compilando, contraste 0 falhas em 46 pares, 0 checksums
-divergentes, e **41/41 verificações na inspeção visual** com 0 erro de console.
+Baseline da Fase 1 (29/09): **150 testes / 20 suítes**, `tsc` limpo, `next build`
+compilando, contraste 0 falhas em 46 pares, 0 checksums divergentes, e
+**41/41 verificações na inspeção visual** com 0 erro de console.
+
+Baseline da Fase 2 (01/10): **168 testes / 22 suítes**, `tsc` limpo, os 4
+gates de design system verdes (contraste 0 falhas, 0 cor hardcoded, 0 violação
+de sentence case, 0 peso fora de 400/600). `jspdf` saiu do bundle inicial de
+5 páginas.
+
+Detalhe de cada lote em `docs/changes/`.

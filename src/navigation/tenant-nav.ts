@@ -12,8 +12,10 @@ import {
   Truck,
   Percent,
   ClipboardCheck,
+  Sparkles,
 } from "lucide-react";
 import type { NavGroup } from "./types";
+import { CHANGELOG_NAV_ID } from "@/lib/changelog";
 
 export type { NavBadge, NavGroup, NavMainItem, NavMainLinkItem, NavMainParentItem, NavSubItem } from "./types";
 
@@ -58,6 +60,7 @@ export const tenantNav: NavGroup[] = [
       { id: "reports", title: "Relatórios", url: "/dashboard/relatorios", icon: BarChart3 },
       { id: "settings", title: "Configurações", url: "/dashboard/configuracoes", icon: Settings },
       { id: "audit", title: "Auditoria", url: "/dashboard/auditoria", icon: ClipboardList },
+      { id: CHANGELOG_NAV_ID, title: "Novidades", url: "/dashboard/novidades", icon: Sparkles, badge: "new" },
     ],
   },
 ];

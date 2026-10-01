@@ -15,6 +15,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { TableCard } from "@/components/shared/TableCard";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
+import { Button } from "@/components/ui/button";
 import { paymentLabel } from "@/lib/payments";
 import { ShoppingCart, Receipt } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
@@ -71,7 +72,16 @@ const { products, cashboxes, todaysSales, user } = await getPdvPageData(tenant.i
       >
           {todaysSales.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Nenhuma venda hoje" description="Finalize a primeira acima." icon={ShoppingCart} />
+              <EmptyState
+                title="Nenhuma venda hoje"
+                description="Finalize a primeira acima."
+                icon={ShoppingCart}
+                action={
+                  <Button asChild size="sm">
+                    <Link href="/dashboard/pdv/express">Abrir PDV expresso</Link>
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <>

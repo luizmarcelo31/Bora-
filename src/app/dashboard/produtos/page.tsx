@@ -25,6 +25,7 @@ import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
 import { createProductAction, toggleProductAction } from "./actions";
 import { EditProductDialog } from "./edit-dialog";
+import Link from "next/link";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Verifique nome e preço.",
@@ -58,6 +59,10 @@ export default async function ProdutosPage({
   const q = (params.q ?? "").toLowerCase().trim();
   const status = params.status ?? "all";
   const cat = params.cat ?? "all";
+
+  // Lista vazia por filtro e lista vazia de verdade pedem saídas diferentes:
+  // a primeira tem o que desfazer, a segunda tem o que cadastrar.
+  const temFiltro = Boolean(q) || status !== "all" || cat !== "all";
 
   const products = allProducts.filter((p) => {
     if (status === "active" && !p.active) return false;
@@ -174,7 +179,20 @@ export default async function ProdutosPage({
       </Card>
 
       {products.length === 0 ? (
-        <EmptyState title="Nenhum produto" description={q || cat !== "all" ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."} icon={Package} />
+        <EmptyState
+          title="Nenhum produto"
+          description={
+            temFiltro ? "Nenhum resultado para o filtro." : "Cadastre o primeiro acima."
+          }
+          icon={Package}
+          action={
+            temFiltro ? (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/produtos">Limpar filtros</Link>
+              </Button>
+            ) : null
+          }
+        />
       ) : (
         <TableCard
           title="Catálogo"

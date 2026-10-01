@@ -28,12 +28,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type {
-  NavBadge,
   NavGroup,
   NavMainItem,
   NavMainLinkItem,
   NavMainParentItem,
 } from "@/navigation/types";
+import { useHasUnseenChangelog } from "@/hooks/use-changelog-seen";
+import { CHANGELOG_NAV_ID } from "@/lib/changelog";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
@@ -163,7 +164,7 @@ function NavLinkItem({ item, isActive, showIconFallback }: NavLinkItemProps) {
           <span>{item.title}</span>
         </Link>
       </SidebarMenuButton>
-      <NavItemBadge badge={item.badge} />
+      <NavItemBadge item={item} />
     </SidebarMenuItem>
   );
 }
@@ -235,7 +236,7 @@ function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive }: Na
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
-        <NavItemBadge badge={item.badge} />
+        <NavItemBadge item={item} />
 
         <CollapsibleContent>
           <SidebarMenuSub>
@@ -268,7 +269,15 @@ function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive }: Na
   );
 }
 
-function NavItemBadge({ badge }: { badge?: NavBadge }) {
+function NavItemBadge({ item }: { item: NavMainItem }) {
+  const hasUnseenChangelog = useHasUnseenChangelog();
+
+  // Só o changelog tem badge condicionado ao usuário — os demais são estáticos
+  // ("soon" marca o que ainda nem existe). O gancho roda sempre, antes de
+  // qualquer retorno, para não violar a ordem de hooks.
+  const badge =
+    item.id === CHANGELOG_NAV_ID && !hasUnseenChangelog ? undefined : item.badge;
+
   if (!badge) {
     return null;
   }

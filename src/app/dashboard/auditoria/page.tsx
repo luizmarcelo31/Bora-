@@ -12,7 +12,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ReportActions } from "@/components/shared/ReportActions";
+import { LazyReportActions } from "@/components/shared/LazyReportActions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +84,7 @@ export default async function AuditoriaPage({
             : `${total} ação(ões) no filtro atual.`
         }
       />
-      <ReportActions
+      <LazyReportActions
         title="Relatório de auditoria (LOG)"
         subtitle={`${tenant.name} — gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · página ${pagina} de ${totalPaginas}`}
         columns={["Data", "Ação", "Entidade", "ID", "Usuário", "Detalhes"]}

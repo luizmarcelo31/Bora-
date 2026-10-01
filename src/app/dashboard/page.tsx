@@ -10,9 +10,11 @@ import { DollarSign, TrendingUp, Package, AlertTriangle, ShoppingCart, Wallet } 
 import { DashboardChart } from "./dashboard-chart";
 import { RecentSalesTable } from "./recent-sales-table";
 import { LowStockTable } from "./low-stock-table";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { OnboardingWelcome } from "@/components/onboarding/OnboardingWelcome";
 
 export default async function DashboardPage() {
-  const { tenant } = await requireSessionTenant("/dashboard");
+  const { tenant, dbUser } = await requireSessionTenant("/dashboard");
 
   const now = new Date();
   const todayStart = new Date(now);
@@ -22,7 +24,7 @@ export default async function DashboardPage() {
   weekStart.setDate(now.getDate() - 6);
   weekStart.setHours(0, 0, 0, 0);
 
-  const [products, todaysSales, financialResume, salesResumeMonth, salesWeek, lowStock, cashboxes] =
+  const [products, todaysSales, financialResume, salesResumeMonth, salesWeek, lowStock, cashboxes, vendasTotal] =
     await Promise.all([
       prisma.product.count({ where: { tenantId: tenant.id, active: true } }),
       SaleService.getTodaysSales(tenant.id),
@@ -40,6 +42,10 @@ export default async function DashboardPage() {
         take: 5,
       }),
       prisma.cashBox.findMany({ where: { tenantId: tenant.id, status: "ABERTO" } }),
+      // Histórico, não "hoje": o passo "fazer uma venda" do onboarding já está
+      // cumprido para quem vendeu ontem. Contar só o dia reabriria a tarefa
+      // todo amanheço para uma loja que opera há meses.
+      prisma.sale.count({ where: { tenantId: tenant.id, status: "CONCLUIDA" } }),
     ]);
 
   const faturadoHoje = todaysSales.reduce((s, sale) => s + sale.total, 0);
@@ -70,6 +76,9 @@ export default async function DashboardPage() {
         badge={tenant.name}
         description="Acompanhe vendas, estoque, caixa e financeiro em tempo real."
       />
+
+      <OnboardingWelcome operatorName={dbUser.name} />
+      <OnboardingChecklist temProduto={products > 0} fezVenda={vendasTotal > 0} />
 
       {/* Metric Cards — strip compacto no mobile (2 col), 4 col no desktop */}
       <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">

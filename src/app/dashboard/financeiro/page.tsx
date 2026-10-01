@@ -21,7 +21,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ReportActions } from "@/components/shared/ReportActions";
+import { LazyReportActions } from "@/components/shared/LazyReportActions";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
@@ -192,7 +192,7 @@ export default async function FinanceiroPage({
         footer={`${movements.length} lançamento(s)`}
         toolbar={
           <div className="flex flex-col gap-4">
-          <ReportActions
+          <LazyReportActions
             title="Relatório financeiro"
             subtitle={`${tenant.name} — mês atual · receitas ${formatCurrency(resume.receitas)} · despesas ${formatCurrency(resume.despesas)} · saldo ${formatCurrency(resume.saldo)}`}
             columns={["Data", "Tipo", "Categoria", "Descrição", "Valor", "Pago"]}

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatCurrency } from "@/lib/validators";
 import { Package, Plus, Minus } from "lucide-react";
+import Link from "next/link";
 
 export type GridProduct = {
   id: number;
@@ -28,7 +29,18 @@ export function ProductGrid({
   onQty: (id: number, qty: number) => void;
 }) {
   if (products.length === 0) {
-    return <EmptyState title="Nenhum produto" description="Nenhum produto ativo. Cadastre em Produtos." icon={Package} />;
+    return (
+      <EmptyState
+        title="Nenhum produto"
+        description="Nenhum produto ativo. Cadastre em Produtos."
+        icon={Package}
+        action={
+          <Button asChild size="sm">
+            <Link href="/dashboard/produtos">Cadastrar produto</Link>
+          </Button>
+        }
+      />
+    );
   }
   return (
     <div className="grid gap-3 sm:grid-cols-2">

@@ -1,7 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
 import { paymentLabel } from "@/lib/payments";
 import { formatCurrency } from "@/lib/validators";
+import Link from "next/link";
 
 export function RecentSalesTable({
   sales,
@@ -9,7 +11,17 @@ export function RecentSalesTable({
   sales: { id: number; createdAt: Date; paymentMethod: string; total: number; items: { quantity: number }[] }[];
 }) {
   if (sales.length === 0) {
-    return <EmptyState title="Nenhuma venda hoje" description="As vendas aparecerão aqui ao longo do dia." />;
+    return (
+      <EmptyState
+        title="Nenhuma venda hoje"
+        description="As vendas aparecerão aqui ao longo do dia."
+        action={
+          <Button asChild size="sm">
+            <Link href="/dashboard/pdv/express">Registrar venda</Link>
+          </Button>
+        }
+      />
+    );
   }
   return (
     <>

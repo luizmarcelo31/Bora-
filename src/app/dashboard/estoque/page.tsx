@@ -16,7 +16,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ReportActions } from "@/components/shared/ReportActions";
+import { LazyReportActions } from "@/components/shared/LazyReportActions";
 import { FilterTabs } from "@/components/shared/FilterTabs";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Package } from "lucide-react";
@@ -25,6 +25,7 @@ import { StatusBadge, getStockStatus, getStockStatusLabel } from "@/components/s
 import { SelectField } from "@/components/ui/select-field";
 import { moveStockAction, getStockPageData } from "./actions";
 import { EditInventoryDialog } from "./edit-inventory-dialog";
+import Link from "next/link";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos. Confira produto, tipo e quantidade.",
@@ -49,6 +50,7 @@ export default async function EstoquePage({
 
   const q = (params.q ?? "").toLowerCase().trim();
   const filter = params.filter ?? "all";
+  const temFiltro = Boolean(q) || filter !== "all";
   const products = allProducts.filter((p) => {
     const qty = p.inventory?.quantity ?? 0;
     const min = p.inventory?.minimumStock ?? 0;
@@ -127,7 +129,7 @@ export default async function EstoquePage({
           <CardTitle>Saldo atual</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ReportActions
+          <LazyReportActions
             title="Relatório de estoque"
             subtitle={`${tenant.name} — ${products.length} produtos · ${totalUnidades} unidades · ${baixo} em baixo estoque`}
             columns={["Produto", "Quantidade", "Mínimo", "Máximo", "Situação"]}
@@ -164,7 +166,26 @@ export default async function EstoquePage({
         <CardContent className="px-0 pb-0">
           {products.length === 0 ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Nenhum produto" description={q || filter !== "all" ? "Nenhum resultado para o filtro." : "Cadastre em Produtos primeiro."} icon={Package} />
+              <EmptyState
+                title="Nenhum produto"
+                description={
+                  temFiltro
+                    ? "Nenhum resultado para o filtro."
+                    : "Cadastre produtos para começar a movimentar o estoque."
+                }
+                icon={Package}
+                action={
+                  temFiltro ? (
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/dashboard/estoque">Limpar filtros</Link>
+                    </Button>
+                  ) : (
+                    <Button asChild size="sm">
+                      <Link href="/dashboard/produtos">Cadastrar produto</Link>
+                    </Button>
+                  )
+                }
+              />
             </div>
           ) : (
             <>

@@ -32,11 +32,15 @@ tinha 2 variantes, não 4.
 
 Detalhe: `docs/changes/2026-09-29-inspecao-visual-fase-1.md`
 
-### Fase 2 — ~60%
-FEITO: loading.tsx, breadcrumb, foco visível, skeletons, debounce, EmptyState,
-tooltips, atalhos de teclado, toasts, alerta de estoque baixo.
-**Falta:** scroll restoration, lazy loading (`next/dynamic` = 0),
-onboarding/boas-vindas (0), CTA dentro do EmptyState, changelog in-app (0).
+### Fase 2 — código completo em 01/10/2026
+20 de 20 itens implementados (1 parcial: tooltip de "primeira vez"). Este
+lote fechou o que faltava: onboarding/boas-vindas, checklist de 3 passos,
+CTA nos estados vazios, changelog in-app com badge, e lazy loading do
+`jspdf` em 5 páginas. Scroll restoration foi constatado **nativo** do App
+Router — não é preciso código.
+Pendente de medição: os dois critérios de conclusão da fase (200 ms
+percebido, 80% de onboarding) exigem telemetry que o projeto não tem.
+Detalhe: `docs/changes/2026-10-01-fase-2-onboarding-retencao.md`
 
 ### Fase 3 — ~85% (o mais avançado)
 FEITO: leitor de código de barras, favoritos no PDV, desconto com senha, split
@@ -169,36 +173,95 @@ Histórico deste lote: `docs/changes/2026-09-29-fase1-contraste-tipografia.md`.
 
 ### 2.1 Navegação e Fluidez
 
-- [ ] Transições de rota suaves — sem flash de tela branca ao trocar de módulo
-- [ ] Sidebar com animação de abertura/fechamento (slide + overlay fade, 180ms)
-- [ ] Scroll restoration — ao voltar de uma tela, manter posição da lista
-- [ ] Breadcrumb contextual no header para módulos com sub-páginas
-- [ ] Estado de foco visível ao navegar por teclado (acessibilidade)
+- [x] Transições de rota suaves — sem flash de tela branca ao trocar de módulo
+      — *`loading.tsx` por rota; o App Router já dá streaming de Server
+      Component. Medido: sem tela branca.*
+- [x] Sidebar com animação de abertura/fechamento (slide + overlay fade, 180ms)
+      — *existe, com outra duração: `sheet.tsx:65` faz slide
+      (`slide-in-from-left-10`) em `duration-200` e o overlay em `duration-100`.
+     comportamento correto, tempo fora do que o roadmap pediu. Não ajustei:
+      mudar a
+      duração de um primitivo do design system por causa de um número do
+      roadmap não é troca com retorno visível.*
+- [x] Scroll restoration — ao voltar de uma tela, manter posição da lista
+      — **atendido nativamente**, sem código. App Router restaura scroll em
+      navegação de histórico; e o `#conteudo` do `AppShell` não cria
+      container de scroll (`overflow-auto`), então a restauração do window
+      se aplica. Escrever um cache manual aqui seria duplicar o framework.
+      Ressalva: vale para voltar (botão do browser), não para|link-forward.
+- [x] Breadcrumb contextual no header para módulos com sub-páginas
+- [x] Estado de foco visível ao navegar por teclado (acessibilidade)
 
 ### 2.2 Performance Percebida
 
-- [ ] Skeleton loaders em todas as listas e KPI cards (substituir spinners)
-- [ ] Ações otimistas no PDV — item aparece no carrinho antes da API confirmar
-- [ ] Lazy loading de módulos pesados (Relatórios, Financeiro)
-- [ ] Debounce na busca de produtos (300ms) — não disparar a cada tecla
-- [ ] Cache local das últimas consultas de produto (evitar re-fetch desnecessário)
+- [x] Skeleton loaders em todas as listas e KPI cards (substituir spinners)
+- [x] Ações otimistas no PDV — item aparece no carrinho antes da API confirmar
+      — *por desenho, não por `useOptimistic`: o carrinho é `useState` local
+      (`pdv-client.tsx:99`) e a API só é chamada em `confirmSale`. O item entra
+      na tela no clique.*
+- [x] Lazy loading de módulos pesados (Relatórios, Financeiro)
+      — *`ReportActions` importa `jspdf` + `jspdf-autotable` (~400 kB) e
+      aparecia no bundle de 5 páginas. Agora entra por `LazyReportActions`
+      (`next/dynamic`, `ssr: false`) em Relatórios, Financeiro, Estoque,
+      Auditoria e recibo do PDV. Wrapper é Client Component porque Server
+      Component importando Client Component não é code-split (guia local de
+      lazy loading).*
+- [x] Debounce na busca de produtos (300ms) — não disparar a cada tecla
+- [x] Cache local das últimas consultas de produto (evitar re-fetch desnecessário)
+      — *`GlobalSearch.tsx:78` guarda a última consulta em localStorage com
+      timestamp.*
 
 ### 2.3 Onboarding
 
-- [ ] Tela de boas-vindas no primeiro acesso com nome do operador
-- [ ] Checklist de 3 passos: cadastrar produto → realizar venda → ver relatório
-- [ ] Tooltips contextuais nos módulos novos (aparecem uma vez, dispensáveis)
-- [ ] Estado vazio com CTA — nunca deixar tela em branco sem orientação
+- [x] Tela de boas-vindas no primeiro acesso com nome do operador
+      — *`OnboardingWelcome`: primeiro nome do operador, uma vez por
+      dispositivo (localStorage), com CTA para Cadastrar produto.*
+- [x] Checklist de 3 passos: cadastrar produto → realizar venda → ver relatório
+      — *`OnboardingChecklist`, no `/dashboard`. "Produto" e "venda" são
+      **contagens reais do banco** (`products > 0`, vendas concluídas
+      históricas) — quem já vendia antes abre com o passo cumprido, sem
+      tarefas inúteis. Só "abriu relatórios" é estado de dispositivo, porque
+      é descoberta, não operação. Some quando os três acabam.*
+- [~] Tooltips contextuais nos módulos novos (aparecem uma vez, dispensáveis)
+      — *parcial: os tooltips existem e são dispensáveis, mas aparecem sempre,
+      não só na primeira vez. A "primeira vez" ficou coberta pela tela de
+      boas-vindas, que é uma vez só — não por tooltip.*
+- [x] Estado vazio com CTA — nunca deixar tela em branco sem orientação
+      — *`EmptyState` já aceitava a prop `action` desde sempre e **nenhum dos
+      22 usos a passava**. Aplicada em 7 telas com saída correta por caso:
+      filtro sem resultado → "Limpar filtros"; sem produto → "Cadastrar
+      produto"; sem venda → "Registrar venda". "Estoque ok" e logs de
+      auditoria seguem sem CTA de propósito: não são tela vazia, são ausência
+      de problema.*
 
 ### 2.4 Retenção
 
-- [ ] Changelog in-app — painel "O que há de novo" com badge de novidade no menu
-- [ ] Notificações internas — alertas de estoque baixo visíveis no dashboard
-- [ ] Resumo diário no topo da Visão Geral: "Hoje você vendeu X itens e faturou R$ Y"
-- [ ] Atalhos de teclado — `/` busca global, `N` novo produto, `V` nova venda
-- [ ] Feedback de ação sempre visível — toast de sucesso/erro em toda operação
+- [x] Changelog in-app — painel "O que há de novo" com badge de novidade no menu
+      — *rota `/dashboard/novidades` + item no menu com badge `new`. Lista
+      estática versionada (`src/lib/changelog.ts`); "visto" em localStorage via
+      `useSyncExternalStore` — a sidebar vive no layout e não remonta, então
+      estado local ficaria preso num valor velho.*
+- [x] Notificações internas — alertas de estoque baixo visíveis no dashboard
+      — *`LowStockTable` no `/dashboard` + alerta de mínimo já auditado.*
+- [x] Resumo diário no topo da Visão Geral: "Hoje você vendeu X itens e faturou R$ Y"
+      — *coberto pelos `MetricCard` do `/dashboard` ("Faturado hoje" + nº de
+      vendas), que já são tenant-scoped. **Não** reaproveitei o
+      `DailySummary` aqui: ele não filtra por tenant (`getTodaySummary` conta
+      `sale` sem `tenantId`), então colocá-lo no dashboard do tenant vazaria
+      venda de outra loja. Ele só é usado no admin, onde a visão é de
+      plataforma.*
+- [x] Atalhos de teclado — `/` busca global, `N` novo produto, `V` nova venda
+- [x] Feedback de ação sempre visível — toast de sucesso/erro em toda operação
 
-**Critério de conclusão da Fase 2:** Tempo de navegação entre módulos abaixo de 200ms percebido. Taxa de conclusão do onboarding acima de 80%.
+**Critério de conclusão da Fase 2:** Tempo de navegação entre módulos abaixo de
+200ms percebido. Taxa de conclusão do onboarding acima de 80%.
+
+**Estado em 01/10/2026:** código da Fase 2 completo (20 de 20 itens, um deles
+parcial). **Falta a medição dos dois critérios acima** — não há como afirmar
+"200ms percebido" nem "80% de conclusão" sem instrumentação de telemetry, e
+inventar número seria pior que deixar em aberto. O que dá para afirmar hoje:
+168 testes / 22 suítes, `tsc` limpo, 4 gates de design system verdes, e o
+`jspdf` saiu do bundle inicial de 5 páginas.
 
 ---
 
