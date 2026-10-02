@@ -6,6 +6,7 @@ import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LazyReportActions } from "@/components/shared/LazyReportActions";
+import { getCompanyLogoUrl } from "@/lib/get-company-logo";
 import { paymentLabel } from "@/lib/payments";
 import { formatCurrency } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
@@ -135,6 +136,7 @@ export default async function ReciboPage({ params }: { params: Promise<{ id: str
         rows={rows}
         footer={["", "TOTAL", formatCurrency(sale.total + sale.feeAmount)]}
         fileName={`cupom-${coupon}`}
+        companyLogoUrl={await getCompanyLogoUrl(tenant.id)}
       />
     </main>
   );

@@ -12,7 +12,27 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { chromium } from "playwright";
 
-const dir = ".next/static/css";
+// Next 16 emite o CSS em `.next/static/chunks/*.css`, não em
+// `.next/static/css/` como nas versões anteriores. Os dois caminhos são
+// procurados para o gate não depender da versão do Next: um gate que quebra
+// por mudança de layout de saída deixa de ser gate.
+const dirs = [".next/static/css", ".next/static/chunks"];
+const dir = dirs.find((d) => {
+  try {
+    return readdirSync(d).some((f) => f.endsWith(".css"));
+  } catch {
+    return false;
+  }
+});
+
+if (!dir) {
+  console.error(
+    "Nenhum CSS emitido encontrado em .next/static/css nem .next/static/chunks.\n" +
+      "Rode `npm run build` antes deste gate."
+  );
+  process.exit(1);
+}
+
 const file = readdirSync(dir)
   .filter((f) => f.endsWith(".css"))
   .map((f) => ({ f, size: readFileSync(`${dir}/${f}`).length }))

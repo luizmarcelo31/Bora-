@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LazyReportActions } from "@/components/shared/LazyReportActions";
+import { getCompanyLogoUrl } from "@/lib/get-company-logo";
 import { FilterTabs } from "@/components/shared/FilterTabs";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Package } from "lucide-react";
@@ -141,6 +142,7 @@ export default async function EstoquePage({
             })}
             footer={["Total", String(totalUnidades), "", "", `${baixo} em baixo`]}
             fileName={`estoque-${tenant.id}-${new Date().toISOString().slice(0, 10)}`}
+            companyLogoUrl={await getCompanyLogoUrl(tenant.id)}
           />
           <div className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm">

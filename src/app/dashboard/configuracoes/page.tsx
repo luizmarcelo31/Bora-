@@ -11,10 +11,13 @@ import { Button } from "@/components/ui/button";
 import { SwitchField } from "@/components/ui/switch-field";
 import { Separator } from "@/components/ui/separator";
 import { updateSettingsAction } from "./actions";
+import { CompanyLogoField } from "./company-logo-field";
 
 const ERROR_MSG: Record<string, string> = {
   invalid: "Dados inválidos.",
   forbidden: "Seu role não tem permissão para alterar configurações.",
+  arquivo: "Logo inválida. Use JPG ou PNG de até 512KB.",
+  storage: "Não foi possível guardar o arquivo. Tente novamente.",
   fail: "Não foi possível salvar. Tente novamente.",
 };
 
@@ -105,15 +108,9 @@ export default async function ConfiguracoesPage() {
               </label>
             </div>
             <Separator />
-            <label className="flex flex-col gap-1 text-sm">
-              URL do logo da empresa
-              <Input
-                name="companyLogoUrl"
-                type="url"
-                defaultValue={(settings as { companyLogoUrl?: string | null }).companyLogoUrl ?? ""}
-                placeholder="https://example.com/logo.png"
-              />
-            </label>
+            <CompanyLogoField
+              currentUrl={(settings as { companyLogoUrl?: string | null }).companyLogoUrl ?? null}
+            />
             <Button type="submit">Salvar</Button>
           </form>
         </CardContent>

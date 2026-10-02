@@ -16,7 +16,21 @@ export type ReportActionsProps = {
   footer?: string[];
   fileName: string;
   orientation?: "portrait" | "landscape";
+  /**
+   * Logo da loja, vinda de `TenantSettings.companyLogoUrl` (Fase 3.3).
+   *
+   * Prop, e não fetch: o PDF é gerado no browser e o `companyLogoUrl` já está
+   * no registro porque a página é Server Component. Buscar aqui seria uma
+   * chamada a mais por export, para dado que a tela acabou de ler.
+   */
+  companyLogoUrl?: string | null;
 };
+
+/** Altura da logo no PDF, em mm. ~70 px: legível no A4 e compacta. */
+const LOGO_ALTURA_MM = 25;
+
+/** Margem esquerda do documento, igual ao `x` do título. */
+const MARGEM_MM = 14;
 
 const TH: React.CSSProperties = {
   border: "1px solid #999",
@@ -25,6 +39,61 @@ const TH: React.CSSProperties = {
   textAlign: "left",
 };
 const TD: React.CSSProperties = { border: "1px solid #999", padding: "4px 6px" };
+
+/**
+ * Carrega a logo como data URL.
+ *
+ * `jsPDF.addImage` não aceita URL: precisa dos bytes. Então busca e converte.
+ *
+ * Falhar aqui não pode derrubar o export: o relatório é o que o gerente
+ * precisa, a logo é enfeite. Perder o PDF por causa de um PNG quebrado seria um
+ * bug, não uma degradação.
+ */
+async function carregarLogo(url: string): Promise<string | null> {
+  try {
+    const resposta = await fetch(url);
+    if (!resposta.ok) return null;
+    const blob = await resposta.blob();
+    return await new Promise<string | null>((resolve) => {
+      const leitor = new FileReader();
+      leitor.onload = () => resolve(typeof leitor.result === "string" ? leitor.result : null);
+      leitor.onerror = () => resolve(null);
+      leitor.readAsDataURL(blob);
+    });
+  } catch {
+    // CORS, DNS, modo avião: qualquer um destes é "sem logo", não "sem PDF".
+    return null;
+  }
+}
+
+/**
+ * Proporção largura/altura a partir dos bytes do PNG.
+ *
+ * `addImage` com largura e altura fixos estica a imagem. Só dá para corrigir a
+ * proporção em PNG — o data URL de JPEG não carrega as dimensões — e aí o
+ * jsPDF assume a proporção quando recebe só a altura.
+ */
+function proporcaoNatural(dataUrl: string): number | null {
+  if (!dataUrl.startsWith("data:image/png;base64,")) return null;
+  try {
+    const bin = atob(dataUrl.slice("data:image/png;base64,".length).slice(0, 64));
+    // IHDR do PNG: largura e altura são 4 bytes big-endian a partir do offset 16.
+    // `atob` devolve string, então cada caractere é um byte.
+    const w =
+      (bin.charCodeAt(16) << 24) | (bin.charCodeAt(17) << 16) | (bin.charCodeAt(18) << 8) | bin.charCodeAt(19);
+    const h =
+      (bin.charCodeAt(20) << 24) | (bin.charCodeAt(21) << 16) | (bin.charCodeAt(22) << 8) | bin.charCodeAt(23);
+    return w > 0 && h > 0 ? w / h : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Largura que preserva a proporção, para não distorcer a logo. */
+function larguraDaLogo(dataUrl: string, alturaMm: number): number {
+  const proporcao = proporcaoNatural(dataUrl);
+  return proporcao ? alturaMm * proporcao : alturaMm;
+}
 
 /**
  * Ações de relatório por tipo (LOG / VENDAS / FINANCEIRO / ESTOQUE):
@@ -40,6 +109,7 @@ export function ReportActions({
   footer,
   fileName,
   orientation = "portrait",
+  companyLogoUrl,
 }: ReportActionsProps) {
   const [printing, setPrinting] = useState(false);
   const empty = rows.length === 0;
@@ -55,21 +125,46 @@ export function ReportActions({
     };
   }, [printing]);
 
-  function buildPdf() {
+  async function buildPdf(): Promise<jsPDF> {
     const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
+
+    // A logo empurra o título e a tabela para baixo; sem ela, o layout é o de
+    // sempre. Este é o único ponto do documento que depende da sua presença.
+    const logo = companyLogoUrl ? await carregarLogo(companyLogoUrl) : null;
+    let alturaLogo = 0;
+
+    if (logo) {
+      try {
+        alturaLogo = LOGO_ALTURA_MM;
+        doc.addImage(
+          logo,
+          logo.startsWith("data:image/png") ? "PNG" : "JPEG",
+          MARGEM_MM,
+          8,
+          larguraDaLogo(logo, alturaLogo),
+          alturaLogo
+        );
+      } catch {
+        // Formato que o addImage não aceita: segue sem logo e sem deslocar o
+        // resto do cabeçalho.
+        alturaLogo = 0;
+      }
+    }
+
+    const yTitulo = alturaLogo > 0 ? 8 + alturaLogo + 8 : 16;
     doc.setFontSize(14);
-    doc.text(title, 14, 16);
+    doc.text(title, MARGEM_MM, yTitulo);
     if (subtitle) {
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(subtitle, 14, 23);
+      doc.text(subtitle, MARGEM_MM, yTitulo + 7);
       doc.setTextColor(0);
     }
     autoTable(doc, {
       head: [columns],
       body: rows,
       foot: footer ? [footer] : undefined,
-      startY: subtitle ? 28 : 22,
+      startY: subtitle ? yTitulo + 12 : yTitulo + 6,
       styles: { fontSize: 9 },
       headStyles: { fillColor: [24, 24, 27] },
       footStyles: { fillColor: [244, 244, 245], textColor: [24, 24, 27], fontStyle: "bold" },
@@ -81,16 +176,17 @@ export function ReportActions({
       doc.setPage(i);
       doc.text(
         `Gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} — Página ${i}/${pageCount}`,
-        14,
+        MARGEM_MM,
         doc.internal.pageSize.height - 8
       );
     }
     return doc;
   }
 
-  function handleExport() {
+  async function handleExport() {
     try {
-      buildPdf().save(`${fileName}.pdf`);
+      const doc = await buildPdf();
+      doc.save(`${fileName}.pdf`);
       toast.success("PDF exportado.");
     } catch {
       toast.error("Não foi possível gerar o PDF.");
@@ -99,13 +195,14 @@ export function ReportActions({
 
   async function handleShare() {
     try {
-      const blob = buildPdf().output("blob");
+      const doc = await buildPdf();
+      const blob = doc.output("blob");
       const file = new File([blob], `${fileName}.pdf`, { type: "application/pdf" });
       if (typeof navigator.share === "function" && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title, text: subtitle });
         return;
       }
-      buildPdf().save(`${fileName}.pdf`);
+      doc.save(`${fileName}.pdf`);
       toast.info("Compartilhamento indisponível — PDF baixado.");
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;
@@ -134,6 +231,16 @@ export function ReportActions({
               data-print-paper
               style={{ padding: "12mm", color: "#000", background: "#fff", fontFamily: "Arial, sans-serif" }}
             >
+              {/* A logo precisa estar DENTRO de data-print-root: o `@media print`
+                  em globals.css esconde tudo que está fora dele. Logo fora daqui
+                  não aparece na impressão. */}
+              {companyLogoUrl ? (
+                <img
+                  src={companyLogoUrl}
+                  alt=""
+                  style={{ height: "25mm", width: "auto", objectFit: "contain", display: "block", margin: "0 0 6px" }}
+                />
+              ) : null}
               <h1 style={{ fontSize: 18, margin: "0 0 4px" }}>{title}</h1>
               {subtitle ? <p style={{ fontSize: 11, color: "#555", margin: "0 0 12px" }}>{subtitle}</p> : null}
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>

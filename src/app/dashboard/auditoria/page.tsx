@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LazyReportActions } from "@/components/shared/LazyReportActions";
+import { getCompanyLogoUrl } from "@/lib/get-company-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,7 @@ export default async function AuditoriaPage({
         ])}
         fileName={`auditoria-${tenant.id}-${new Date().toISOString().slice(0, 10)}-p${pagina}`}
         orientation="landscape"
+        companyLogoUrl={await getCompanyLogoUrl(tenant.id)}
       />
 
       <TableCard

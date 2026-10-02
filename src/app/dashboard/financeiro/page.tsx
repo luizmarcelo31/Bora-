@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LazyReportActions } from "@/components/shared/LazyReportActions";
+import { getCompanyLogoUrl } from "@/lib/get-company-logo";
 import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { SelectField } from "@/components/ui/select-field";
 import { formatCurrency } from "@/lib/validators";
@@ -207,6 +208,7 @@ export default async function FinanceiroPage({
             footer={["", "", "", "Saldo", formatCurrency(resume.saldo), ""]}
             fileName={`financeiro-${tenant.id}-${now.toISOString().slice(0, 10)}`}
             orientation="landscape"
+            companyLogoUrl={await getCompanyLogoUrl(tenant.id)}
           />
           <form className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm">

@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { TableCard } from "@/components/shared/TableCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { LazyReportActions } from "@/components/shared/LazyReportActions";
+import { getCompanyLogoUrl } from "@/lib/get-company-logo";
 import { paymentLabel } from "@/lib/payments";
 import { BarChart3 } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
@@ -176,6 +177,7 @@ export default async function RelatoriosPage({
             ])}
             footer={["", "Total", `${printSales.length} vendas`, "", formatCurrency(printSales.reduce((t, s) => t + s.total, 0))]}
             fileName={`vendas-${tenant.id}-${startStr}_${endStr}`}
+            companyLogoUrl={await getCompanyLogoUrl(tenant.id)}
           />
         </CardContent>
         <CardContent className="px-0 pb-0">
