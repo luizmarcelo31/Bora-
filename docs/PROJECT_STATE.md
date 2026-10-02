@@ -74,6 +74,13 @@ medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
   `DATABASE_URL`/`DIRECT_URL` no `.env` e `.env.local`.
 
 ## Próxima tarefa
+- **Backlog de UX escrito da perspectiva do dono da conveniência:**
+  `docs/backlog-pedidos-dono.md` — 9 itens priorizados com o cenário do dia a
+  dia que faz cada um acontecer, mais a seção "O que NÃO mudar". Nenhum código
+  foi alterado nesse lote; é documento para virar tarefa depois. Se for
+  atacar um só, é **2.1 (total consistente entre PDV clássico e express)**:
+  mexe no usuário todo dia, custa pouco, e é a diferença entre ele conferir a
+  tela e confiar nela
 - **Verificação manual do modo offline com rede caída** — a única coisa que
   falta para fechar a Fase 3. roteiro em
   `docs/changes/2026-10-02-modo-offline-pdv.md`; critérios abaixo
