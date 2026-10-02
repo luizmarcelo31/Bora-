@@ -94,7 +94,15 @@ export function ProductGrid({
                     <span className="font-semibold text-sm tabular-nums">{formatCurrency(p.price)}</span>
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground">est. {p.stock}</span>
+                {/* Auditoria mobile: "est. 139" reassurance não é informação
+                    acionável — o operador só precisa saber quando falta. O
+                    badge "Baixo"/"Sem estoque" acima já cobre o caso que muda
+                    a decisão. Mostrar o número só quando low/out. */}
+                {low || out ? (
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    rest. {p.stock}
+                  </span>
+                ) : null}
               </div>
               <div className="flex items-center gap-1">
                 <Button variant="outline" size="sm" type="button" className="hit-area-44" disabled={out && qty === 0} onClick={() => onQty(p.id, qty + 1)}>

@@ -45,7 +45,7 @@ const { products, cashboxes, todaysSales, user } = await getPdvPageData(tenant.i
 
     return (
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
-        <PageHeader title="PDV" badge={tenant.name} description="Ponto de venda da conveniência." />
+        <PageHeader title="PDV" badge={tenant.name} />
         <SearchParamToast
           okText="Venda #{v} registrada com sucesso."
           okMap={{ cancel: "Venda cancelada e estoque/financeiro estornados." }}

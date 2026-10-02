@@ -264,11 +264,17 @@ export function PdvClient({
 
   return (
     <>
-      {/* Operador — PIN para troca */}
-      <div className="flex items-center justify-between bg-card rounded-lg px-4 py-2 border">
-        <span className="text-sm font-semibold">👤 {user.name}</span>
-        <Button variant="ghost" size="sm" onClick={() => setPinOpen(true)} className="hit-area-44" aria-label="Trocar operador">
-          <span aria-hidden="true">🔒</span> Trocar operador
+      {/* Operador — PIN para troca.
+          Auditoria mobile: este card ocupava ~90px (y=188..280) com avatar,
+          nome e botão, para informar ao operador algo que ele já sabe. Virou
+          uma linha compacta acima do catálogo; o nome continua em title para
+          o leitor de tela. */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-sm text-muted-foreground" title={user.name}>
+          {user.name}
+        </span>
+        <Button variant="ghost" size="sm" onClick={() => setPinOpen(true)} className="hit-area-44 shrink-0" aria-label="Trocar operador">
+          <span aria-hidden="true">🔒</span> Trocar
         </Button>
       </div>
       <Dialog open={pinOpen} onOpenChange={(o) => { setPinOpen(o); if (!o) { setPinValue(""); setPinError(""); } }}>
@@ -429,23 +435,36 @@ export function PdvClient({
         </CardContent>
       </Card>
     </div>
-      {/* P0 mobile — total + carrinho sempre visíveis */}
-      {lines.length > 0 && (
-        <div className="fixed inset-x-0 bottom-20 z-40 border-t bg-background/95 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur md:bottom-0 lg:hidden">
-          <div className="mx-auto flex max-w-6xl items-center gap-3">
-            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground">
-                {lines.reduce((n, l) => n + l.qty, 0)} {lines.reduce((n, l) => n + l.qty, 0) === 1 ? "item" : "itens"}
-              </span>
-              <span className="text-lg font-semibold tabular-nums">{formatCurrency(subtotal)}</span>
-            </div>
-            <Button type="button" className="ml-auto min-h-11 flex-1 sm:flex-none" onClick={() => setCartOpen(true)}>
-              Ver carrinho
-            </Button>
+      {/* B — Cobrança fixa. No mobile a coluna "Venda atual" + formulário de
+          pagamento fica 1173px abaixo do primeiro produto (medido a 390px), ou
+          seja, 1,4 telas antes do operador conseguir cobrar. A barra fixa
+          resolve: total e botão de cobrança ficam sempre na mesma altura,
+          acima da BottomNav. No desktop a coluna lateral já é visível e o
+          layout `lg:sticky` original permanece — por isso `lg:hidden`. */}
+      <div className="fixed inset-x-0 bottom-16 z-40 border-t bg-background/95 px-3 pt-2 pb-2 backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-6xl items-center gap-2">
+          <div className="flex min-w-0 flex-col">
+            <span className="text-xs text-muted-foreground">
+              {lines.reduce((n, l) => n + l.qty, 0)}{" "}
+              {lines.reduce((n, l) => n + l.qty, 0) === 1 ? "item" : "itens"}
+            </span>
+            <span className="text-lg font-semibold leading-tight tabular-nums">
+              {formatCurrency(subtotal)}
+            </span>
           </div>
+          <Button
+            type="button"
+            className="ml-auto h-12 flex-1 text-base"
+            disabled={lines.length === 0 || pending}
+            onClick={() => setCartOpen(true)}
+          >
+            Cobrar
+          </Button>
         </div>
-      )}
-      {lines.length > 0 && <div aria-hidden="true" className="h-36 md:h-20 lg:hidden" />}
+      </div>
+      {/* Espaçador para a barra fixa não cobrir o fim do catálogo. Só quando há
+          itens, porque a barra só aparece nesse caso. */}
+      {lines.length > 0 && <div aria-hidden="true" className="h-28 lg:hidden" />}
     </>
   );
 }
