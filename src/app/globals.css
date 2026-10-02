@@ -66,19 +66,14 @@
   html {
     @apply font-sans;
   }
-}
 
-@layer utilities {
-  .animate-fade-in-up {
-    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-@layer utilities {
-  .animate-fade-in-up {
-    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  /* Fase 2 — Focus visível para acessibilidade */
+  /* Foco visível para acessibilidade (WCAG 2.4.7).
+   *
+   * Fica em @layer base de propósito: em 02/10/2026 esta regra estava num
+   * @layer utilities com uma chave de fechamento errada, e o build a descartava
+   * inteira — a auditoria no navegador mediu `outline=0px none` em todos os
+   * botões e nenhuma regra :focus-visible em document.styleSheets. Em @layer
+   * base ela sobrevive ao build e não depende da estrutura de layers acima. */
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
@@ -88,11 +83,42 @@
   }
 }
 
-.stagger-1 { animation-delay: 50ms; }
-.stagger-2 { animation-delay: 100ms; }
-.stagger-3 { animation-delay: 150ms; }
-.stagger-4 { animation-delay: 200ms; }
-.stagger-5 { animation-delay: 250ms; }
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+
+  /* Alvo de toque mínimo em telas pequenas (WCAG 2.5.8).
+   *
+   * A densidade do PDV é intencional no desktop — h-9 (36px) e h-7 (28px) em
+   * botões de tabela cabem mais ação por linha. No celular isso vira 28px de
+   * alvo para "Editar" e "Desativar", medido na auditoria de 02/10/2026.
+   *
+   * A regra só vale abaixo de 768px e só aumenta a área clicável (min-height),
+   * sem mudar o tamanho da fonte nem o layout: o texto continua onde está, mas
+   * o dedo tem onde acertar. Botões de ícone (size-7, size-8) também entram —
+   * medir por seletor `data-slot` deixaria de fora justamente os alvos
+   * menores, que são os que mais precisam. */
+  @media (max-width: 768px) {
+    button,
+    a[href],
+    input:not([type='checkbox']):not([type='radio']),
+    select {
+      min-height: 44px;
+    }
+
+    /* Checkbox e radio não devem esticar: o quadrado precisa manter a proporção. */
+    input[type='checkbox'],
+    input[type='radio'] {
+      min-height: unset;
+    }
+  }
 }
 
 @keyframes fadeInUp {
