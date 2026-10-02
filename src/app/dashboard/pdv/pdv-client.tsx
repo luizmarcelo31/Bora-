@@ -14,14 +14,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/validators";
-import { createSaleAction } from "./actions";
 import { ProductGrid } from "./_components/product-grid";
 import { CartSheet } from "./_components/cart-sheet";
 import { ControlledSelect } from "@/components/ui/controlled-select";
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { Package } from "lucide-react";
+import { useCatalogSnapshot } from "@/lib/offline/use-catalog-snapshot";
+import { enviarOuEnfileirar, type ResultadoVenda } from "@/lib/offline/enviar";
+import { SyncIndicator } from "@/components/offline/SyncIndicator";
 
-export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null; wholesalePrice?: number | null; wholesaleMinQuantity?: number | null };
+export type PdvProduct = { id: number; name: string; price: number; stock: number; category?: string | null; imageUrl?: string | null; wholesalePrice?: number | null; wholesaleMinQuantity?: number | null };
 export type PdvCashbox = { id: number; name: string };
 
 const PAYMENTS = PAYMENT_OPTIONS;
@@ -41,10 +43,12 @@ export function PdvClient({
   products,
   cashboxes,
   user,
+  tenantId,
 }: {
   products: PdvProduct[];
   cashboxes: PdvCashbox[];
   user: { id: number; name: string; email: string };
+  tenantId: number;
 }) {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [payment, setPayment] = useState("DINHEIRO");
@@ -66,6 +70,23 @@ export function PdvClient({
     return idemRef.current;
   }
 
+  // Snapshot do catálogo para o modo offline (Fase 3.1). `barcode` não vem
+  // nesta tela — o leitor de código é do PDV Expresso — então fica nulo em vez
+  // de inventado: o modo offline procura por nome, e um código falso faria o
+  // operador vender o produto errado.
+  useCatalogSnapshot(
+    tenantId,
+    products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      stock: p.stock,
+      barcode: null,
+      category: p.category ?? null,
+      imageUrl: p.imageUrl ?? null,
+    }))
+  );
+
   const lines = useMemo(
     () =>
       Object.entries(cart)
@@ -79,6 +100,14 @@ export function PdvClient({
   );
 
   const subtotal = lines.reduce((s, l) => s + l.total, 0);
+
+  // Desconto em centavos. Fica no escopo do componente porque a fila offline
+  // precisa do mesmo número que a action recebe — dois lugares convertendo
+  // "1,50" divergem em exatamente uma venda.
+  const discountCents = useMemo(() => {
+    const v = parseFloat(discount.replace(/\./g, "").replace(",", ".").trim());
+    return Number.isFinite(v) && v > 0 ? Math.round(v * 100) : 0;
+  }, [discount]);
 
   function setQty(id: number, qty: number) {
     setCart((c) => {
@@ -137,6 +166,46 @@ export function PdvClient({
     }
   }
 
+  /**
+   * Trata o desfecho de `enviarOuEnfileirar` (Fase 3.1).
+   *
+   * Os três casos pedem mensagens diferentes porque o operador precisa saber
+   * em qual deles a venda está salva: no banco, no aparelho, ou em lugar
+   * nenhum. "Venda registrada" para uma venda que ficou só na fila seria a
+   * mentira mais cara deste feature.
+   */
+  function handleEnvio(res: ResultadoVenda) {
+    if (res.tipo === "venda") {
+      handleSaleResult({ ok: res.saleId });
+      return;
+    }
+
+    if (res.tipo === "rejeitada") {
+      toast.error(SALE_ERROR_MSG[res.erro] ?? SALE_ERROR_MSG.sale);
+      return;
+    }
+
+    // Enfileirada: a venda está garantida no aparelho. O troco já foi dado,
+    // então o carrinho pode limpar — a venda existe, só falta o servidor.
+    if (res.motivo) {
+      toast.error(
+        res.motivo === "cheia"
+          ? "Sem rede e a fila de vendas está cheia. Esta venda NÃO foi salva — anote o valor e sincronize antes de continuar."
+          : "Sem rede e o aparelho está sem espaço para salvar. Esta venda NÃO foi registrada — anote o valor e reconecte."
+      );
+      return;
+    }
+
+    toast.warning("Sem conexão: venda salva no aparelho. Sincroniza sozinha quando a rede voltar.", {
+      duration: 6000,
+    });
+    setCart({});
+    setDiscount("");
+    setCustomer("");
+    setCartOpen(false);
+    idemRef.current = null;
+  }
+
   async function submit(formData: FormData) {
     if (pending) return;
     setPending(true);
@@ -147,7 +216,22 @@ export function PdvClient({
       formData.set("discount", discount);
       formData.set("customerName", customer);
       formData.set("idempotencyKey", getIdemKey());
-      handleSaleResult(await createSaleAction(formData));
+      handleEnvio(
+        await enviarOuEnfileirar(
+          {
+            items: lines.map((l) => ({ productId: l.id, quantity: l.qty })),
+            paymentMethod: payment,
+            cashBoxId: cashBoxId ? Number(cashBoxId) : undefined,
+            discount: discountCents,
+            customerName: customer,
+            tenantId,
+            userId: user.id,
+          },
+          getIdemKey()
+        )
+      );
+    } catch {
+      toast.error(SALE_ERROR_MSG.sale);
     } finally {
       setPending(false);
     }
@@ -157,14 +241,22 @@ export function PdvClient({
     if (pending || lines.length === 0) return;
     setPending(true);
     try {
-      const fd = new FormData();
-      fd.set("items", JSON.stringify(lines.map((l) => ({ productId: l.id, quantity: l.qty }))));
-      fd.set("paymentMethod", payment);
-      fd.set("cashBoxId", cashBoxId);
-      fd.set("discount", discount);
-      fd.set("customerName", customer);
-      fd.set("idempotencyKey", getIdemKey());
-      handleSaleResult(await createSaleAction(fd));
+      handleEnvio(
+        await enviarOuEnfileirar(
+          {
+            items: lines.map((l) => ({ productId: l.id, quantity: l.qty })),
+            paymentMethod: payment,
+            cashBoxId: cashBoxId ? Number(cashBoxId) : undefined,
+            discount: discountCents,
+            customerName: customer,
+            tenantId,
+            userId: user.id,
+          },
+          getIdemKey()
+        )
+      );
+    } catch {
+      toast.error(SALE_ERROR_MSG.sale);
     } finally {
       setPending(false);
     }
@@ -212,6 +304,10 @@ export function PdvClient({
         </DialogContent>
       </Dialog>
       <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
+      {/* Vendas pendentes de sync (Fase 3.1). Some quando não há nada. */}
+      <div className="lg:col-span-3">
+        <SyncIndicator tenantId={tenantId} userId={user.id} />
+      </div>
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>Catálogo</CardTitle>

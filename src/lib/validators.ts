@@ -173,6 +173,15 @@ export const createSaleSchema = z.object({
   idempotencyKey: z.string().min(1).max(100).optional(),
   // Recibo: recebido do cliente (troco calculado no servidor). Omitido = sem troco.
   receivedAmount: z.number().int().min(0).optional(),
+  // Modo offline (Fase 3.1 — ADR-006). Venda vinda da fila local do
+  // dispositivo muda duas politicas no service: estoque pode ficar negativo
+  // (a venda ocorreu) e caixa fechado nao recusa. Ver createSaleAction, que é
+  // quem aceita marcar offline — o service confia no caller autenticado.
+  offline: z.boolean().optional(),
+  // Quando a venda aconteceu de fato (ISO string do dispositivo). Vira
+  // `occurredAt` e define cupom diário e DRE. Ausente = venda online, e aí
+  // vale o createdAt.
+  occurredAt: z.string().datetime().optional(),
 });
 
 export const cancelSaleSchema = z.object({

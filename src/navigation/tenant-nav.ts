@@ -13,6 +13,7 @@ import {
   Percent,
   ClipboardCheck,
   Sparkles,
+  TriangleAlert,
 } from "lucide-react";
 import type { NavGroup } from "./types";
 import { CHANGELOG_NAV_ID } from "@/lib/changelog";
@@ -35,6 +36,7 @@ export const tenantNav: NavGroup[] = [
       { id: "stock", title: "Estoque", url: "/dashboard/estoque", icon: Boxes },
       { id: "inventory", title: "Inventário", url: "/dashboard/inventario", icon: ClipboardCheck },
       { id: "pdv", title: "PDV", url: "/dashboard/pdv", icon: ShoppingCart },
+      { id: "divergencias", title: "Divergências offline", url: "/dashboard/divergencias", icon: TriangleAlert },
       { id: "promotions", title: "Promoções", url: "/dashboard/promocoes", icon: Percent },
     ],
   },

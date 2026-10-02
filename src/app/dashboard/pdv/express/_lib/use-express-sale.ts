@@ -4,10 +4,10 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/validators";
-import { createSaleAction } from "../../actions";
 import { calcChange, calcSplit, calcTotals } from "@/lib/pdv-math";
 import { DISCOUNT_PASSWORD } from "../../pdv-client";
 import { buzz } from "@/hooks/use-long-press";
+import { enviarOuEnfileirar } from "@/lib/offline/enviar";
 
 export type ExpressProduct = { id: number; name: string; price: number; stock: number; barcode: string | null; category: string | null; imageUrl: string | null };
 export type ExpressCashbox = { id: number; name: string };
@@ -39,12 +39,16 @@ export function useExpressSale({
   feeCredit,
   feeDebit,
   topSellerIds,
+  tenantId,
+  userId,
 }: {
   products: ExpressProduct[];
   cashboxes: ExpressCashbox[];
   feeCredit: number;
   feeDebit: number;
   topSellerIds: number[];
+  tenantId: number;
+  userId: number;
 }) {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -225,34 +229,69 @@ export function useExpressSale({
     if (pending || lines.length === 0) return;
     setPending(true);
     try {
-      const fd = new FormData();
-      fd.set("items", JSON.stringify(lines.map((l) => ({ productId: l.id, quantity: l.qty }))));
-      if (payMode === "split") {
-        fd.set("paymentMethod", cashCents >= pixCents ? "DINHEIRO" : "PIX");
-        fd.set("payments", JSON.stringify([
-          { method: "DINHEIRO", amount: cashCents },
-          { method: "PIX", amount: pixCents },
-        ]));
-      } else {
-        fd.set("paymentMethod", payment);
-      }
-      fd.set("cashBoxId", cashBoxId);
-      fd.set("discount", discount);
-      if (receivedCents > 0) fd.set("received", received);
-      fd.set("customerName", "");
-      fd.set("idempotencyKey", getIdemKey());
-      const res = await createSaleAction(fd);
-      if ("ok" in res) {
-        toast.success(`Venda #${res.ok} registrada. Troco ${formatCurrency(Math.max(0, troco))}.`, {
+      const parcelas =
+        payMode === "split"
+          ? [
+              { method: "DINHEIRO", amount: cashCents },
+              { method: "PIX", amount: pixCents },
+            ]
+          : undefined;
+
+      const metodo = payMode === "split" ? (cashCents >= pixCents ? "DINHEIRO" : "PIX") : payment;
+
+      // O troco sai do total local: com a rede caída não há recibo do servidor
+      // para consultar, e o dinheiro já foi devolvido ao cliente. O servidor
+      // recalcula ao sincronizar (ADR-006 §6).
+      const res = await enviarOuEnfileirar(
+        {
+          items: lines.map((l) => ({ productId: l.id, quantity: l.qty })),
+          paymentMethod: metodo,
+          ...(parcelas ? { payments: parcelas } : {}),
+          cashBoxId: cashBoxId ? Number(cashBoxId) : undefined,
+          discount: discountCents,
+          ...(receivedCents > 0 ? { received } : {}),
+          customerName: "",
+          tenantId,
+          userId,
+        },
+        getIdemKey()
+      );
+
+      if (res.tipo === "venda") {
+        toast.success(`Venda #${res.saleId} registrada. Troco ${formatCurrency(Math.max(0, troco))}.`, {
           action: {
             label: "Recibo",
-            onClick: () => router.push(`/dashboard/pdv/recibo/${res.ok}`),
+            onClick: () => router.push(`/dashboard/pdv/recibo/${res.saleId}`),
           },
         });
         clearSale();
-      } else {
-        toast.error(SALE_ERROR_MSG[res.error] ?? SALE_ERROR_MSG.sale);
+        return;
       }
+
+      if (res.tipo === "rejeitada") {
+        toast.error(SALE_ERROR_MSG[res.erro] ?? SALE_ERROR_MSG.sale);
+        return;
+      }
+
+      if (res.motivo) {
+        // Sem rede e sem fila: a venda NÃO existe. Dizer o contrário seria a
+        // falha mais grave possível aqui — o operador fecharia o caixa
+        //ACHANDO que a venda entrou.
+        toast.error(
+          res.motivo === "cheia"
+            ? "Sem rede e a fila de vendas está cheia. Esta venda NÃO foi salva — anote o total e sincronize antes de continuar."
+            : "Sem rede e o aparelho está sem espaço. Esta venda NÃO foi registrada — anote o total e reconecte."
+        );
+        return;
+      }
+
+      toast.warning(
+        `Sem conexão: venda salva no aparelho (troco ${formatCurrency(Math.max(0, troco))}). Sincroniza quando a rede voltar.`,
+        { duration: 6000 }
+      );
+      clearSale();
+    } catch {
+      toast.error(SALE_ERROR_MSG.sale);
     } finally {
       setPending(false);
     }

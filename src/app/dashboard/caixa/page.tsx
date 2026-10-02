@@ -85,7 +85,7 @@ export default async function CaixaPage() {
             <CardTitle>Fechar caixa</CardTitle>
           </CardHeader>
           <CardContent>
-            <CloseCashBoxDialog openBoxes={openBoxes.map((b) => ({ id: b.id, name: b.name, currentBalance: b.currentBalance }))} />
+            <CloseCashBoxDialog openBoxes={openBoxes.map((b) => ({ id: b.id, name: b.name, currentBalance: b.currentBalance }))} tenantId={tenant.id} userId={dbUser.id} />
           </CardContent>
         </Card>
       </div>

@@ -53,6 +53,7 @@ const { products, cashboxes, todaysSales, user } = await getPdvPageData(tenant.i
         />
 
         <PdvClient
+          tenantId={tenant.id}
           products={products.map((p) => ({
             id: p.id,
             name: p.name,

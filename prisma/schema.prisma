@@ -234,6 +234,19 @@ model Sale {
 
   idempotencyKey String?
 
+  // ============================================================
+  // Modo offline (Fase 3.1 — ADR-006)
+  // ============================================================
+  // offline: venda veio da fila local do dispositivo, não foi criada com a
+  // rede no momento. Muda duas políticas no service: estoque pode ficar
+  // negativo (a venda ocorreu, o dinheiro foi entregue) e caixa fechado não
+  // recusa a venda. Divergências ficam registradas no audit.
+  offline Boolean @default(false)
+  // occurredAt: quando a venda aconteceu de fato. Venda sincronizada horas
+  // depois recebe createdAt = hora do sync, e sem esta coluna o cupom diário e
+  // o DRE cairiam no dia errado. `occurredAt ?? createdAt` é a data real.
+  occurredAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

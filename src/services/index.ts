@@ -25,6 +25,33 @@ async function getSettingsWithDefaults(tenantId: number) {
   );
 }
 
+/**
+ * Divergência de estoque de uma venda offline (ADR-006 §5).
+ *
+ * Existe porque a política escolhida é "a venda vence o estoque": a venda
+ * entra, o saldo pode ficar negativo, e quem corrige o número depois é a
+ * contagem de inventário. Isso só é seguro com registro — uma venda que
+ * vendeu 5 com 2 disponíveis e passou sem deixar rastro vira estoque fantasma
+ * que ninguém sabe explicar.
+ */
+export interface DivergenciaEstoque {
+  productId: number;
+  disponivel: number;
+  vendido: number;
+}
+
+/** Venda + o que divergiu ao ser gravada. Vendas online voltam vazio. */
+export type SaleComDivergencias = Sale & {
+  items: import("@prisma/client").SaleItem[];
+  divergencias: {
+    estoque: DivergenciaEstoque[];
+    caixa: boolean;
+  };
+};
+
+/** Divergências vazias — o que uma venda sem conflito (ou online) devolve. */
+const SEM_DIVERGENCIAS = { estoque: [] as DivergenciaEstoque[], caixa: false };
+
 // ============================================================
 // PRODUCT SERVICE
 // ============================================================
@@ -352,7 +379,7 @@ export class InventoryService {
 // ============================================================
 
 export class SaleService {
-  static async createSale(tenantId: number, data: CreateSaleInput) {
+  static async createSale(tenantId: number, data: CreateSaleInput): Promise<SaleComDivergencias> {
     // Independentes em paralelo (eram 4 round-trips sequenciais).
     const [tenant, cashBox, user, settings] = await Promise.all([
       prisma.tenant.findUnique({ where: { id: tenantId } }),
@@ -473,8 +500,28 @@ export class SaleService {
     // Método primário = maior parcela (relatórios seguem compatíveis).
     const primaryMethod = [...payments].sort((a, b) => b.amount - a.amount)[0].method;
 
+    // Venda offline (Fase 3.1): o dispositivo mandou quando a venda aconteceu.
+    // `occurredAt` é a data real — sem ela, uma venda sincronizada 3 horas
+    // depois receberia o cupom e o DRE do dia do sync, e o relatório do dia em
+    // que o cliente pagou ficaria errado.
+    //
+    // O preço NÃO vem do dispositivo: permanece o do banco (ADR-006 §6). O
+    // troco já foi dado com o preço antigo, e essa diferença aparece como
+    // problema de caixa, não como motivo para o servidor aceitar preço do
+    // cliente.
+    const offline = data.offline === true;
+    // `Number.isNaN` antes de aceitar: `new Date("ontem")` é Invalid Date, e o
+    // Prisma lancaria na hora de gravar — devolvendo erro genérico para uma
+    // venda que o cliente já pagou. Data inválida cai no createdAt do servidor.
+    const occurredAtBruto = offline && data.occurredAt ? new Date(data.occurredAt) : null;
+    const occurredAt =
+      occurredAtBruto && !Number.isNaN(occurredAtBruto.getTime()) ? occurredAtBruto : null;
+
     // Cupom diário (SP): sequência por tenant+dia com retry em corrida.
-    const spDay = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    // A data de referência é a da venda, não a de hoje — o countdown tem que
+    // olhar para o mesmo dia que vai receber o cupom.
+    const couponBase = occurredAt ?? new Date();
+    const spDay = new Date(couponBase.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     spDay.setHours(0, 0, 0, 0);
     let couponSeq =
       (await prisma.sale.count({ where: { tenantId, couponDate: spDay } })) + 1;
@@ -499,10 +546,19 @@ export class SaleService {
         where: { tenantId, idempotencyKey: data.idempotencyKey },
         include: { items: true },
       });
-      if (existing) return existing;
+      // Replay: a venda já existe, então nada divergiu agora. Devolve com as
+      // listas vazias para que o chamador não precise tratar dois formatos.
+      if (existing) return Object.assign(existing, { divergencias: SEM_DIVERGENCIAS });
     }
 
     let sale: (Sale & { items: import("@prisma/client").SaleItem[] }) | undefined;
+    // Divergências acumuladas na última tentativa que criou a venda. Vivem
+    // aqui porque a transação não devolve nada além da venda, e a action
+    // precisa delas para escrever o log de auditoria.
+    let divergenciasEstoque: DivergenciaEstoque[] = [];
+    // ADR-006 §7: venda offline cujo caixa fechou no sync entra sem tocar em
+    // saldo nenhum. O dinheiro está na gaveta; recusar seria perder venda.
+    let divergenciaCaixa = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
       sale = await prisma.$transaction(async (tx) => {
@@ -525,6 +581,8 @@ export class SaleService {
             customerName: data.customerName || null,
             customerPhone: data.customerPhone || null,
             idempotencyKey: data.idempotencyKey || null,
+            offline,
+            occurredAt,
             items: {
               create: processedItems.map((item) => ({
                 tenantId,
@@ -545,16 +603,31 @@ export class SaleService {
 
           if (inventory) {
             // Revalida dentro da tx: fecha a corrida entre o check pré-tx e o decremento.
-            if (
+            const insuficiente =
               settings?.enableStockControl &&
               inventory.quantity < item.quantity &&
-              !settings?.allowNegativeStock
-            ) {
+              !settings?.allowNegativeStock;
+
+            // ADR-006 §5: venda offline NÃO é recusada por estoque. O dinheiro
+            // foi entregue e a mercadoria saiu da prateleira — recusar aqui é
+            // perda direta. O estoque pode ficar negativo e a contagem de
+            // inventário corrige o número depois. A divergência é registrada
+            // no log de auditoria pela action, que conhece o resultado.
+            if (insuficiente && !offline) {
               throw new ValidationError(
                 ValidationErrorType.INSUFFICIENT_STOCK,
                 `Estoque insuficiente para o produto ID ${item.productId}. Disponivel: ${inventory.quantity}`
               );
             }
+
+            if (insuficiente) {
+              divergenciasEstoque.push({
+                productId: item.productId,
+                disponivel: inventory.quantity,
+                vendido: item.quantity,
+              });
+            }
+
             await tx.stockMovement.create({
               data: {
                 tenantId,
@@ -577,6 +650,13 @@ export class SaleService {
           }
         }
 
+        // ADR-006 §7: caixa fechado não recusa venda offline. O dinheiro está na
+        // gaveta; a venda entra sem `cashBoxId` e sem mexer em saldo, e a
+        // conciliação manual do caixa recoloca o valor. Para venda online o
+        // comportamento é o de sempre: recusar, porque ali ainda dá para
+        // corrigir antes de o cliente receber o troco.
+        let caixaRegistrado = data.cashBoxId ?? null;
+
         if (data.cashBoxId) {
           // Condicional: se o caixa fechou entre o check e a escrita, ninguém vence em silêncio.
           const updated = await tx.cashBox.updateMany({
@@ -586,14 +666,30 @@ export class SaleService {
             },
           });
           if (updated.count === 0) {
-            throw new ValidationError(
-              ValidationErrorType.CLOSED_CASHBOX,
-              'Caixa esta fechada'
-            );
+            if (!offline) {
+              throw new ValidationError(
+                ValidationErrorType.CLOSED_CASHBOX,
+                'Caixa esta fechada'
+              );
+            }
+            divergenciaCaixa = true;
+            caixaRegistrado = null;
           }
         }
 
-        // Financeiro atômico com a venda: RECEITA automaticamente (idempotente via venda)
+        if (divergenciaCaixa && s.cashBoxId) {
+          // A venda foi criada apontando para o caixa que já estava fechado.
+          // Solta o vínculo para que nenhum relatório some a venda no caixa
+          // errado — o valor fica na conciliação manual.
+          await tx.sale.update({ where: { id: s.id }, data: { cashBoxId: null } });
+          s.cashBoxId = null;
+        }
+
+        // Financeiro atômico com a venda: RECEITA automaticamente (idempotente via venda).
+        // movementDate = occurredAt ?? createdAt: venda offline de ontem
+        // sincronizada hoje tem que entrar no DRE de ontem (ADR-006 §8).
+        const vendaDate = s.occurredAt ?? s.createdAt;
+
         await tx.financialMovement.create({
           data: {
             tenantId,
@@ -601,8 +697,8 @@ export class SaleService {
             category: "Vendas PDV",
             description: `Venda #${s.id} — ${paymentLabel(s.paymentMethod)}`,
             amount: s.total,
-            movementDate: s.createdAt,
-            cashBoxId: s.cashBoxId ?? null,
+            movementDate: vendaDate,
+            cashBoxId: caixaRegistrado,
           },
         });
 
@@ -615,8 +711,8 @@ export class SaleService {
               category: "Taxa maquineta",
               description: `Taxa maquineta venda #${s.id}`,
               amount: feeAmount,
-              movementDate: s.createdAt,
-              cashBoxId: s.cashBoxId ?? null,
+              movementDate: vendaDate,
+              cashBoxId: caixaRegistrado,
             },
           });
         }
@@ -640,7 +736,7 @@ export class SaleService {
           where: { tenantId, idempotencyKey: data.idempotencyKey },
           include: { items: true },
         });
-        if (existing) return existing;
+        if (existing) return Object.assign(existing, { divergencias: SEM_DIVERGENCIAS });
       }
       throw e;
     }
@@ -650,7 +746,10 @@ export class SaleService {
       throw new Error('Não foi possível numerar o cupom, tente novamente');
     }
 
-    return sale;
+    // As divergências viajam junto da venda para a action escrever a auditoria.
+    // Uma venda online sempre volta com a lista vazia — o comportamento antigo
+    // é `divergencias` ausente, então quem lê não precisa tratar caso novo.
+    return Object.assign(sale, { divergencias: { estoque: divergenciasEstoque, caixa: divergenciaCaixa } });
   }
 
   static async cancelSale(tenantId: number, saleId: number) {

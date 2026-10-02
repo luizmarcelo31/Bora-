@@ -94,6 +94,13 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
 
   const idempotencyKey = String(formData.get("idempotencyKey") ?? "").trim() || undefined;
 
+  // Modo offline (Fase 3.1 — ADR-006). `offline` só é aceito em "1": é um
+  // FormData, então qualquer string chegaria como verdade se fosse lido
+  // direto, e esta flag desliga a recusa por estoque.
+  const offline = String(formData.get("offline") ?? "") === "1";
+  const occurredAtRaw = String(formData.get("occurredAt") ?? "").trim();
+  const occurredAt = offline && occurredAtRaw ? occurredAtRaw : undefined;
+
   try {
     const parsed = createSaleSchema.parse({
       userId: dbUser.id,
@@ -105,9 +112,39 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
       receivedAmount,
       customerName: String(formData.get("customerName") ?? ""),
       idempotencyKey,
+      offline,
+      occurredAt,
     });
     const sale = await SaleService.createSale(tenant.id, parsed);
     const { logAudit } = await import("@/lib/audit");
+
+    // Divergências de venda offline (ADR-006 §5 e §7). Venda online volta com
+    // as listas vazias e este bloco não roda — o caminho comum não paga nada
+    // por um recurso que quase nunca acontece.
+    const divergencias = sale.divergencias;
+    if (offline && (divergencias.estoque.length > 0 || divergencias.caixa)) {
+      await logAudit({
+        tenantId: tenant.id,
+        action: "create",
+        entity: "sale",
+        entityId: sale.id,
+        userId: dbUser.id,
+        userEmail: dbUser.email,
+        changes: {
+          total: sale.total,
+          offline: true,
+          divergenciaEstoque: divergencias.estoque,
+          divergenciaCaixa: divergencias.caixa,
+        },
+        details:
+          `Venda #${sale.id} sincronizada do modo offline com divergência` +
+          (divergencias.estoque.length > 0
+            ? ` — estoque: ${divergencias.estoque.map((d) => `produto ${d.productId} (tinha ${d.disponivel}, vendeu ${d.vendido})`).join(", ")}`
+            : "") +
+          (divergencias.caixa ? " — caixa estava fechado, venda sem vínculo de caixa" : ""),
+      });
+    }
+
     await logAudit({
       tenantId: tenant.id,
       action: "create",

@@ -1,6 +1,6 @@
 # PROJECT_STATE — fonte da verdade
 
-**Atualizado:** 01/10/2026 · **Fase:** **Fase 1 CONCLUÍDA** (1.1–1.4, com inspeção visual) · **Fase 2: código completo** (20 de 20 itens, 1 parcial) · Próxima: Fase 3 (modo offline)
+**Atualizado:** 02/10/2026 · **Fase:** **Fase 1 CONCLUÍDA** (1.1–1.4, com inspeção visual) · **Fase 2: código completo** (20 de 20 itens, 1 parcial) · **Fase 3: 15 de 15** — modo offline implementado, aguardando verificação manual em navegador
 
 ## Implementado ✅
 - Next.js 16 + TS + Tailwind v4 + shadcn + `lib` (`payments`, `audit-labels`, `labels`, `plataforma`)
@@ -26,9 +26,14 @@
 - Nenhum.
 
 ## Não implementado ⬜
-- Fases 3 (Features) e 4 (Elite) do roadmap — inventário real em
-  `docs/boramais-roadmap.md`. Fase 3 falta **modo offline**; Fase 4 está
-  praticamente do zero e exige decisão de produto (gateway, multi-loja)
+- Fase 3 (Features): **15 de 15 itens implementados.** Modo offline entregue em
+  02/10 (`docs/changes/2026-10-02-modo-offline-pdv.md`, `ADR-006`). Falta a
+  **verificação manual em navegador** com rede caída — nenhum teste unitário
+  cobre isso, e o critério de pronto é justamente comportamento offline
+- **Fase 4 (Elite): do zero**, 15 itens, e exige decisão de produto (gateway
+  de pagamento, modelo multi-loja) antes de qualquer ticket
+- Fase 4 (Elite): do zero, 15 itens, e exige decisão de produto (gateway de
+  pagamento, modelo multi-loja) antes de qualquer ticket
 - **Medição dos critérios de conclusão da Fase 2:** navegação abaixo de
   200 ms percebido e conclusão de onboarding acima de 80%. Exigem telemetry
   que o projeto não tem — registrados como pendentes, não preenchidos com
@@ -49,10 +54,29 @@
   `DATABASE_URL`/`DIRECT_URL` no `.env` e `.env.local`.
 
 ## Próxima tarefa
-- **Abrir a Fase 3** — falta só o **modo offline com fila de sync**, o
-  único item pendente dela.
-- Antes disso: decidir gateway de pagamento e modelo multi-loja, que travam
-  a Fase 4 inteira. É decisão de negócio, não continuação natural.
+- **Verificação manual do modo offline com rede caída** — a única coisa que
+  falta para fechar a Fase 3. roteiro em
+  `docs/changes/2026-10-02-modo-offline-pdv.md`; critérios abaixo
+- **Três ressalvas da Fase 3 a conferir no navegador** antes de fechar o critério
+  da fase: alerta de estoque por e-mail não existe (só in-app), o PDF de
+  relatório não tem logo da loja, e os perfis de acesso existem por
+  `requirePermission` mas não foram conferidos um a um contra a tabela de papel.
+- **Bloqueio de produto, não de engenharia:** decidir gateway de pagamento e
+  modelo multi-loja trava a Fase 4 inteira. Precisa de decisão de negócio.
+
+## Documentei nesta sessão
+- `docs/changes/2026-10-02-modo-offline-pdv.md` — Fase 3.1 completa: 6 passos,
+  as 4 políticas de conflito, o achado de migration que travava o banco, e o
+  roteiro de verificação manual
+- `docs/changes/2026-10-02-logo-pdf.md` — logo da loja nos 5 PDF e na impressão;
+  troca do campo URL por upload do próprio dispositivo; fecha a ressalva de PDF
+  da Fase 3. Ajuste fino do cabeçalho do PDF ficou pendente
+- `docs/decisions/ADR-006-modo-offline-pdv.md` — escopo, 4 políticas de
+  conflito (estoque, preço, caixa, sessão), 2 colunas novas em `Sale`
+  (`offline`, `occurredAt`), e a justificativa de não usar service worker
+- `docs/boramais-roadmap.md` — bloco "Visão Geral" reconciliado com o código
+  (estava mostrando Fase 1 em andamento e Fases 2–4 aguardando); barras agora
+  são por item, com as ressalvas que a barra esconde explicitadas
 
 ## Notas de verificação
 Baseline da Fase 1 (29/09): **150 testes / 20 suítes**, `tsc` limpo, `next build`
@@ -63,5 +87,18 @@ Baseline da Fase 2 (01/10): **168 testes / 22 suítes**, `tsc` limpo, os 4
 gates de design system verdes (contraste 0 falhas, 0 cor hardcoded, 0 violação
 de sentence case, 0 peso fora de 400/600). `jspdf` saiu do bundle inicial de
 5 páginas.
+
+Baseline da Fase 3.1 (02/10): **280 testes / 29 suítes** (+112), `tsc` limpo,
+`next build` ok, os 4 gates de design system verdes, `prisma migrate status`
+com histórico fechado. `verificar-pesos.mjs` estava quebrado por caminho de CSS
+obsoleto do Next 16 — corrigido.
+
+Ressalvas da Fase 3: **a do PDF com logo foi fechada** em 02/10. Restam duas —
+alerta de estoque por e-mail (exige provedor, decisão de infraestrutura) e os
+perfis de acesso não conferidos um a um.
+
+**Pendência que só o navegador fecha:** venda offline nunca perder venda e
+nunca duplicar na fila. Roteiro de 5 passos em
+`docs/changes/2026-10-02-modo-offline-pdv.md`.
 
 Detalhe de cada lote em `docs/changes/`.

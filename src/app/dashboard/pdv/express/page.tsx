@@ -55,6 +55,8 @@ export default async function PdvExpressPage() {
         errorMap={ERROR_MSG}
       />
       <ExpressPdvClient
+        tenantId={tenant.id}
+        userId={dbUser.id}
         products={products.map((p) => ({
           id: p.id,
           name: p.name,

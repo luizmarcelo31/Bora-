@@ -42,18 +42,29 @@ Pendente de medição: os dois critérios de conclusão da fase (200 ms
 percebido, 80% de onboarding) exigem telemetry que o projeto não tem.
 Detalhe: `docs/changes/2026-10-01-fase-2-onboarding-retencao.md`
 
-### Fase 3 — 14 de 15 itens (o mais avançado)
+### Fase 3 — 15 de 15 itens implementados; falta a verificação manual
 FEITO: leitor de código de barras, favoritos no PDV, desconto com senha, split
 payment, estoque mínimo, alerta de mínimo (in-app), gráfico por hora, top 10
 produtos, DRE, PDF, filtro de período, níveis de acesso, log de auditoria, PIN
-de operador.
-**Falta:** modo offline com fila de sync.
+de operador, **modo offline com fila de sync** (02/10).
 
-Checkboxes reconciliados em 01/10/2026. Três itens ficaram marcados **com
-ressalva explícita** na seção da fase: alerta de estoque por e-mail não
-existe (só in-app), o PDF não tem logo da loja, e os perfis de acesso não foram
-conferidos um a um. Marcar como entregue é afirmação de código, não de UX —
-os critérios de conclusão por uso medido continuam em aberto.
+Checkboxes reconciliados em 01/10/2026; modo offline fechado em 02/10.
+**Ressalva do PDF removida em 02/10** — a logo da loja foi implementada
+(`docs/changes/2026-10-02-logo-pdf.md`). Restam duas: alerta de estoque por
+e-mail não existe (só in-app), e os perfis de acesso não foram conferidos um a
+um.
+
+**O que falta para fechar a fase não é código.** Duas coisas, ambas de
+verificação:
+1. Modo offline com a rede realmente caída — roteiro em
+   `docs/changes/2026-10-02-modo-offline-pdv.md`. Nenhum teste unitário
+   cobre comportamento offline, e o critério de pronto é esse comportamento.
+2. Conferência no navegador das duas ressalvas restantes (e-mail de estoque,
+   perfis de acesso).
+3. Ajuste visual do cabeçalho do PDF com a logo.
+
+Marcar como entregue é afirmação de código, não de UX — os critérios de
+conclusão por uso medido continuam em aberto.
 
 ### Fase 4 — praticamente não iniciado
 FEITO: nada relevante. "Produtos parados" tem 3matches (a verificar);
@@ -69,8 +80,10 @@ com evidência suficiente para marcar.
 1. ~~Aplicar `.label-group`~~ — feito na Fase 1
 2. ~~Auditar 1.4 e ligar o overlay órfão~~ — overlay era código morto, removido
 3. ~~Fase 2~~ — código completo em 01/10
-4. **Fase 3: modo offline** — único item pendente
-5. Fase 4 exige decisão de produto e de gateway — não é continuação natural
+4. ~~Fase 3: modo offline~~ — implementado em 02/10
+5. **Verificar a Fase 3 no navegador** — modo offline com rede caída + as 3
+   ressalvas (e-mail de estoque, logo no PDF, perfis de acesso)
+6. Fase 4 exige decisão de produto e de gateway — não é continuação natural
 
 Histórico deste lote: `docs/changes/2026-09-29-fase1-contraste-tipografia.md`.
 
@@ -280,10 +293,18 @@ inventar número seria pior que deixar em aberto. O que dá para afirmar hoje:
 
 ### 3.1 PDV Avançado
 
-- [ ] **Modo offline** — continua vendendo sem internet, fila de sync ao reconectar
-      — **único item pendente da Fase 3.** É o item mais caro da fase: fila
-      local, resolução de conflito na reconexão (o mesmo estoque vendido duas
-      vezes) e idempotência. O `sale_idempotency` do PDV já dá a base.
+- [x] **Modo offline** — continua vendendo sem internet, fila de sync ao reconectar
+      — **implementado em 02/10** (`ADR-006`, `docs/changes/2026-10-02-modo-offline-pdv.md`).
+      Escopo: só a venda, não o sistema inteiro. Fila em `localStorage` com
+      chave por tenant **e** operador (o PDV tem PIN de troca). O `idempotencyKey`
+      nasce na confirmação, não no retry — é o que torna reenvio um no-op pelo
+      `@@unique([tenantId, idempotencyKey])` que já existia. Estoque: **a venda
+      vence**; pode ficar negativo, com divergência na auditoria e no relatório
+      `/dashboard/divergencias`. Preço: continua sendo o do servidor. Caixa
+      fechado não recusa venda offline. `Sale.occurredAt` define cupom e DRE.
+      259 testes / 27 suítes.
+      **Ressalva:** verificado por teste automatizado, **não** por navegação
+      com a rede caída — o roteiro de verificação manual está no change.
 - [x] **Leitor de código de barras** — câmera do celular via biblioteca JS (sem app nativo)
 - [x] **Atalho de produto favorito** — fixar os 6 mais vendidos na tela do PDV
 - [x] **Aplicação de desconto por item ou total** com senha de autorização
@@ -306,8 +327,12 @@ inventar número seria pior que deixar em aberto. O que dá para afirmar hoje:
 - [x] DRE simplificado: receita − custo − despesas = lucro estimado
       — *tokenizado na Fase 1 (o verde hardcoded era ilegível no dark mode).*
 - [x] Exportação de relatório em PDF com logo da loja
-      — *PDF existe e agora entra por `LazyReportActions` (Fase 2). **Logo da
-      loja no PDF não** — ver ressalva.*
+      — *PDF entra por `LazyReportActions` (Fase 2) e **agora tem a logo da
+      loja** (02/10): upload em Configurações, mesmo bucket por tenant da foto
+      de produto, e a logo sai nos 5 PDF e na impressão — Relatórios,
+      Financeiro, Estoque, Auditoria e recibo do PDV. Falha ao carregar a
+      imagem não derruba o export. O ajuste fino do cabeçalho está pendente de
+      ajuste visual.*
 - [x] Filtro por período customizado em todos os relatórios
 
 ### 3.4 Gestão de Equipe
@@ -370,22 +395,41 @@ critério.
 
 ## Visão Geral do Roadmap
 
+> Barras por **itens do roadmap**, não por fase inteira: é o que o código
+> sustenta. Onde fase e código divergem, a barra mostra o código e o texto
+> explicita a pendência. Fonte do estado: bloco "📌 Estado real" no topo.
+
 ```
-FASE 1 — Visual          [████████████░░░░░░░░]  Em andamento
-FASE 2 — UX & Retenção  [░░░░░░░░░░░░░░░░░░░░]  Aguarda Fase 1
-FASE 3 — Features        [░░░░░░░░░░░░░░░░░░░░]  Aguarda Fase 2
-FASE 4 — Elite & Escala  [░░░░░░░░░░░░░░░░░░░░]  Aguarda Fase 3
+FASE 1 — Visual          [████████████████████]  Concluída 29/09 (4/4 seções)
+FASE 2 — UX & Retenção  [████████████████████]  Código completo 01/10 (20/20, 1 parcial)
+FASE 3 — Features        [████████████████████]  15/15 implementado 02/10 — falta verificar
+FASE 4 — Elite & Escala  [░░░░░░░░░░░░░░░░░░░░]  Não iniciado
 ```
 
-| Fase | Foco principal | Resultado esperado |
-|---|---|---|
-| 1 — Visual | Design system completo | Interface consistente, profissional |
-| 2 — UX/Retenção | Fluidez e hábito | Usuário volta todo dia sem fricção |
-| 3 — Features | Valor funcional | Dependência real do produto |
-| 4 — Elite | Escala e diferenciação | Produto premium, difícil de substituir |
+**Três ressalvas que a barra cheia esconde.** A Fase 2 está cheia, mas os
+dois critérios de conclusão da fase (200 ms percebido, 80% de onboarding) **não
+foram medidos** — exigem telemetry que o projeto não tem. A Fase 3 está cheia,
+mas os itens foram marcados por busca de código e teste automatizado, **sem
+inspeção em navegador**: alerta de estoque por e-mail não existe, o PDF não
+tem logo da loja, os perfis de acesso não foram conferidos um a um, e o modo
+offline não foi exercitado com a rede caída. Barras cheias significam "o código
+existe", não "o comportamento foi visto".
+
+| Fase | Itens | Foco principal | Resultado esperado |
+|---|---|---|---|
+| 1 — Visual | 4/4 | Design system completo | Interface consistente, profissional |
+| 2 — UX/Retenção | 20/20 (1 parcial) | Fluidez e hábito | Usuário volta todo dia sem fricção |
+| 3 — Features | 15/15 | Valor funcional | Dependência real do produto |
+| 4 — Elite | 0/15 | Escala e diferenciação | Produto premium, difícil de substituir |
+
+**Próximo passo:** não é escrever código. É a verificação manual que fecha a
+Fase 3 — modo offline com a rede caída, e as três ressalvas acima. roteiro em
+`docs/changes/2026-10-02-modo-offline-pdv.md`. Fase 4 é bloqueada por decisão
+de produto (gateway de pagamento, modelo multi-loja), não por trabalho técnico
+pendente.
 
 ---
 
 > **Regra do roadmap:** Não iniciar a próxima fase enquanto os critérios de conclusão da fase atual não forem cumpridos. Qualidade antes de volume.
 
-*BoraMais Roadmap — v1.0 — Setembro 2026*
+*BoraMais Roadmap — v1.2 — 02/10/2026 (Fase 3 implementada; barras por item, ressalvas explícitas)*

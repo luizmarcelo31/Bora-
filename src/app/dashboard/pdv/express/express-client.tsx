@@ -18,6 +18,8 @@ import { ControlledSelect } from "@/components/ui/controlled-select";
 import { Minus, Plus, X } from "lucide-react";
 import { useExpressSale } from "./_lib/use-express-sale";
 import type { ExpressProduct, ExpressCashbox } from "./_lib/use-express-sale";
+import { useCatalogSnapshot } from "@/lib/offline/use-catalog-snapshot";
+import { SyncIndicator } from "@/components/offline/SyncIndicator";
 
 export type { ExpressProduct, ExpressCashbox };
 
@@ -27,13 +29,21 @@ export function ExpressPdvClient({
   feeCredit,
   feeDebit,
   topSellerIds,
+  tenantId,
+  userId,
 }: {
   products: ExpressProduct[];
   cashboxes: ExpressCashbox[];
   feeCredit: number;
   feeDebit: number;
   topSellerIds: number[];
+  tenantId: number;
+  userId: number;
 }) {
+  // Snapshot do catálogo para o modo offline (Fase 3.1). Esta tela é onde o
+  // operador passa o expediente inteiro, então é o melhor momento para guardar
+  // o catálogo com rede — e é o que permite vender sem conexão depois.
+  useCatalogSnapshot(tenantId, products);
   const {
     cart,
     selectedId,
@@ -84,7 +94,7 @@ export function ExpressPdvClient({
     restoreCart,
     confirmSale,
     submitSearch,
-  } = useExpressSale({ products, cashboxes, feeCredit, feeDebit, topSellerIds });
+  } = useExpressSale({ products, cashboxes, feeCredit, feeDebit, topSellerIds, tenantId, userId });
 
 
 
@@ -141,6 +151,10 @@ export function ExpressPdvClient({
   return (
     <ExpressShell cashboxName={cashboxName}>
     <div className="grid gap-4 p-4 md:p-6 lg:grid-cols-2">
+      {/* Vendas pendentes de sync (Fase 3.1). Some quando não há nada. */}
+      <div className="lg:col-span-2">
+        <SyncIndicator tenantId={tenantId} userId={userId} />
+      </div>
       {/* Catálogo + busca */}
       <Card>
         <CardHeader>
