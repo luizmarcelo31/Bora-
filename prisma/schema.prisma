@@ -56,6 +56,9 @@ model Tenant {
 
   @@index([active])
   @@index([suspended])
+  @@index([health])
+  @@index([lastActivityAt])
+  @@index([status])
 }
 
 // ============================================================
@@ -730,7 +733,7 @@ model Plan {
 model Subscription {
   id           Int                 @id @default(autoincrement())
   tenantId     Int                 @unique
-  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   planId       Int
   plan         Plan                @relation(fields: [planId], references: [id])
   status       StatusAssinatura    @default(EXPERIMENTACAO)
@@ -770,7 +773,7 @@ enum PrioridadeTicket {
 model Ticket {
   id          Int              @id @default(autoincrement())
   tenantId    Int
-  tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   subject     String
   description String
   status      StatusTicket     @default(ABERTO)
@@ -905,7 +908,7 @@ model PlatformSettings {
 model Integracao {
   id                 Int              @id @default(autoincrement())
   platformSettingsId Int
-  platformSettings   PlatformSettings @relation(fields: [platformSettingsId], references: [id])
+  platformSettings   PlatformSettings @relation(fields: [platformSettingsId], references: [id], onDelete: Cascade)
   key                String
   name               String
   status             StatusIntegracao @default(PENDENTE)

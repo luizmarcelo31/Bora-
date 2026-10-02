@@ -2,26 +2,48 @@
 -- migration nunca foi versionada (só havia a linha failed em
 -- `_prisma_migrations`, com finished_at nulo).
 --
--- As tabelas abaixo foram conferidas coluna a coluna contra o schema.prisma
--- antes desta pasta ser criada, então o conteúdo é o estado real do banco —
--- por isso esta migration está marcada como `applied` e nunca roda de novo
--- sobre a instância existente. Ela existe para que o histórico de migrations
--- reconstrua o banco do zero, que antes não era possível.
+-- CONTEUDO AJUSTADO EM 02/10/2026 (idempotencia)
+-- ------------------------------------------------
+-- Esta migration foi marcada como `applied` no banco de producao, entao NUNCA
+-- roda la -- por isso o estado real nunca foi.testado por ela. No replay do
+-- zero (shadow database / Postgres novo) ela quebrava: a migration
+-- 20260926000000_enums_pt_platforma JA cria StatusAssinatura, CicloCobranca,
+-- MotivoCancelamento, Plan e Subscription, e esta tentava criar tudo de novo ->
+-- ERROR: type "StatusAssinatura" already exists.
 --
--- Ver docs/AI_RULES.md (banco é estado compartilhado) e
--- docs/changes/2026-10-02-modo-offline-pdv.md.
+-- Por isso tudo aqui virou IF NOT EXISTS / DO $$. Assim a migration funciona
+-- nos dois lados: no banco de producao (nao-op) e no replay do zero (no-op
+-- tambem, porque a 20260926000000 ja fez o trabalho).
+--
+-- Editing foi feito porque o arquivo esta marked-as-applied; o checksum no
+-- banco foi alinhado depois, com o mesmo procedimento de
+-- `scripts/corrigir-migration-bom.cjs`. Ver
+-- docs/changes/2026-10-02-baseline-migrations.md.
 
--- CreateEnum
-CREATE TYPE "StatusAssinatura" AS ENUM ('EXPERIMENTACAO', 'ATIVA', 'PENDENTE_PAGAMENTO', 'SUSPENSA', 'CANCELADA', 'ARQUIVADA');
+-- Enums (ja criados pela 20260926000000 -- aqui so para o caso de rodar isolada)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'StatusAssinatura') THEN
+        CREATE TYPE "StatusAssinatura" AS ENUM ('EXPERIMENTACAO', 'ATIVA', 'PENDENTE_PAGAMENTO', 'SUSPENSA', 'CANCELADA', 'ARQUIVADA');
+    END IF;
+END $$;
 
--- CreateEnum
-CREATE TYPE "CicloCobranca" AS ENUM ('MENSAL', 'ANUAL');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'CicloCobranca') THEN
+        CREATE TYPE "CicloCobranca" AS ENUM ('MENSAL', 'ANUAL');
+    END IF;
+END $$;
 
--- CreateEnum
-CREATE TYPE "MotivoCancelamento" AS ENUM ('SOLICITACAO_CLIENTE', 'FALHA_PAGAMENTO', 'INADIMPLENCIA', 'VIOLACAO_TERMO', 'INICIADA_PLATAFORMA');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'MotivoCancelamento') THEN
+        CREATE TYPE "MotivoCancelamento" AS ENUM ('SOLICITACAO_CLIENTE', 'FALHA_PAGAMENTO', 'INADIMPLENCIA', 'VIOLACAO_TERMO', 'INICIADA_PLATAFORMA');
+    END IF;
+END $$;
 
 -- CreateTable
-CREATE TABLE "Plan" (
+CREATE TABLE IF NOT EXISTS "Plan" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -42,7 +64,7 @@ CREATE TABLE "Plan" (
 );
 
 -- CreateTable
-CREATE TABLE "Subscription" (
+CREATE TABLE IF NOT EXISTS "Subscription" (
     "id" SERIAL NOT NULL,
     "tenantId" INTEGER NOT NULL,
     "planId" INTEGER NOT NULL,
@@ -60,22 +82,32 @@ CREATE TABLE "Subscription" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Plan_name_key" ON "Plan"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "Plan_name_key" ON "Plan"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Plan_slug_key" ON "Plan"("slug");
+CREATE UNIQUE INDEX IF NOT EXISTS "Plan_slug_key" ON "Plan"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Subscription_tenantId_key" ON "Subscription"("tenantId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Subscription_tenantId_key" ON "Subscription"("tenantId");
 
 -- CreateIndex
-CREATE INDEX "Subscription_status_idx" ON "Subscription"("status");
+CREATE INDEX IF NOT EXISTS "Subscription_status_idx" ON "Subscription"("status");
 
 -- CreateIndex
-CREATE INDEX "Subscription_renewsAt_idx" ON "Subscription"("renewsAt");
+CREATE INDEX IF NOT EXISTS "Subscription_renewsAt_idx" ON "Subscription"("renewsAt");
 
 -- AddForeignKey
-ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_planId_fkey" FOREIGN KEY ("planId") REFERENCES "Plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Subscription_planId_fkey') THEN
+        ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_planId_fkey" FOREIGN KEY ("planId") REFERENCES "Plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Subscription_tenantId_fkey') THEN
+        ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;

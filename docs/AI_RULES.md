@@ -36,24 +36,32 @@ tentou recriar tabelas (`Plan`, `Subscription`) que já existiam.
   Para corrigir bytes, use `node scripts/corrigir-migration-bom.cjs`, que
   imprime o SQL de rollback.
 
-**Estado atual (29/09/2026) — armadilha conhecida:**
+**Estado atual (02/10/2026) — RESOLVIDO, com ressalva:**
 
-- `npx prisma migrate dev` **falha** (P1014: tabela `Promotion` não existe
-  no shadow DB). 7 modelos não têm migration que crie a tabela: `Promotion`,
-  `PromotionItem`, `Supplier`, `Purchase`, `PurchaseItem`, `InventoryCount`,
-  `InventoryCountItem`. Eles existem no banco, criados fora das migrations
-  versionadas. O histórico de migrations **não reconstrói o banco do zero**.
-- enquanto isso durar, gere migration com o caminho sem shadow DB:
-  ```bash
-  npx prisma migrate diff \
-    --from-schema-datamodel <schema-anterior> \
-    --to-schema-datamodel prisma/schema.prisma --script
-  ```
-  Grave o `.sql` em `prisma/migrations/<timestamp>_<nome>/` e aplique com
-  `npx prisma migrate deploy`.
-- Se uma migration falhar, ela deixa linha `failed` em `_prisma_migrations` e
-  **bloqueia todas as seguintes**. Resolva com
-  `npx prisma migrate resolve --rolled-back <nome>` antes de tentar de novo.
+- O histórico de migrations **agora reconstrói o banco do zero**: replay das 12
+  migrations em banco descartável cria **28/28 tabelas**. Verifique com
+  `node scripts/replay-migrations.mjs` (ou `testar-shadow-real.mjs`, que faz
+  num banco novo em vez de schema).
+- `npx prisma migrate deploy` funciona e é o caminho oficial do projeto.
+  Foi ele que aplicou `20260925000000_baseline_7_tabelas` e
+  `20261002150000_product_wholesale`.
+- **`npx prisma migrate dev` continua falhando** com P3006/P1014, e a causa
+  **não é o SQL** (o replay passa inteiro, por pooler e por conexão direta).
+  Passa-se uma sentinela `SELECT 1/0` numa migration anterior à que falha e ela
+  não dispara: o Prisma 6.19.3 não executa as migrations novas no shadow contra
+  Supabase, embora o log `DEBUG` mostre que lê a pasta. Sete variantes foram
+  testadas (pooler, direta, `shadowDatabaseUrl`, `--create-only`, caches
+  limpos) e nenhuma resolveu. **Use `migrate deploy`, nunca `migrate dev`, e
+  nunca `migrate reset`.**
+- Causas raiz que foram corrigidas (detalhe em
+  `docs/changes/2026-10-02-baseline-migrations.md`): as 7 tabelas fora do
+  histórico; a `20260926000000` que depende delas; os 4 enums antigos que
+  nenhuma migration criava; a `20260929090000` que duplica a `20260926000000`;
+  e `Product.wholesalePrice`/`wholesaleMinQuantity`, usadas pelo PDV mas
+  inexistentes no banco.
+- Ao editar uma migration **já aplicada** (foi o caso da `20260929090000`),
+  alinhe o checksum com `node scripts/alinhar-checksum.cjs <nome>`, que
+  imprime o SQL de rollback.
 
 ## Stack travada
 Next.js 16 App Router · Prisma · Supabase (Auth + Postgres) · Zod · Tailwind + shadcn.

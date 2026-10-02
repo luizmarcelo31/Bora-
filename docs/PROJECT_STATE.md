@@ -38,14 +38,34 @@
   200 ms percebido e conclusão de onboarding acima de 80%. Exigem telemetry
   que o projeto não tem — registrados como pendentes, não preenchidos com
   número inventado
-- `npx prisma migrate dev` segue quebrado: 7 modelos não têm migration que crie
-  a tabela (`Promotion`, `PromotionItem`, `Supplier`, `Purchase`, `PurchaseItem`,
-  `InventoryCount`, `InventoryCountItem`). Detalhes em
-  `docs/changes/2026-09-29-integridade-migrations.md`
 - Domínio + backup · logo própria (usa `BrandMark` atual)
+- **`npx prisma migrate dev` continua quebrado (P3006/P1014)** — mas o
+  histórico de migrations agora **reconstrói o banco do zero** (28/28 tabelas
+  verificadas em replay). O caminho oficial (`migrate diff` + `migrate deploy`)
+  funciona. 7 causas raíz corrigidas em
+  `docs/changes/2026-10-02-baseline-migrations.md`; a pendência que sobrou é
+  defeito do shadow do Prisma 6.19.3 com Supabase, não do SQL
 
 ## Bugs conhecidos
-- Nenhum aberto.
+- **3 `<Select>` (shadcn) sem nome acessível** em `/dashboard/produtos`: o
+  `Select` não gera `aria-label` sozinho e o consumidor não nomeia. Leitor de
+  tela anuncia "combobox" sem dizer o que é. Decisão de conteúdo (rótulo por
+  filtro), precisa de lote próprio
+- **43 testes falhando** em `src/lib/offline/queue.test.ts` (+1 arquivo):
+  `TypeError: Cannot read properties of undefined (reading 'clear')` —
+  `window.localStorage` indefinido por falta de jsdom no ambiente de teste.
+  Vem do commit `0d4f962` (modo offline), **não é regressão do lote de
+  migrations**. Falta um lote próprio.
+
+## Acessibilidade — verificado no navegador (02/10/2026)
+Auditoria real em 16 rotas (desktop 1249px + mobile 390px), com login e
+medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
+390px: nenhum.** **Inputs sem label: 0.** Corrigido neste dia:
+- Estrutura de layers em `globals.css` (`:focus-visible` estava fora de
+  `@layer` e sumia no build) — é o mesmo padrão do bug da Fase 1
+- Alvos de toque: de 16 controles < 44px para **0** no mobile, com densidade
+  do desktop preservada
+- Detalhe em `docs/changes/2026-10-02-foco-e-alvos-de-toque.md`
 
 ## Pendência de segurança
 - A senha do Postgres apareceu em claro na saída de um comando de terminal
