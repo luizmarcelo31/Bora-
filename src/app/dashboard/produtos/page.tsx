@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, getStockStatus, getStockStatusLabel } from "@/components/shared/StatusBadge";
+import { LinhaLista, AvatarProduto } from "@/components/shared/LinhaLista";
+import { Valor } from "@/components/shared/Valor";
 import {
   Table,
   TableHeader,
@@ -215,51 +217,44 @@ export default async function ProdutosPage({
             const min = p.inventory?.minimumStock ?? 0;
             const status = getStockStatus(qty, min);
             return (
-              <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
-                {p.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- miniatura remota do Storage, sem remotePatterns
-                  <img
-                    src={p.imageUrl}
-                    alt=""
-                    className="size-10 shrink-0 rounded-lg border object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                    <Package className="size-4" />
-                  </div>
-                )}
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-semibold">{p.name}</span>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {formatCurrency(p.price)} · {qty} un.
-                  </span>
-                  <span className="mt-1">
-                    <StatusBadge status={status} label={getStockStatusLabel(qty, min)} />
-                  </span>
-                </div>
-                <div className="flex shrink-0 flex-col gap-1">
-                  <EditProductDialog
-                    product={{
-                      id: p.id,
-                      name: p.name,
-                      sku: p.sku,
-                      barcode: p.barcode,
-                      description: p.description,
-                      price: p.price,
-                      cost: p.cost,
-                      category: p.category,
-                      imageUrl: p.imageUrl,
-                    }}
-                    categories={productCategories}
-                  />
-                  <form action={toggleProductAction}>
-                    <input type="hidden" name="productId" value={p.id} />
-                    <Button variant="outline" size="sm" type="submit" className="hit-area-44 w-full">
-                      {p.active ? "Desativar" : "Ativar"}
-                    </Button>
-                  </form>
-                </div>
+              <li key={p.id}>
+                <LinhaLista
+                  avatar={<AvatarProduto nome={p.name} src={p.imageUrl} />}
+                  titulo={p.name}
+                  apoio={
+                    <>
+                      <Valor tom={qty <= 0 ? "negativo" : qty <= min ? "atencao" : "neutro"}>{qty}</Valor>
+                      {` un. · ${p.category ?? "Sem categoria"}${p.sku ? ` · ${p.sku}` : ""}`}
+                    </>
+                  }
+                  badge={<StatusBadge status={status} label={getStockStatusLabel(qty, min)} />}
+                  valor={<Valor>{formatCurrency(p.price)}</Valor>}
+                  acoes={
+                    <>
+                      <EditProductDialog
+                        product={{
+                          id: p.id,
+                          name: p.name,
+                          sku: p.sku,
+                          barcode: p.barcode,
+                          description: p.description,
+                          price: p.price,
+                          cost: p.cost,
+                          category: p.category,
+                          imageUrl: p.imageUrl,
+                        }}
+                        categories={productCategories}
+                      />
+                      <form action={toggleProductAction}>
+                        <input type="hidden" name="productId" value={p.id} />
+                        <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                          {p.active ? "Desativar" : "Ativar"}
+                        </Button>
+                      </form>
+                    </>
+                  }
+                  className={p.active ? undefined : "opacity-70"}
+                />
               </li>
             );
           })}

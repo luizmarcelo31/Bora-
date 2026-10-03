@@ -30,6 +30,8 @@ import {
 import type { PrioridadeTicket, StatusTicket } from "@prisma/client";
 import { AdminFilterBar } from "@/components/admin/admin-filter-bar";
 import { slaVencido } from "@/lib/plataforma";
+import { Valor } from "@/components/shared/Valor";
+import { LinhaLista } from "@/components/shared/LinhaLista";
 import { mudarStatusTicketAction, abrirTicketAction } from "./actions";
 
 const ERROS_TICKET: Record<string, string> = {
@@ -135,7 +137,12 @@ export default async function SuportePage({
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard title="Em andamento" value={String(abertos)} hint="Abertos ou em análise" icon={LifeBuoy} />
         <MetricCard title="Críticos" value={String(contagens.find((c) => c.status === "ABERTO")?._count._all ?? 0)} hint="Novos e não tratados" icon={AlertTriangle} />
-        <MetricCard title="Fora do prazo" value={String(vencidos)} hint="Passaram do SLA" icon={Timer} />
+        <MetricCard
+          title="Fora do prazo"
+          value={<Valor tom={vencidos > 0 ? "atencao" : "neutro"}>{vencidos}</Valor>}
+          hint="Passaram do SLA"
+          icon={Timer}
+        />
         <MetricCard title="Total" value={String(contagens.reduce((s, c) => s + c._count._all, 0))} hint="Todos os tickets" icon={Clock} />
       </div>
 
@@ -209,19 +216,44 @@ export default async function SuportePage({
               {/* Mobile: lista compacta — tabela só no desktop */}
               <ul className="flex flex-col gap-2 p-3 md:hidden">
                 {tickets.map((t) => (
-                  <li key={t.id} className="flex items-center gap-3 rounded-lg border p-3">
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-sm font-semibold">{t.subject}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        #{t.id} · {t.tenant.name}
-                      </span>
-                    </div>
-                    <StatusPill tom={prioridadeTicketTom[t.priority]}>
-                      {labelDe(prioridadeTicketLabel, t.priority)}
-                    </StatusPill>
-                    <StatusPill tom={statusTicketTom[t.status]}>
-                      {labelDe(statusTicketLabel, t.status)}
-                    </StatusPill>
+                  <li key={t.id}>
+                    <LinhaLista
+                      titulo={t.subject}
+                      apoio={`#${t.id} · ${t.tenant.name}`}
+                      valor={
+                        t.slaDueAt ? (
+                          // Mesmo dialeto do desktop: prazo estourado é danger,
+                          // não warning — aqui só muda o peso da linha.
+                          <span
+                            className={
+                              slaVencido(t.slaDueAt, t.status)
+                                ? "text-xs font-normal text-[var(--status-danger-fg)]"
+                                : "text-xs font-normal text-muted-foreground"
+                            }
+                          >
+                            {t.slaDueAt.toLocaleString("pt-BR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {slaVencido(t.slaDueAt, t.status) ? " · vencido" : ""}
+                          </span>
+                        ) : (
+                          <span className="text-xs font-normal text-muted-foreground">—</span>
+                        )
+                      }
+                      acoes={
+                        <span className="flex items-center gap-1">
+                          <StatusPill tom={prioridadeTicketTom[t.priority]}>
+                            {labelDe(prioridadeTicketLabel, t.priority)}
+                          </StatusPill>
+                          <StatusPill tom={statusTicketTom[t.status]}>
+                            {labelDe(statusTicketLabel, t.status)}
+                          </StatusPill>
+                        </span>
+                      }
+                    />
                   </li>
                 ))}
               </ul>

@@ -23,6 +23,8 @@ import { SearchParamToast } from "@/components/shared/SearchParamToast";
 import { Package } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { StatusBadge, getStockStatus, getStockStatusLabel } from "@/components/shared/StatusBadge";
+import { LinhaLista, AvatarProduto } from "@/components/shared/LinhaLista";
+import { Valor } from "@/components/shared/Valor";
 import { SelectField } from "@/components/ui/select-field";
 import { moveStockAction, getStockPageData } from "./actions";
 import { EditInventoryDialog } from "./edit-inventory-dialog";
@@ -207,20 +209,30 @@ export default async function EstoquePage({
                 const min = p.inventory?.minimumStock ?? 0;
                 const max = p.inventory?.maximumStock ?? null;
                 const status = getStockStatus(qty, min);
+                const tomQtd =
+                  qty <= 0 ? ("negativo" as const) : qty <= min ? ("atencao" as const) : undefined;
                 return (
-                  <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-sm font-semibold">{p.name}</span>
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {qty} un. · mín {min}{max !== null ? ` · máx ${max}` : ""}
-                      </span>
-                    </div>
-                    <StatusBadge status={status} label={getStockStatusLabel(qty, min)} />
-                    <EditInventoryDialog
-                      productId={p.id}
-                      productName={p.name}
-                      minimumStock={min}
-                      maximumStock={max}
+                  <li key={p.id}>
+                    <LinhaLista
+                      avatar={<AvatarProduto nome={p.name} />}
+                      titulo={p.name}
+                      apoio={`mín ${min}${max !== null ? ` · máx ${max}` : ""}`}
+                      badge={<StatusBadge status={status} label={getStockStatusLabel(qty, min)} />}
+                      valor={
+                        <>
+                          <Valor tom={tomQtd ?? "neutro"}>{qty}</Valor>
+                          <span className="text-[10px] font-normal text-muted-foreground"> un.</span>
+                        </>
+                      }
+                      acoes={
+                        <EditInventoryDialog
+                          productId={p.id}
+                          productName={p.name}
+                          minimumStock={min}
+                          maximumStock={max}
+                        />
+                      }
+                      acoesNaLinha
                     />
                   </li>
                 );
@@ -281,16 +293,23 @@ export default async function EstoquePage({
             {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
             <ul className="flex flex-col gap-2 p-3 md:hidden">
               {history.map((m) => (
-                <li key={m.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-semibold">{m.inventory.product.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {new Date(m.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {m.reason ?? "—"}
-                    </span>
-                  </div>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums">{m.type === "ENTRADA" ? `+${m.quantity}` : `-${m.quantity}`}</span>
-                  <StatusBadge
-                    status={m.type === "ENTRADA" ? "entry" : m.type === "SAIDA" ? "exit" : "adjustment"}
+                <li key={m.id}>
+                  <LinhaLista
+                    titulo={m.inventory.product.name}
+                    apoio={`${new Date(m.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${m.reason ?? "—"}`}
+                    badge={
+                      <StatusBadge
+                        status={m.type === "ENTRADA" ? "entry" : m.type === "SAIDA" ? "exit" : "adjustment"}
+                      />
+                    }
+                    valor={
+                      <Valor
+                        tom={m.type === "ENTRADA" ? "positivo" : m.type === "SAIDA" ? "negativo" : "atencao"}
+                        sinal={m.type === "ENTRADA"}
+                      >
+                        {m.type === "ENTRADA" ? m.quantity : -m.quantity}
+                      </Valor>
+                    }
                   />
                 </li>
               ))}

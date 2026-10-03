@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { LazyReportActions } from "@/components/shared/LazyReportActions";
 import { getCompanyLogoUrl } from "@/lib/get-company-logo";
 import { Badge } from "@/components/ui/badge";
+import { LinhaLista } from "@/components/shared/LinhaLista";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -155,16 +156,12 @@ export default async function AuditoriaPage({
           {/* Mobile: lista compacta — tabela só no desktop */}
           <ul className="flex flex-col gap-1.5 p-2 md:hidden">
             {logs.map((l) => (
-              <li key={l.id} className="flex items-center gap-2 rounded-lg border p-2">
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-xs font-semibold">
-                    {auditActionLabel(l.action)} · {auditEntityLabel(l.entity)} #{l.entityId}
-                  </span>
-                  <span className="truncate text-[10px] text-muted-foreground">
-                    {new Date(l.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {l.userEmail ?? `#${l.userId ?? "—"}`}
-                  </span>
-                </div>
-                <Badge variant={auditActionVariant(l.action)} className="shrink-0 text-[10px]">{auditActionLabel(l.action)}</Badge>
+              <li key={l.id}>
+                <LinhaLista
+                  titulo={`${auditActionLabel(l.action)} · ${auditEntityLabel(l.entity)} #${l.entityId}`}
+                  apoio={`${new Date(l.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${l.userEmail ?? `#${l.userId ?? "—"}`}`}
+                  badge={<Badge variant={auditActionVariant(l.action)}>{auditActionLabel(l.action)}</Badge>}
+                />
               </li>
             ))}
           </ul>

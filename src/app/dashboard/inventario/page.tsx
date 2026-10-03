@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/ui/select-field";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LinhaLista } from "@/components/shared/LinhaLista";
+import { Valor } from "@/components/shared/Valor";
 import {
   Table,
   TableHeader,
@@ -74,23 +76,40 @@ export default async function InventarioPage() {
         >
         {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
         <ul className="flex flex-col gap-2 p-3 md:hidden">
-          {counts.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-semibold">{tipoInventarioLabel[c.type]}</span>
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {c.startedAt.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} · {c.items.length} {c.items.length === 1 ? "item" : "itens"}
-                </span>
-              </div>
-              <StatusBadge status={c.status === "CONCLUIDO" ? "active" : c.status === "ABERTO" ? "pending" : "inactive"} label={c.status} />
-              {c.status === "ABERTO" && (
-                <form action={finalizeInventoryCountAction} className="shrink-0">
-                  <input type="hidden" name="countId" value={c.id} />
-                  <Button variant="outline" size="sm" type="submit" className="hit-area-44">Finalizar</Button>
-                </form>
-              )}
-            </li>
-          ))}
+          {counts.map((c) => {
+            const aberto = c.status === "ABERTO";
+            return (
+              <li key={c.id}>
+                <LinhaLista
+                  titulo={tipoInventarioLabel[c.type]}
+                  apoio={c.startedAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                  badge={
+                    <StatusBadge
+                      status={aberto ? "pending" : c.status === "CONCLUIDO" ? "active" : "inactive"}
+                      label={c.status}
+                    />
+                  }
+                  /* Contagem em aberto é o que exige ação — finalizar. Fechada
+                     é histórico: cinza. */
+                  valor={
+                    <Valor tom={aberto ? "atencao" : "neutro"}>
+                      {c.items.length} {c.items.length === 1 ? "item" : "itens"}
+                    </Valor>
+                  }
+                  acoes={
+                    aberto ? (
+                      <form action={finalizeInventoryCountAction}>
+                        <input type="hidden" name="countId" value={c.id} />
+                        <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                          Finalizar
+                        </Button>
+                      </form>
+                    ) : undefined
+                  }
+                />
+              </li>
+            );
+          })}
         </ul>
         <div className="hidden md:block">
         <Table>

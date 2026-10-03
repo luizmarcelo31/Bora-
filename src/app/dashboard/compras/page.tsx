@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/ui/select-field";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LinhaLista } from "@/components/shared/LinhaLista";
+import { Valor } from "@/components/shared/Valor";
 import {
   Table,
   TableHeader,
@@ -107,24 +109,38 @@ export default async function ComprasPage() {
         >
         {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
         <ul className="flex flex-col gap-2 p-3 md:hidden">
-          {purchases.map((p) => (
-            <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-semibold">{p.supplier.name}</span>
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {p.createdAt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
-                </span>
-              </div>
-              <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(p.total)}</span>
-              <StatusBadge status={p.status === "RECEBIDA" ? "active" : "pending"} label={p.status} />
-              {p.status === "PENDENTE" && (
-                <form action={receivePurchaseAction} className="shrink-0">
-                  <input type="hidden" name="purchaseId" value={p.id} />
-                  <Button variant="outline" size="sm" type="submit" className="hit-area-44">Confirmar</Button>
-                </form>
-              )}
-            </li>
-          ))}
+          {purchases.map((p) => {
+            const pendente = p.status === "PENDENTE";
+            return (
+              <li key={p.id}>
+                <LinhaLista
+                  titulo={p.supplier.name}
+                  apoio={p.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                  badge={
+                    <StatusBadge status={pendente ? "pending" : "active"} label={p.status} />
+                  }
+                  /* Compra é saída de dinheiro: o total em vermelho é o que
+                     manda. PENDENTE pede ação — o valor herda tom de atenção
+                     e o badge repete o estado com o token de warning. */
+                  valor={
+                    <Valor tom={pendente ? "atencao" : "negativo"}>
+                      {formatCurrency(p.total)}
+                    </Valor>
+                  }
+                  acoes={
+                    pendente ? (
+                      <form action={receivePurchaseAction}>
+                        <input type="hidden" name="purchaseId" value={p.id} />
+                        <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                          Confirmar
+                        </Button>
+                      </form>
+                    ) : undefined
+                  }
+                />
+              </li>
+            );
+          })}
         </ul>
         <div className="hidden md:block">
         <Table>

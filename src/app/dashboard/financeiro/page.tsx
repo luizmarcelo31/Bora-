@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LinhaLista } from "@/components/shared/LinhaLista";
+import { Valor, ValorNum } from "@/components/shared/Valor";
 import {
   Table,
   TableHeader,
@@ -99,15 +101,21 @@ export default async function FinanceiroPage({
 
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-lg border bg-card p-2 text-center">
-          <p className="text-sm font-semibold tabular-nums">{formatCurrency(resume.receitas)}</p>
+          <p className="text-sm font-semibold tabular-nums">
+            <ValorNum valor={resume.receitas} formatar={formatCurrency} />
+          </p>
           <p className="text-[10px] text-muted-foreground">Receitas</p>
         </div>
         <div className="rounded-lg border bg-card p-2 text-center">
-          <p className="text-sm font-semibold tabular-nums">{formatCurrency(resume.despesas)}</p>
+          <p className="text-sm font-semibold tabular-nums">
+            <Valor tom="negativo">{formatCurrency(resume.despesas)}</Valor>
+          </p>
           <p className="text-[10px] text-muted-foreground">Despesas</p>
         </div>
         <div className="rounded-lg border bg-card p-2 text-center">
-          <p className="text-sm font-semibold tabular-nums">{formatCurrency(resume.saldo)}</p>
+          <p className="text-sm font-semibold tabular-nums">
+            <ValorNum valor={resume.saldo} formatar={formatCurrency} />
+          </p>
           <p className="text-[10px] text-muted-foreground">Saldo</p>
         </div>
       </div>
@@ -252,45 +260,54 @@ export default async function FinanceiroPage({
             {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
             <ul className="flex flex-col gap-2 p-3 md:hidden">
               {movements.map((m) => (
-                <li key={m.id} className="flex flex-col gap-2 rounded-lg border p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-sm font-semibold">{m.description}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(m.movementDate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {m.category}
-                      </span>
-                    </div>
-                    <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(m.amount)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={m.paid ? "paid" : "pending"} />
-                    <StatusBadge
-                      status={m.type === "RECEITA" ? "income" : m.type === "DESPESA" ? "expense" : "transfer"}
-                    />
-                    <div className="ml-auto flex shrink-0 gap-1">
-                      <form action={togglePaidAction}>
-                        <input type="hidden" name="movementId" value={m.id} />
-                        <input type="hidden" name="paid" value={m.paid ? "false" : "true"} />
-                        <Button variant="outline" size="sm" type="submit" className="hit-area-44">
-                          {m.paid ? "Desmarcar" : "Dar baixa"}
-                        </Button>
-                      </form>
-                      <EditFinancialDialog
-                        movement={{
-                          id: m.id,
-                          type: m.type,
-                          category: m.category,
-                          description: m.description,
-                          amount: m.amount,
-                          movementDate: m.movementDate.toISOString(),
-                          cashBoxId: m.cashBoxId,
-                        }}
-                        categories={finCategories}
-                        cashboxes={cashboxes}
-                      />
-                      <DeleteFinancialDialog id={m.id} />
-                    </div>
-                  </div>
+                <li key={m.id}>
+                  <LinhaLista
+                    titulo={m.description}
+                    apoio={`${new Date(m.movementDate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${m.category}`}
+                    badges={
+                      <>
+                        <StatusBadge status={m.paid ? "paid" : "pending"} />
+                        <StatusBadge
+                          status={m.type === "RECEITA" ? "income" : m.type === "DESPESA" ? "expense" : "transfer"}
+                        />
+                      </>
+                    }
+                    valor={
+                      // Mesmo número do desktop: o sinal vem do badge e da cor,
+                      // não de inverter o valor. Duas telas fazendo a mesma
+                      // coisa de jeito diferente é o que faz o operador errar.
+                      <Valor
+                        tom={m.type === "RECEITA" ? "positivo" : m.type === "DESPESA" ? "negativo" : "neutro"}
+                      >
+                        {formatCurrency(m.amount)}
+                      </Valor>
+                    }
+                    acoes={
+                      <>
+                        <form action={togglePaidAction}>
+                          <input type="hidden" name="movementId" value={m.id} />
+                          <input type="hidden" name="paid" value={m.paid ? "false" : "true"} />
+                          <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                            {m.paid ? "Desmarcar" : "Dar baixa"}
+                          </Button>
+                        </form>
+                        <EditFinancialDialog
+                          movement={{
+                            id: m.id,
+                            type: m.type,
+                            category: m.category,
+                            description: m.description,
+                            amount: m.amount,
+                            movementDate: m.movementDate.toISOString(),
+                            cashBoxId: m.cashBoxId,
+                          }}
+                          categories={finCategories}
+                          cashboxes={cashboxes}
+                        />
+                        <DeleteFinancialDialog id={m.id} />
+                      </>
+                    }
+                  />
                 </li>
               ))}
             </ul>

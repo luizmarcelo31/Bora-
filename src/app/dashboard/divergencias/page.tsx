@@ -7,6 +7,8 @@ import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TableCard } from "@/components/shared/TableCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LinhaLista } from "@/components/shared/LinhaLista";
+import { Valor } from "@/components/shared/Valor";
 import {
   Table,
   TableHeader,
@@ -103,6 +105,55 @@ export default async function DivergenciasPage() {
             description="Últimas 200 vendas com divergência, da mais recente para a mais antiga."
             footer={`${vendas.length} venda(s)`}
           >
+            {/* Mobile: lista compacta — a tabela de 5 colunas não cabe no celular */}
+            <ul className="flex flex-col gap-1.5 p-2 md:hidden">
+              {vendas.map((v) => (
+                <li key={v.saleId}>
+                  <LinhaLista
+                    titulo={
+                      <Link
+                        href={`/dashboard/pdv/recibo/${v.saleId}`}
+                        className="hover:underline"
+                      >
+                        Recibo #{v.saleId}
+                      </Link>
+                    }
+                    apoio={
+                      <span className="flex flex-col gap-0.5 whitespace-normal">
+                        <span className="truncate">
+                          {v.occurredAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} ·{" "}
+                          {v.userEmail ?? "—"}
+                        </span>
+                        {v.estoque.length === 0 ? (
+                          <span className="truncate">Sem divergência de estoque</span>
+                        ) : (
+                          v.estoque.map((item) => {
+                            // Vendou acima do disponível: o saldo ficou para
+                            // depois, e é o que a contagem precisa enxergar.
+                            const semSaldo = item.vendido > item.disponivel;
+                            return (
+                              <span key={item.productId} className="truncate">
+                                {nomePorId.get(item.productId) ?? `Produto ${item.productId}`} — tinha{" "}
+                                <Valor tom={semSaldo ? "atencao" : "neutro"}>
+                                  {formatCurrency(item.disponivel)}
+                                </Valor>
+                                , vendeu{" "}
+                                <Valor tom={semSaldo ? "atencao" : "neutro"}>
+                                  {formatCurrency(item.vendido)}
+                                </Valor>
+                              </span>
+                            );
+                          })
+                        )}
+                      </span>
+                    }
+                    badge={v.caixa ? <Badge variant="destructive">Sem vínculo</Badge> : undefined}
+                  />
+                </li>
+              ))}
+            </ul>
+
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -161,6 +212,7 @@ export default async function DivergenciasPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </TableCard>
 
           <div>

@@ -8,6 +8,8 @@ import { StatusPill } from "@/components/shared/StatusPill";
 import { TableCard } from "@/components/shared/TableCard";
 import { AdminFilterBar } from "@/components/admin/admin-filter-bar";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Valor } from "@/components/shared/Valor";
+import { LinhaLista } from "@/components/shared/LinhaLista";
 import {
   Table,
   TableHeader,
@@ -147,13 +149,17 @@ export default async function EmpresasPage({
         />
         <MetricCard
           title="Precisam de atenção"
-          value={String((porStatus.get("SUSPENSA") ?? 0) + (porStatus.get("CANCELADA") ?? 0))}
+          value={
+            <Valor tom="negativo">
+              {(porStatus.get("SUSPENSA") ?? 0) + (porStatus.get("CANCELADA") ?? 0)}
+            </Valor>
+          }
           hint="Suspensas ou canceladas"
           icon={AlertTriangle}
         />
         <MetricCard
           title="Receita mensal"
-          value={formatCurrency(mrr)}
+          value={<Valor tom="positivo">{formatCurrency(mrr)}</Valor>}
           hint="Planos ativos e em experimentação"
           icon={ShoppingCart}
         />
@@ -188,22 +194,33 @@ export default async function EmpresasPage({
           {/* Mobile: lista compacta — tabela só no desktop */}
           <ul className="flex flex-col gap-2 p-3 md:hidden">
             {paginaAtual.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <Link
-                    prefetch={false}
-                    href={`/admin/empresas/${t.id}`}
-                    className="truncate text-sm font-semibold hover:underline"
-                  >
-                    {t.name}
-                  </Link>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {t._count.users} usuários · {t._count.sales} vendas
-                  </span>
-                </div>
-                <StatusPill tom={statusEmpresaTom[t.status]}>
-                  {labelDe(statusEmpresaLabel, t.status)}
-                </StatusPill>
+              <li key={t.id}>
+                <LinhaLista
+                  titulo={
+                    <Link
+                      prefetch={false}
+                      href={`/admin/empresas/${t.id}`}
+                      className="hover:underline"
+                    >
+                      {t.name}
+                    </Link>
+                  }
+                  apoio={`${t._count.users} usuários · ${t._count.sales} vendas`}
+                  badge={
+                    <StatusPill tom={statusEmpresaTom[t.status]}>
+                      {labelDe(statusEmpresaLabel, t.status)}
+                    </StatusPill>
+                  }
+                  valor={
+                    t.subscription ? (
+                      <Valor tom="positivo" className="text-xs font-normal">
+                        {formatCurrency(t.subscription.plan.monthlyPrice)}/mês
+                      </Valor>
+                    ) : (
+                      <span className="text-xs font-normal text-muted-foreground">Sem plano</span>
+                    )
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -249,8 +266,10 @@ export default async function EmpresasPage({
                     {t.subscription ? (
                       <>
                         {t.subscription.plan.name}
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(t.subscription.plan.monthlyPrice)}/mês
+                        <p className="text-xs">
+                          <Valor tom="positivo">
+                            {formatCurrency(t.subscription.plan.monthlyPrice)}/mês
+                          </Valor>
                         </p>
                       </>
                     ) : (

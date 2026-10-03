@@ -15,7 +15,8 @@ export function MetricCard({
   className,
 }: {
   title: string;
-  value: string;
+  /** Aceita string ou <Valor tom="…"> — número com tom semântico. */
+  value: React.ReactNode;
   hint?: string;
   icon?: LucideIcon;
   badge?: React.ReactNode;

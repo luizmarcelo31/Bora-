@@ -17,6 +17,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/validators";
+import { Valor } from "@/components/shared/Valor";
+import { LinhaLista } from "@/components/shared/LinhaLista";
 import { salvarPlanoAction, alternarPlanoAtivoAction } from "./actions";
 
 const ERROS: Record<string, string> = {
@@ -120,18 +122,32 @@ export default async function PlanosPage({
               {/* Mobile: lista compacta — tabela só no desktop */}
               <ul className="flex flex-col gap-2 p-3 md:hidden">
                 {planos.map((p) => (
-                  <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <Link href={`/admin/planos/${p.id}`} className="truncate text-sm font-semibold hover:underline">
-                        {p.name}
-                      </Link>
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {formatCurrency(p.monthlyPrice)}/mês · {p._count.subscriptions} empresas
-                      </span>
-                    </div>
-                    <StatusPill tom={p.active ? "positivo" : "neutro"}>
-                      {p.active ? "Disponível" : "Indisponível"}
-                    </StatusPill>
+                  <li key={p.id}>
+                    <LinhaLista
+                      titulo={
+                        <Link href={`/admin/planos/${p.id}`} className="hover:underline">
+                          {p.name}
+                        </Link>
+                      }
+                      apoio={`${p._count.subscriptions} empresas · ${
+                        p.trialDays > 0 ? `${p.trialDays} dias de experimentação` : "Sem experimentação"
+                      }`}
+                      badge={
+                        <StatusPill tom={p.active ? "positivo" : "neutro"}>
+                          {p.active ? "Disponível" : "Indisponível"}
+                        </StatusPill>
+                      }
+                      valor={
+                        <Valor tom="neutro" className="text-xs">
+                          {formatCurrency(p.monthlyPrice)}/mês
+                        </Valor>
+                      }
+                      acoes={
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/admin/planos/${p.id}`}>Editar</Link>
+                        </Button>
+                      }
+                    />
                   </li>
                 ))}
               </ul>
@@ -158,10 +174,14 @@ export default async function PlanosPage({
                         </p>
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
-                        {formatCurrency(p.monthlyPrice)}
+                        <Valor tom="neutro">{formatCurrency(p.monthlyPrice)}</Valor>
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
-                        {p.annualPrice ? formatCurrency(p.annualPrice) : "—"}
+                        {p.annualPrice ? (
+                          <Valor tom="neutro">{formatCurrency(p.annualPrice)}</Valor>
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                       <TableCell className="text-right text-xs text-muted-foreground">
                         {p.maxUsers ? `${p.maxUsers} usuários` : "Ilimitado"}

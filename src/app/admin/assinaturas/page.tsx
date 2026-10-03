@@ -28,6 +28,9 @@ import {
 } from "@/lib/labels";
 import type { StatusAssinatura } from "@prisma/client";
 import { AdminFilterBar } from "@/components/admin/admin-filter-bar";
+import { Valor } from "@/components/shared/Valor";
+import type { TomValor } from "@/components/shared/Valor";
+import { LinhaLista } from "@/components/shared/LinhaLista";
 import { mudarStatusAssinaturaAction } from "./actions";
 
 const ERROS_ASSINATURA: Record<string, string> = {
@@ -44,6 +47,25 @@ const FILTROS: { valor: StatusAssinatura; rotulo: string }[] = [
   { valor: "CANCELADA", rotulo: "Canceladas" },
   { valor: "ARQUIVADA", rotulo: "Arquivadas" },
 ];
+
+/**
+ * Tom da mensalidade: receita viva em verde, dinheiro que já saiu ou não entra
+ * mais em vermelho, cobrança em aberto em atenção. Arquivada é neutra — é
+ * histórico, não um problema.
+ */
+function tomMensalidade(status: StatusAssinatura): TomValor {
+  switch (status) {
+    case "ATIVA":
+    case "EXPERIMENTACAO":
+      return "positivo";
+    case "CANCELADA":
+      return "negativo";
+    case "PENDENTE_PAGAMENTO":
+      return "atencao";
+    default:
+      return "neutro";
+  }
+}
 
 export default async function AssinaturasPage({
   searchParams,
@@ -122,10 +144,33 @@ export default async function AssinaturasPage({
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard title="Receita mensal" value={formatCurrency(mrr)} hint="Planos ativos e em experimentação" icon={TrendingUp} />
+        <MetricCard
+          title="Receita mensal"
+          value={<Valor tom="positivo">{formatCurrency(mrr)}</Valor>}
+          hint="Planos ativos e em experimentação"
+          icon={TrendingUp}
+        />
         <MetricCard title="Ativas" value={String(porStatus.get("ATIVA") ?? 0)} hint="Assinaturas em dia" icon={CreditCard} />
-        <MetricCard title="Pagamento pendente" value={String(porStatus.get("PENDENTE_PAGAMENTO") ?? 0)} hint="Precisam de cobrança" icon={AlertTriangle} />
-        <MetricCard title="Suspensas" value={String(porStatus.get("SUSPENSA") ?? 0)} hint="Acesso restrito" icon={PauseCircle} />
+        <MetricCard
+          title="Pagamento pendente"
+          value={
+            <Valor tom={(porStatus.get("PENDENTE_PAGAMENTO") ?? 0) > 0 ? "negativo" : "neutro"}>
+              {porStatus.get("PENDENTE_PAGAMENTO") ?? 0}
+            </Valor>
+          }
+          hint="Precisam de cobrança"
+          icon={AlertTriangle}
+        />
+        <MetricCard
+          title="Suspensas"
+          value={
+            <Valor tom={(porStatus.get("SUSPENSA") ?? 0) > 0 ? "atencao" : "neutro"}>
+              {porStatus.get("SUSPENSA") ?? 0}
+            </Valor>
+          }
+          hint="Acesso restrito"
+          icon={PauseCircle}
+        />
       </div>
 
       <TableCard
@@ -158,21 +203,25 @@ export default async function AssinaturasPage({
           {/* Mobile: lista compacta — tabela só no desktop */}
           <ul className="flex flex-col gap-2 p-3 md:hidden">
             {assinaturas.map((a) => (
-              <li key={a.id} className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <a
-                    href={`/admin/empresas/${a.tenant.id}`}
-                    className="truncate text-sm font-semibold hover:underline"
-                  >
-                    {a.tenant.name}
-                  </a>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {a.plan.name} · {formatCurrency(a.plan.monthlyPrice)}
-                  </span>
-                </div>
-                <StatusPill tom={statusAssinaturaTom[a.status]}>
-                  {labelDe(statusAssinaturaLabel, a.status)}
-                </StatusPill>
+              <li key={a.id}>
+                <LinhaLista
+                  titulo={
+                    <a href={`/admin/empresas/${a.tenant.id}`} className="hover:underline">
+                      {a.tenant.name}
+                    </a>
+                  }
+                  apoio={`${a.plan.name} · ${cicloCobrancaLabel[a.billingCycle]}`}
+                  badge={
+                    <StatusPill tom={statusAssinaturaTom[a.status]}>
+                      {labelDe(statusAssinaturaLabel, a.status)}
+                    </StatusPill>
+                  }
+                  valor={
+                    <Valor tom={tomMensalidade(a.status)}>
+                      {formatCurrency(a.plan.monthlyPrice)}
+                    </Valor>
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -215,7 +264,9 @@ export default async function AssinaturasPage({
                       ) : null}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatCurrency(a.plan.monthlyPrice)}
+                      <Valor tom={tomMensalidade(a.status)}>
+                        {formatCurrency(a.plan.monthlyPrice)}
+                      </Valor>
                       <span className="block text-xs text-muted-foreground">
                         {cicloCobrancaLabel[a.billingCycle]}
                       </span>

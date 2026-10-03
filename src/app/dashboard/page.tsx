@@ -6,6 +6,7 @@ import { MetricCard } from "@/components/shared/MetricCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/validators";
+import { Valor, ValorNum } from "@/components/shared/Valor";
 import { DollarSign, TrendingUp, Package, AlertTriangle, ShoppingCart, Wallet } from "lucide-react";
 import { DashboardChart } from "./dashboard-chart";
 import { RecentSalesTable } from "./recent-sales-table";
@@ -80,27 +81,57 @@ export default async function DashboardPage() {
       <OnboardingWelcome operatorName={dbUser.name} />
       <OnboardingChecklist temProduto={products > 0} fezVenda={vendasTotal > 0} />
 
-      {/* Metric Cards — strip compacto no mobile (2 col), 4 col no desktop */}
+      {/* KPIs — strip compacto (2 col no mobile, 4 no desktop).
+          Cor semântica: faturamento positivo, saldo do mês negativo em
+          vermelho. O dono lê o sinal antes do número — é o saldo que ele
+          precisa enxergar primeiro. */}
       <div className="grid grid-cols-2 gap-2 md:gap-4 xl:grid-cols-4">
         <div className="rounded-lg border bg-card p-2 md:p-3">
           <p className="text-[10px] text-muted-foreground">Faturado hoje</p>
-          <p className="text-base md:text-lg font-semibold tabular-nums">{formatCurrency(faturadoHoje)}</p>
+          <ValorNum
+            valor={faturadoHoje}
+            formatar={formatCurrency}
+            className="text-base md:text-lg font-semibold"
+          />
           <p className="text-[10px] text-muted-foreground">{qtdVendasHoje} vendas</p>
         </div>
         <div className="rounded-lg border bg-card p-2 md:p-3">
           <p className="text-[10px] text-muted-foreground">Vendas no mês</p>
-          <p className="text-base md:text-lg font-semibold tabular-nums">{salesResumeMonth.totalSales}</p>
-          <p className="text-[10px] text-muted-foreground">Ticket {formatCurrency(Math.round(salesResumeMonth.averageSale || 0))}</p>
+          <p className="text-base md:text-lg font-semibold tabular-nums">
+            {salesResumeMonth.totalSales}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            Ticket {formatCurrency(Math.round(salesResumeMonth.averageSale || 0))}
+          </p>
         </div>
         <div className="rounded-lg border bg-card p-2 md:p-3">
           <p className="text-[10px] text-muted-foreground">Produtos ativos</p>
           <p className="text-base md:text-lg font-semibold tabular-nums">{products}</p>
-          <p className="text-[10px] text-muted-foreground">{estoqueBaixo} em baixo estoque</p>
+          <p className="text-[10px] text-muted-foreground">
+            {estoqueBaixo > 0 ? (
+              <Valor tom="atencao">{estoqueBaixo} em baixo estoque</Valor>
+            ) : (
+              "Nada em baixo estoque"
+            )}
+          </p>
         </div>
         <div className="rounded-lg border bg-card p-2 md:p-3">
           <p className="text-[10px] text-muted-foreground">Saldo financeiro</p>
-          <p className="text-base md:text-lg font-semibold tabular-nums">{formatCurrency(financialResume.saldo)}</p>
-          <p className="text-[10px] text-muted-foreground">{financialResume.saldo >= 0 ? "Positivo" : "Negativo"}</p>
+          <ValorNum
+            valor={financialResume.saldo}
+            formatar={formatCurrency}
+            className="text-base md:text-lg font-semibold"
+          />
+          <p className="text-[10px] text-muted-foreground">
+            {financialResume.receitas > 0 || financialResume.despesas > 0 ? (
+              <>
+                {formatCurrency(financialResume.receitas)} /{" "}
+                {formatCurrency(financialResume.despesas)}
+              </>
+            ) : (
+              "Sem lançamentos no mês"
+            )}
+          </p>
         </div>
       </div>
 

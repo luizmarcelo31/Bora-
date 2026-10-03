@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/ui/select-field";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LinhaLista } from "@/components/shared/LinhaLista";
+import { Valor } from "@/components/shared/Valor";
 import {
   Table,
   TableHeader,
@@ -106,20 +108,22 @@ export default async function PromocoesPage() {
           {promotions.map((p) => {
             const valueFormatted = p.type === "VALOR_FIXO" ? formatCurrency(p.value) : p.type === "PERCENTUAL" ? `${p.value}%` : p.value;
             return (
-              <li key={p.id} className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-semibold">{p.name}</span>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {valueFormatted} · {p.items.length} produto(s)
-                  </span>
-                </div>
-                <StatusBadge status={p.active ? "active" : "inactive"} />
-                <form action={togglePromotionAction} className="shrink-0">
-                  <input type="hidden" name="promotionId" value={p.id} />
-                  <Button variant="outline" size="sm" type="submit" className="hit-area-44">
-                    {p.active ? "Desativar" : "Ativar"}
-                  </Button>
-                </form>
+              <li key={p.id}>
+                <LinhaLista
+                  /* Promoção inativa é o estado que pede ação (reativar): o
+                     tom de atenção no título acha a linha sem ler o badge. */
+                  titulo={<Valor tom={p.active ? "neutro" : "atencao"}>{p.name}</Valor>}
+                  apoio={`${valueFormatted} · ${p.items.length} produto(s)`}
+                  badge={<StatusBadge status={p.active ? "active" : "inactive"} />}
+                  acoes={
+                    <form action={togglePromotionAction}>
+                      <input type="hidden" name="promotionId" value={p.id} />
+                      <Button variant="outline" size="sm" type="submit" className="hit-area-44">
+                        {p.active ? "Desativar" : "Ativar"}
+                      </Button>
+                    </form>
+                  }
+                />
               </li>
             );
           })}

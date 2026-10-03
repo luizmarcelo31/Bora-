@@ -7,6 +7,8 @@ import { requirePermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TableCard } from "@/components/shared/TableCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LinhaLista } from "@/components/shared/LinhaLista";
+import { Valor } from "@/components/shared/Valor";
 import { LazyReportActions } from "@/components/shared/LazyReportActions";
 import { getCompanyLogoUrl } from "@/lib/get-company-logo";
 import { paymentLabel } from "@/lib/payments";
@@ -205,21 +207,20 @@ export default async function RelatoriosPage({
             </div>
           ) : (
             <>
-            {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
-            <ul className="flex flex-col gap-2 p-3 md:hidden">
-              {periodSales.map((s) => (
-                <li key={s.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-semibold">
-                      #{s.id} · {s.items.reduce((n, i) => n + i.quantity, 0)} {s.items.reduce((n, i) => n + i.quantity, 0) === 1 ? "item" : "itens"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(s.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {paymentLabel(s.paymentMethod)}
-                    </span>
-                  </div>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(s.total)}</span>
-                </li>
-              ))}
+            {/* Mobile: lista compacta (LinhaLista) — tabela só no desktop */}
+            <ul className="flex flex-col gap-1.5 p-3 md:hidden">
+              {periodSales.map((s) => {
+                const itens = s.items.reduce((n, i) => n + i.quantity, 0);
+                return (
+                  <li key={s.id}>
+                    <LinhaLista
+                      titulo={`#${s.id} · ${itens} ${itens === 1 ? "item" : "itens"}`}
+                      apoio={`${new Date(s.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${paymentLabel(s.paymentMethod)}`}
+                      valor={<Valor tom="positivo">{formatCurrency(s.total)}</Valor>}
+                    />
+                  </li>
+                );
+              })}
             </ul>
             <div className="hidden md:block">
             <Table>

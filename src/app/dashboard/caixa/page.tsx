@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LinhaLista, AvatarProduto } from "@/components/shared/LinhaLista";
+import { ValorNum } from "@/components/shared/Valor";
 import {
   Table,
   TableHeader,
@@ -59,7 +61,9 @@ export default async function CaixaPage() {
           <p className="text-[10px] text-muted-foreground">Abertos</p>
         </div>
         <div className="rounded-lg border bg-card p-2 text-center">
-          <p className="text-sm font-semibold tabular-nums">{formatCurrency(saldoAbertos)}</p>
+          <p className="text-sm font-semibold tabular-nums">
+            <ValorNum valor={saldoAbertos} formatar={formatCurrency} />
+          </p>
           <p className="text-[10px] text-muted-foreground">Saldo</p>
         </div>
         <div className="rounded-lg border bg-card p-2 text-center">
@@ -112,19 +116,35 @@ export default async function CaixaPage() {
             <>
             {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
             <ul className="flex flex-col gap-2 p-3 md:hidden">
-              {boxes.map((b) => (
-                <li key={b.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-semibold">{b.name}</span>
-                    <span className="text-xs tabular-nums text-muted-foreground">
-                      Abertura {formatCurrency(b.openingBalance)}
-                      {b.closingBalance !== null ? ` · Fech. ${formatCurrency(b.closingBalance)}` : ""}
-                    </span>
-                  </div>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(b.currentBalance)}</span>
-                  <StatusBadge status={b.status === "ABERTO" ? "open" : "closed"} />
-                </li>
-              ))}
+              {boxes.map((b) => {
+                const diff = b.closingBalance !== null ? b.closingBalance - b.currentBalance : null;
+                return (
+                  <li key={b.id}>
+                    <LinhaLista
+                      avatar={<AvatarProduto nome={b.name} tamanho={40} />}
+                      titulo={b.name}
+                      apoio={`Abertura ${formatCurrency(b.openingBalance)}${
+                        b.closingBalance !== null ? ` · fech. ${formatCurrency(b.closingBalance)}` : ""
+                      }`}
+                      badge={<StatusBadge status={b.status === "ABERTO" ? "open" : "closed"} />}
+                      valor={
+                        <>
+                          <ValorNum valor={b.currentBalance} formatar={formatCurrency} />
+                          {diff !== null && diff !== 0 ? (
+                            <span
+                              className={`block text-[10px] font-normal ${
+                                diff > 0 ? "text-[var(--status-success-fg)]" : "text-destructive"
+                              }`}
+                            >
+                              {diff > 0 ? `sobra ${formatCurrency(diff)}` : `falta ${formatCurrency(Math.abs(diff))}`}
+                            </span>
+                          ) : null}
+                        </>
+                      }
+                    />
+                  </li>
+                );
+              })}
             </ul>
             <div className="hidden md:block">
             <Table>
