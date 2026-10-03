@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { TableCard } from "@/components/shared/TableCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { LinhaLista } from "@/components/shared/LinhaLista";
 import {
   Table,
   TableHeader,
@@ -26,6 +28,26 @@ const ENTIDADE: Record<string, string> = {
   Ticket: "Ticket",
   Broadcast: "Comunicação",
   PlatformSettings: "Configurações",
+};
+
+/**
+ * Tom do selo por ação. Mesma semântica de `auditActionVariant` (que atende o
+ * enum de operação, em inglês minúsculo) traduzida para o enum de plataforma:
+ * criação e envio abrem, arquivamento e desativação fecham, o resto é neutro.
+ */
+const VARIANTE: Record<AcaoAuditoria, "default" | "secondary" | "destructive"> = {
+  EMPRESA_CRIADA: "default",
+  EMPRESA_STATUS_ALTERADO: "secondary",
+  EMPRESA_ARQUIVADA: "destructive",
+  ASSINATURA_ALTERADA: "secondary",
+  PLANO_ALTERADO: "secondary",
+  USUARIO_CRIADO: "default",
+  USUARIO_ALTERADO: "secondary",
+  USUARIO_DESATIVADO: "destructive",
+  FUNCAO_ALTERADA: "secondary",
+  TICKET_ALTERADO: "secondary",
+  COMUNICACAO_ENVIADA: "default",
+  CONFIGURACAO_ALTERADA: "secondary",
 };
 
 export default async function AuditoriaPage({
@@ -85,7 +107,7 @@ export default async function AuditoriaPage({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader
         title="Auditoria da plataforma"
         badge="Rastreabilidade"
@@ -123,15 +145,27 @@ export default async function AuditoriaPage({
           {/* Mobile: lista compacta — tabela só no desktop */}
           <ul className="flex flex-col gap-2 p-3 md:hidden">
             {logs.map((l) => (
-              <li key={l.id} className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-semibold">
-                    {acaoAuditoriaLabel[l.action]} · {ENTIDADE[l.entity] ?? l.entity}{l.entityId ? ` #${l.entityId}` : ""}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {l.actorEmail}
-                  </span>
-                </div>
+              <li key={l.id}>
+                <LinhaLista
+                  titulo={`${acaoAuditoriaLabel[l.action]} · ${ENTIDADE[l.entity] ?? l.entity}${l.entityId ? ` #${l.entityId}` : ""}`}
+                  apoio={`${l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${l.actorEmail}`}
+                  badges={
+                    <>
+                      <Badge variant={VARIANTE[l.action]}>
+                        {acaoAuditoriaLabel[l.action]}
+                      </Badge>
+                      {l.tenantId ? (
+                        <Badge variant="outline" asChild>
+                          <a href={`/admin/empresas/${l.tenantId}`}>
+                            {nomeEmpresa.get(l.tenantId) ?? `Empresa ${l.tenantId}`}
+                          </a>
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Plataforma</Badge>
+                      )}
+                    </>
+                  }
+                />
               </li>
             ))}
           </ul>

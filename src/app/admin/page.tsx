@@ -5,15 +5,14 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { DailySummary } from "@/components/shared/DailySummary";
 import { LowStockTable } from "@/app/dashboard/low-stock-table";
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
-import { MetricCard } from "@/components/shared/MetricCard";
+import { KpiFaixa } from "@/components/shared/MetricCard";
+import { Valor } from "@/components/shared/Valor";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
-  AlertTriangle,
   Building2,
-  CreditCard,
   LifeBuoy,
   Package,
   ShoppingCart,
@@ -92,7 +91,7 @@ export default async function AdminHomePage() {
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
         <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
         <DailySummary />
         {lowStockItems.length > 0 && (
@@ -113,27 +112,35 @@ export default async function AdminHomePage() {
         />
 
       {/* Linha 1: o dinheiro e o cliente. */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          title="Receita mensal"
-          value={formatCurrency(mrr)}
-          hint={`${assinaturas.length} assinatura(s) em dia`}
-          icon={CreditCard}
-        />
-        <MetricCard title="Empresas ativas" value={String(ativas)} hint={`${empresas} no total`} icon={Building2} />
-        <MetricCard
-          title="Tickets em aberto"
-          value={String(ticketsAbertosTotal)}
-          hint={ticketsCriticos > 0 ? `${ticketsCriticos} crítico(s)` : "Nenhum crítico"}
-          icon={ticketsCriticos > 0 ? AlertTriangle : LifeBuoy}
-        />
-        <MetricCard
-          title="Vendas concluídas"
-          value={String(vendas)}
-          hint="Somadas de todas as empresas"
-          icon={ShoppingCart}
-        />
-      </div>
+      <KpiFaixa
+        colunas={4}
+        itens={[
+          {
+            rotulo: "Receita mensal",
+            valor: <Valor tom="positivo">{formatCurrency(mrr)}</Valor>,
+            apoio: `${assinaturas.length} assinatura(s) em dia`,
+          },
+          {
+            rotulo: "Empresas ativas",
+            valor: <Valor tom={ativas > 0 ? "positivo" : "neutro"}>{ativas}</Valor>,
+            apoio: `${empresas} no total`,
+          },
+          {
+            rotulo: "Tickets em aberto",
+            valor: (
+              <Valor tom={ticketsAbertosTotal > 0 ? "atencao" : "neutro"}>
+                {ticketsAbertosTotal}
+              </Valor>
+            ),
+            apoio: ticketsCriticos > 0 ? `${ticketsCriticos} crítico(s)` : "Nenhum crítico",
+          },
+          {
+            rotulo: "Vendas concluídas",
+            valor: <Valor tom="neutro">{vendas}</Valor>,
+            apoio: "Somadas de todas as empresas",
+          },
+        ]}
+      />
 
       {/* Linha 2: o que precisa de ação hoje. */}
       <div className="grid gap-6 lg:grid-cols-2">

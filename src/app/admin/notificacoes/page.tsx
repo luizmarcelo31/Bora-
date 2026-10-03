@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/shared/StatusPill";
+import { LinhaLista } from "@/components/shared/LinhaLista";
+import { ValorNum } from "@/components/shared/Valor";
 import { TableCard } from "@/components/shared/TableCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,9 +62,9 @@ export default async function NotificacoesPage({
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
-        $2<PageHeader
+      <PageHeader
         title="Comunicações"
         badge="Relacionamento"
         description="Avisos para as empresas. Rascunhar é livre; enviar é registrado na auditoria."
@@ -148,16 +150,24 @@ export default async function NotificacoesPage({
               {/* Mobile: lista compacta — tabela só no desktop */}
               <ul className="flex flex-col gap-2 p-3 md:hidden">
                 {comunicacoes.map((c) => (
-                  <li key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-sm font-semibold">{c.subject}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {labelDe(alvoNotificacaoLabel, c.target)} · {c.recipients} dest. · {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
-                      </span>
-                    </div>
-                    <StatusPill tom={TOM_ENVIO[c.status] ?? "neutro"}>
-                      {labelDe(statusEnvioLabel, c.status)}
-                    </StatusPill>
+                  <li key={c.id}>
+                    <LinhaLista
+                      titulo={c.subject}
+                      apoio={`${labelDe(alvoNotificacaoLabel, c.target)} · ${labelDe(statusEnvioLabel, c.status)}`}
+                      valor={
+                        <ValorNum
+                          valor={c.recipients}
+                          formatar={(v) => `${v} dest.`}
+                          zero="atencao"
+                          className="text-xs font-normal"
+                        />
+                      }
+                      badges={
+                        <span className="text-xs text-muted-foreground">
+                          {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                        </span>
+                      }
+                    />
                   </li>
                 ))}
               </ul>

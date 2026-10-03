@@ -2,10 +2,12 @@ import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
-import { MetricCard } from "@/components/shared/MetricCard";
+import { KpiFaixa } from "@/components/shared/MetricCard";
+import { Valor } from "@/components/shared/Valor";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TableCard } from "@/components/shared/TableCard";
+import { LinhaLista } from "@/components/shared/LinhaLista";
 import {
   Table,
   TableHeader,
@@ -14,15 +16,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import {
-  Activity,
-  AlertTriangle,
-  Database,
-  LifeBuoy,
-  PauseCircle,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Activity, Database } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
 import { labelDe, statusEmpresaLabel, statusEmpresaTom } from "@/lib/labels";
 import type { Tom } from "@/lib/labels";
@@ -116,8 +110,15 @@ export default async function SaudePage() {
     },
   ];
 
+  const volume: { recurso: string; registros: string }[] = [
+    { recurso: "Empresas", registros: String(totalEmpresas) },
+    { recurso: "Produtos no catálogo", registros: String(produtos) },
+    { recurso: "Vendas concluídas", registros: String(vendas) },
+    { recurso: "Tickets", registros: `${ticketsAbertos} em aberto` },
+  ];
+
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
         <PageHeader
         title="Saúde da plataforma"
@@ -125,32 +126,33 @@ export default async function SaudePage() {
         description="O que está funcionando, o que está travado, e onde olhar primeiro."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          title="Receita mensal"
-          value={formatCurrency(mrr)}
-          hint={`${assinaturas.length} assinatura(s) em dia`}
-          icon={TrendingUp}
-        />
-        <MetricCard
-          title="Empresas ativas"
-          value={String(ativas)}
-          hint={`${totalEmpresas} no total`}
-          icon={Users}
-        />
-        <MetricCard
-          title="Tickets em aberto"
-          value={String(ticketsAbertos)}
-          hint={crticos > 0 ? `${crticos} crítico(s)` : "Nenhum crítico"}
-          icon={crticos > 0 ? AlertTriangle : LifeBuoy}
-        />
-        <MetricCard
-          title="Sem atividade há 14 dias"
-          value={String(semAtividade)}
-          hint="Ativas que pararam de usar"
-          icon={PauseCircle}
-        />
-      </div>
+      <KpiFaixa
+        colunas={4}
+        itens={[
+          {
+            rotulo: "Receita mensal",
+            valor: <Valor tom="positivo">{formatCurrency(mrr)}</Valor>,
+            apoio: `${assinaturas.length} assinatura(s) em dia`,
+          },
+          {
+            rotulo: "Empresas ativas",
+            valor: <Valor tom={ativas > 0 ? "positivo" : "neutro"}>{ativas}</Valor>,
+            apoio: `${totalEmpresas} no total`,
+          },
+          {
+            rotulo: "Tickets em aberto",
+            valor: <Valor tom={ticketsAbertos > 0 ? "atencao" : "neutro"}>{ticketsAbertos}</Valor>,
+            apoio: crticos > 0 ? `${crticos} crítico(s)` : "Nenhum crítico",
+          },
+          {
+            rotulo: "Sem atividade há 14 dias",
+            valor: (
+              <Valor tom={semAtividade > 0 ? "atencao" : "neutro"}>{semAtividade}</Valor>
+            ),
+            apoio: "Ativas que pararam de usar",
+          },
+        ]}
+      />
 
       <Card>
         <CardHeader>
@@ -197,7 +199,22 @@ export default async function SaudePage() {
         </TableCard>
 
         <TableCard title="Volume de dados" description="Tudo que a plataforma guarda hoje.">
-          <Table>
+          {/* Mobile: a mesma leitura em linha, recurso à esquerda e registros
+              à direita. A tabela de duas colunas cabe, mas a linha é a leitura
+              que o celular já usa no resto da tela. */}
+          <ul className="flex flex-col gap-2 p-2 md:hidden">
+            {volume.map((v) => (
+              <li key={v.recurso}>
+                <LinhaLista
+                  titulo={v.recurso}
+                  valor={<span className="tabular-nums">{v.registros}</span>}
+                />
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden md:block">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Recurso</TableHead>
@@ -228,6 +245,7 @@ export default async function SaudePage() {
               </TableRow>
             </TableBody>
           </Table>
+          </div>
         </TableCard>
       </div>
     </main>

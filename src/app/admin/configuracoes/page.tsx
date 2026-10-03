@@ -35,7 +35,7 @@ export default async function ConfiguracoesPage({
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
         <PageHeader
         title="Configurações da plataforma"

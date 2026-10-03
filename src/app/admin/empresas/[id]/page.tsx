@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { MetricCard } from "@/components/shared/MetricCard";
+import { KpiFaixa } from "@/components/shared/MetricCard";
+import { Valor } from "@/components/shared/Valor";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,15 +18,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import {
-  Activity,
-  ArrowLeft,
-  LifeBuoy,
-  Package,
-  Receipt,
-  ShoppingCart,
-  Users,
-} from "lucide-react";
+import { Activity, ArrowLeft, Receipt } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
 import {
   cicloCobrancaLabel,
@@ -130,7 +123,7 @@ export default async function EmpresaPage({
   const erro = sp.error ? MENSAGEM_EMPRESA[sp.error as keyof typeof MENSAGEM_EMPRESA] : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-8">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader
         title={empresa.name}
         badge="Empresa"
@@ -167,22 +160,37 @@ export default async function EmpresaPage({
         </p>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard title="Usuários" value={String(empresa._count.users)} hint="Contas vinculadas" icon={Users} />
-        <MetricCard title="Produtos" value={String(empresa._count.products)} hint="Itens no catálogo" icon={Package} />
-        <MetricCard
-          title="Vendas concluídas"
-          value={String(empresa._count.sales)}
-          hint={formatCurrency(totalVendas._sum.total ?? 0)}
-          icon={ShoppingCart}
-        />
-        <MetricCard
-          title="Tickets"
-          value={String(empresa._count.tickets)}
-          hint={`Último acesso: ${dataRelativa(ultimoLogin?.lastLogin ?? empresa.lastActivityAt)}`}
-          icon={LifeBuoy}
-        />
-      </div>
+      <KpiFaixa
+        colunas={4}
+        itens={[
+          {
+            rotulo: "Usuários",
+            valor: <Valor tom="neutro">{empresa._count.users}</Valor>,
+            apoio: "Contas vinculadas",
+          },
+          {
+            rotulo: "Produtos",
+            valor: <Valor tom="neutro">{empresa._count.products}</Valor>,
+            apoio: "Itens no catálogo",
+          },
+          {
+            rotulo: "Vendas concluídas",
+            valor: <Valor tom="neutro">{empresa._count.sales}</Valor>,
+            apoio: (
+              <Valor tom="positivo">{formatCurrency(totalVendas._sum.total ?? 0)}</Valor>
+            ),
+          },
+          {
+            rotulo: "Tickets",
+            valor: (
+              <Valor tom={empresa._count.tickets > 0 ? "atencao" : "neutro"}>
+                {empresa._count.tickets}
+              </Valor>
+            ),
+            apoio: `Último acesso: ${dataRelativa(ultimoLogin?.lastLogin ?? empresa.lastActivityAt)}`,
+          },
+        ]}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Assinatura */}
