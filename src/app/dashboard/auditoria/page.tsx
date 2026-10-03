@@ -152,19 +152,19 @@ export default async function AuditoriaPage({
           />
         ) : (
           <>
-          {/* Mobile: lista compacta (skill §8) — tabela só no desktop */}
-          <ul className="flex flex-col gap-2 p-3 md:hidden">
+          {/* Mobile: lista compacta — tabela só no desktop */}
+          <ul className="flex flex-col gap-1.5 p-2 md:hidden">
             {logs.map((l) => (
-              <li key={l.id} className="flex items-center gap-2 rounded-lg border p-3">
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="truncate text-sm font-semibold">
+              <li key={l.id} className="flex items-center gap-2 rounded-lg border p-2">
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate text-xs font-semibold">
                     {auditActionLabel(l.action)} · {auditEntityLabel(l.entity)} #{l.entityId}
                   </span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="truncate text-[10px] text-muted-foreground">
                     {new Date(l.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {l.userEmail ?? `#${l.userId ?? "—"}`}
                   </span>
                 </div>
-                <Badge variant={auditActionVariant(l.action)} className="shrink-0">{auditActionLabel(l.action)}</Badge>
+                <Badge variant={auditActionVariant(l.action)} className="shrink-0 text-[10px]">{auditActionLabel(l.action)}</Badge>
               </li>
             ))}
           </ul>

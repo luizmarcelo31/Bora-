@@ -53,10 +53,19 @@ export default async function CaixaPage() {
       <PageHeader title="Caixa" badge={tenant.name} description="Abertura, saldo e fechamento — com preview de sobra/falta." />
       <SearchParamToast okText="Operação registrada." errorMap={ERROR_MSG} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard title="Abertos" value={String(openBoxes.length)} hint={`${closedCount} fechados`} />
-        <MetricCard title="Saldo em abertos" value={formatCurrency(saldoAbertos)} hint={`${openBoxes.length} caixa(s)`} />
-        <MetricCard title="Total caixas" value={String(boxes.length)} hint={boxes.length > 0 ? `Último: ${boxes[0].name}` : "Nenhum ainda"} />
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{openBoxes.length}</p>
+          <p className="text-[10px] text-muted-foreground">Abertos</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-sm font-semibold tabular-nums">{formatCurrency(saldoAbertos)}</p>
+          <p className="text-[10px] text-muted-foreground">Saldo</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{boxes.length}</p>
+          <p className="text-[10px] text-muted-foreground">Total</p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">

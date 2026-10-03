@@ -148,10 +148,19 @@ export default async function RelatoriosPage({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard title="Vendas" value={String(salesResume.totalSales)} hint={`Ticket médio ${formatCurrency(Math.round(salesResume.averageSale))}`} />
-        <MetricCard title="Faturado (vendas)" value={formatCurrency(salesResume.totalReceived)} hint={`Descontos ${formatCurrency(salesResume.totalDiscount)}`} />
-        <MetricCard title="Saldo financeiro" value={formatCurrency(financialResume.saldo)} hint={`Receitas ${formatCurrency(financialResume.receitas)} / Despesas ${formatCurrency(financialResume.despesas)}`} />
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{salesResume.totalSales}</p>
+          <p className="text-[10px] text-muted-foreground">Vendas</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-sm font-semibold tabular-nums">{formatCurrency(salesResume.totalReceived)}</p>
+          <p className="text-[10px] text-muted-foreground">Faturado</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-sm font-semibold tabular-nums">{formatCurrency(financialResume.saldo)}</p>
+          <p className="text-[10px] text-muted-foreground">Saldo</p>
+        </div>
       </div>
 
       <Card>

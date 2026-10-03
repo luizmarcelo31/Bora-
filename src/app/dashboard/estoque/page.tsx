@@ -75,10 +75,19 @@ export default async function EstoquePage({
       />
       <SearchParamToast okText="Movimentação registrada." errorMap={ERROR_MSG} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard title="Produtos" value={String(total)} hint={`${baixo} em baixo estoque`} />
-        <MetricCard title="Unidades em estoque" value={String(totalUnidades)} hint={total > 0 ? `Média ${(totalUnidades/total).toFixed(1)} por produto` : "—"} />
-        <MetricCard title="Alertas" value={String(baixo)} hint={baixo > 0 ? "Repor em breve" : "Tudo ok"} />
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{total}</p>
+          <p className="text-[10px] text-muted-foreground">Produtos</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{totalUnidades}</p>
+          <p className="text-[10px] text-muted-foreground">Unidades</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{baixo}</p>
+          <p className="text-[10px] text-muted-foreground">Alertas</p>
+        </div>
       </div>
 
       <Card>

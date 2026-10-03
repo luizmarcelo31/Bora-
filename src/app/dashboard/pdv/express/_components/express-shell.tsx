@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 /**
  * Contêiner imersivo do Express (spec E1): cobre header + bottom nav
- * (z-60), barra própria, scroll interno, safe-areas. ✕ volta ao dashboard.
+ * (z-60), barra própria, scroll interno, safe-areas.
+ * Botão Cancelar visível no header (decisão Fase 0).
  */
 export function ExpressShell({
   cashboxName,
@@ -32,15 +32,16 @@ export function ExpressShell({
           type="button"
           variant="ghost"
           size="sm"
-          className="hit-area-44"
-          aria-label="Sair do PDV Expresso"
+          className="hit-area-44 gap-1"
+          aria-label="Cancelar e sair do PDV Expresso"
           onClick={() => router.push("/dashboard")}
         >
-          <X className="size-5" />
+          <span aria-hidden="true">✕</span>
+          <span className="text-sm">Cancelar</span>
         </Button>
         <span className="truncate text-sm font-semibold">{cashboxName}</span>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">{children}</div>
+      <div className="min-h-0 flex-1 overflow-hidden pb-[env(safe-area-inset-bottom)]">{children}</div>
     </div>
   );
 }

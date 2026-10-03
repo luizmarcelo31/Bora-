@@ -54,7 +54,7 @@ export default async function ConfiguracoesPage() {
           <CardTitle>Regras de operação</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={updateSettingsAction} className="flex flex-col gap-4">
+          <form action={updateSettingsAction} className="flex flex-col gap-3">
             <SwitchField name="enableDiscount" defaultChecked={settings.enableDiscount} label="Permitir desconto em vendas" />
             <label className="flex flex-col gap-1 text-sm">
               Desconto máximo (%)

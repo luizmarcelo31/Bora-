@@ -81,44 +81,27 @@ export default async function DashboardPage() {
       <OnboardingChecklist temProduto={products > 0} fezVenda={vendasTotal > 0} />
 
       {/* Metric Cards — strip compacto no mobile (2 col), 4 col no desktop */}
-      <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-        <MetricCard
-          title="Faturado hoje"
-          value={formatCurrency(faturadoHoje)}
-          hint={`Mês: ${formatCurrency(salesResumeMonth.totalReceived)}`}
-          icon={DollarSign}
-          badge={<Badge variant={qtdVendasHoje > 0 ? "default" : "secondary"}>{qtdVendasHoje} vendas</Badge>}
-        />
-        <MetricCard
-          title="Vendas no mês"
-          value={String(salesResumeMonth.totalSales)}
-          hint={`Descontos ${formatCurrency(salesResumeMonth.totalDiscount)}`}
-          icon={ShoppingCart}
-          badge={
-            <Badge>
-              <TrendingUp className="size-3" />
-              Ticket {formatCurrency(Math.round(salesResumeMonth.averageSale || 0))}
-            </Badge>
-          }
-        />
-        <MetricCard
-          title="Produtos ativos"
-          value={String(products)}
-          hint={cashboxes.length > 0 ? `${cashboxes.length} caixa(s) aberto(s)` : "Nenhum caixa aberto"}
-          icon={Package}
-          badge={<Badge variant="outline">{estoqueBaixo} em baixo estoque</Badge>}
-        />
-        <MetricCard
-          title="Saldo financeiro (mês)"
-          value={formatCurrency(financialResume.saldo)}
-          hint={`${formatCurrency(financialResume.receitas)} / ${formatCurrency(financialResume.despesas)}`}
-          icon={Wallet}
-          badge={
-            <Badge variant={financialResume.saldo >= 0 ? "default" : "destructive"}>
-              {financialResume.saldo >= 0 ? "Positivo" : "Negativo"}
-            </Badge>
-          }
-        />
+      <div className="grid grid-cols-2 gap-2 md:gap-4 xl:grid-cols-4">
+        <div className="rounded-lg border bg-card p-2 md:p-3">
+          <p className="text-[10px] text-muted-foreground">Faturado hoje</p>
+          <p className="text-base md:text-lg font-semibold tabular-nums">{formatCurrency(faturadoHoje)}</p>
+          <p className="text-[10px] text-muted-foreground">{qtdVendasHoje} vendas</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 md:p-3">
+          <p className="text-[10px] text-muted-foreground">Vendas no mês</p>
+          <p className="text-base md:text-lg font-semibold tabular-nums">{salesResumeMonth.totalSales}</p>
+          <p className="text-[10px] text-muted-foreground">Ticket {formatCurrency(Math.round(salesResumeMonth.averageSale || 0))}</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 md:p-3">
+          <p className="text-[10px] text-muted-foreground">Produtos ativos</p>
+          <p className="text-base md:text-lg font-semibold tabular-nums">{products}</p>
+          <p className="text-[10px] text-muted-foreground">{estoqueBaixo} em baixo estoque</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 md:p-3">
+          <p className="text-[10px] text-muted-foreground">Saldo financeiro</p>
+          <p className="text-base md:text-lg font-semibold tabular-nums">{formatCurrency(financialResume.saldo)}</p>
+          <p className="text-[10px] text-muted-foreground">{financialResume.saldo >= 0 ? "Positivo" : "Negativo"}</p>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

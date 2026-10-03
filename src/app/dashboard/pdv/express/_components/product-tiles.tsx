@@ -9,6 +9,7 @@ import type { ExpressProduct } from "../_lib/use-express-sale";
 /**
  * Chips de categoria + grade de produtos (spec E2 §4.3).
  * Reconhecer por foto+preço, não ler linha de texto.
+ * Cards compactos: foto 48px, nome 2 linhas, preço, badge qty.
  */
 export function ProductTiles({
   products,
@@ -53,7 +54,7 @@ export function ProductTiles({
               disabled={out}
               label={`${p.name}, ${formatCurrency(p.price)}${qty ? `, ${qty} no carrinho` : ""}${out ? ", sem estoque" : ""}`}
               className={cn(
-                "relative flex min-h-26 flex-col items-center gap-1 rounded-xl border p-2 text-center select-none disabled:opacity-60",
+                "relative flex min-h-20 flex-col items-center gap-0.5 rounded-xl border p-1.5 text-center select-none disabled:opacity-60",
                 qty > 0 && "border-primary ring-1 ring-primary"
               )}
               onAdd={onAdd}
@@ -64,27 +65,27 @@ export function ProductTiles({
                   src={p.imageUrl}
                   alt=""
                   loading="lazy"
-                  className="size-12 rounded-lg border object-cover"
+                  className="size-10 rounded-lg border object-cover"
                 />
               ) : (
                 <span
                   aria-hidden="true"
-                  className="flex size-12 items-center justify-center rounded-lg bg-muted text-lg font-bold text-muted-foreground"
+                  className="flex size-10 items-center justify-center rounded-lg bg-muted text-base font-bold text-muted-foreground"
                 >
                   {p.name.charAt(0).toUpperCase()}
                 </span>
               )}
-              <span className="line-clamp-2 w-full text-xs leading-tight font-semibold">{p.name}</span>
-              <span className="text-xs font-bold tabular-nums text-primary">{formatCurrency(p.price)}</span>
+              <span className="line-clamp-2 w-full text-[11px] leading-tight font-semibold">{p.name}</span>
+              <span className="text-[11px] font-bold tabular-nums text-primary">{formatCurrency(p.price)}</span>
               {qty > 0 ? (
                 <span
                   aria-hidden="true"
-                  className="absolute -top-1.5 -right-1.5 flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground tabular-nums"
+                  className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground tabular-nums"
                 >
                   {qty}
                 </span>
               ) : null}
-              {out ? <span className="text-[11px] text-muted-foreground">Sem estoque</span> : null}
+              {out ? <span className="text-[10px] text-muted-foreground">Sem estoque</span> : null}
             </PressProductButton>
           );
         })}

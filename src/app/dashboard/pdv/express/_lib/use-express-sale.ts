@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/validators";
 import { calcChange, calcSplit, calcTotals } from "@/lib/pdv-math";
-import { DISCOUNT_PASSWORD } from "../../pdv-client";
+// DISCOUNT_PASSWORD removido do cliente (decisão Fase 0).
+// A validação de desconto deve ser feita no servidor, nunca no bundle.
 import { buzz } from "@/hooks/use-long-press";
 import { enviarOuEnfileirar } from "@/lib/offline/enviar";
 
@@ -61,9 +62,8 @@ export function useExpressSale({
   const [cashAmount, setCashAmount] = useState("");
   const [cashBoxId, setCashBoxId] = useState(cashboxes[0] ? String(cashboxes[0].id) : "");
   const [discount, setDiscount] = useState("");
-  const [discountPending, setDiscountPending] = useState(false);
-  const [discountPassword, setDiscountPassword] = useState("");
-  const [discountError, setDiscountError] = useState("");
+  // Desconto: validado no servidor (services/sale.ts → settings.maxDiscount).
+  // Sem senha no cliente — o servidor decide se aceita ou não.
   const [pending, setPending] = useState(false);
   const router = useRouter();
   const idemRef = useRef<string | null>(null);
@@ -177,25 +177,6 @@ export function useExpressSale({
     else setQtyBuffer("");
   }
 
-  function applyDiscount() {
-    setDiscountError("");
-    if (discountPending) {
-      if (discountPassword === DISCOUNT_PASSWORD) {
-        setDiscountPending(false);
-        setDiscountPassword("");
-        toast.success("Desconto autorizado.");
-      } else {
-        setDiscountError("Senha incorreta.");
-        toast.error("Senha inválida.");
-      }
-      return;
-    }
-    if (parseBRLCents(discount) > 0) {
-      setDiscountPending(true);
-      setDiscountPassword("");
-    }
-  }
-
   function restoreCart(rec: Record<number, number>) {
     setCart((c) => {
       const next = { ...c };
@@ -212,18 +193,14 @@ export function useExpressSale({
     setReceived("");
     setCashAmount("");
     setDiscount("");
-    setDiscountPending(false);
-    setDiscountPassword("");
-    setDiscountError("");
     idemRef.current = null;
   }
 
   const canConfirmSingle =
     lines.length > 0 &&
-    (payment !== "DINHEIRO" || receivedCents >= customerTotal) &&
-    !discountPending;
+    (payment !== "DINHEIRO" || receivedCents >= customerTotal);
   const canConfirmSplit =
-    lines.length > 0 && cashCents > 0 && pixCents >= 0 && cashCents + pixCents === total && receivedCents >= cashCents && !discountPending;
+    lines.length > 0 && cashCents > 0 && pixCents >= 0 && cashCents + pixCents === total && receivedCents >= cashCents;
 
   async function confirmSale() {
     if (pending || lines.length === 0) return;
@@ -345,10 +322,7 @@ export function useExpressSale({
     setCashBoxId,
     discount,
     setDiscount,
-    discountPending,
-    discountPassword,
-    setDiscountPassword,
-    discountError,
+
     pending,
     lines,
     subtotal,
@@ -373,7 +347,6 @@ export function useExpressSale({
     onDigit,
     onBackspace,
     onClear,
-    applyDiscount,
     clearSale,
     restoreCart,
     confirmSale,

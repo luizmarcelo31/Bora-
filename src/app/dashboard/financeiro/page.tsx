@@ -97,10 +97,19 @@ export default async function FinanceiroPage({
       />
       <SearchParamToast okText="Lançamento registrado." errorMap={ERROR_MSG} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard title="Receitas (mês)" value={formatCurrency(resume.receitas)} hint={`${resume.totalMovimentos} lançamentos`} />
-        <MetricCard title="Despesas (mês)" value={formatCurrency(resume.despesas)} hint={`Saldo ${formatCurrency(resume.saldo)}`} />
-        <MetricCard title="Saldo (mês)" value={formatCurrency(resume.saldo)} hint={resume.saldo >= 0 ? "Positivo" : "Negativo"} />
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-sm font-semibold tabular-nums">{formatCurrency(resume.receitas)}</p>
+          <p className="text-[10px] text-muted-foreground">Receitas</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-sm font-semibold tabular-nums">{formatCurrency(resume.despesas)}</p>
+          <p className="text-[10px] text-muted-foreground">Despesas</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-sm font-semibold tabular-nums">{formatCurrency(resume.saldo)}</p>
+          <p className="text-[10px] text-muted-foreground">Saldo</p>
+        </div>
       </div>
 
       {/* DRE — Demonstrativo de Resultado do Exercício */}

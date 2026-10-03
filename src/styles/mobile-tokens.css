@@ -1,0 +1,231 @@
+/*
+ * Mobile Tokens — BoraMais
+ * Tokens específicos para mobile, seguindo a escala 4/8.
+ * Complementa tokens.css (que é o source of truth de cor).
+ */
+
+:root {
+  /* ===== Espaçamento (escala 4/8) ===== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ===== Tipografia mobile (máx. 5 tamanhos) ===== */
+  --text-mobile-xs: 11px;    /* badges, labels */
+  --text-mobile-sm: 12px;    /* corpo pequeno */
+  --text-mobile-base: 14px;  /* corpo */
+  --text-mobile-lg: 16px;    /* título de seção */
+  --text-mobile-xl: 20px;    /* KPI, números */
+
+  /* ===== Raios ===== */
+  --radius-mobile-sm: 8px;
+  --radius-mobile-md: 12px;
+  --radius-mobile-lg: 16px;
+  --radius-mobile-xl: 20px;
+
+  /* ===== Sombras mobile ===== */
+  --shadow-mobile-sm: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+  --shadow-mobile-md: 0 2px 4px 0 oklch(0 0 0 / 0.08);
+  --shadow-mobile-lg: 0 4px 8px 0 oklch(0 0 0 / 0.12);
+
+  /* ===== Alturas fixas ===== */
+  --header-height: 48px;
+  --bottom-nav-height: 56px;
+  --action-bar-height: 64px;
+  --touch-target: 44px;
+
+  /* ===== Cores semânticas mobile ===== */
+  --mobile-primary: var(--primary);
+  --mobile-primary-fg: var(--primary-foreground);
+  --mobile-bg: var(--background);
+  --mobile-card: var(--card);
+  --mobile-muted: var(--muted);
+  --mobile-muted-fg: var(--muted-foreground);
+  --mobile-border: var(--border);
+  --mobile-success: var(--status-success-fg);
+  --mobile-warning: var(--status-warning-fg);
+  --mobile-danger: var(--status-danger-fg);
+}
+
+.dark {
+  --mobile-primary: #FFFFFF;
+  --mobile-primary-fg: #111111;
+  --mobile-bg: #0A0A0A;
+  --mobile-card: #141414;
+  --mobile-muted: #1F1F1F;
+  --mobile-muted-fg: #A0A0A0;
+  --mobile-border: #2A2A2A;
+  --mobile-success: #6EE7B7;
+  --mobile-warning: #FCD34D;
+  --mobile-danger: #FCA5A5;
+}
+
+/* ===== Utilitários mobile ===== */
+
+/* Card compacto */
+.mobile-card {
+  background: var(--mobile-card);
+  border: 1px solid var(--mobile-border);
+  border-radius: var(--radius-mobile-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-mobile-sm);
+}
+
+/* Lista-em-card */
+.mobile-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--mobile-border);
+  min-height: var(--touch-target);
+}
+
+.mobile-list-item:last-child {
+  border-bottom: none;
+}
+
+/* Barra de ação fixa */
+.mobile-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--action-bar-height);
+  background: var(--mobile-bg);
+  border-top: 1px solid var(--mobile-border);
+  padding: var(--space-2) var(--space-4);
+  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  z-index: 50;
+}
+
+/* Header fixo */
+.mobile-header {
+  position: sticky;
+  top: 0;
+  height: var(--header-height);
+  background: var(--mobile-bg);
+  border-bottom: 1px solid var(--mobile-border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  z-index: 50;
+}
+
+/* Chips */
+.mobile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-mobile-sm);
+  font-size: var(--text-mobile-xs);
+  font-weight: 600;
+  min-height: var(--touch-target);
+  white-space: nowrap;
+}
+
+/* Skeleton */
+.mobile-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--mobile-muted) 25%,
+    var(--mobile-border) 50%,
+    var(--mobile-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: mobile-skeleton-loading 1.5s infinite;
+  border-radius: var(--radius-mobile-sm);
+}
+
+@keyframes mobile-skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Estado vazio */
+.mobile-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  gap: var(--space-3);
+}
+
+/* KPI compacto */
+.mobile-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--mobile-card);
+  border: 1px solid var(--mobile-border);
+  border-radius: var(--radius-mobile-md);
+  box-shadow: var(--shadow-mobile-sm);
+}
+
+.mobile-kpi-value {
+  font-size: var(--text-mobile-xl);
+  font-weight: 600;
+  color: var(--mobile-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mobile-kpi-label {
+  font-size: var(--text-mobile-xs);
+  color: var(--mobile-muted-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Stepper */
+.mobile-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+}
+
+.mobile-stepper-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: var(--text-mobile-xs);
+  font-weight: 600;
+  background: var(--mobile-muted);
+  color: var(--mobile-muted-fg);
+}
+
+.mobile-stepper-step.active {
+  background: var(--mobile-primary);
+  color: var(--mobile-primary-fg);
+}
+
+.mobile-stepper-step.completed {
+  background: var(--mobile-success);
+  color: white;
+}
+
+.mobile-stepper-line {
+  flex: 1;
+  height: 2px;
+  background: var(--mobile-border);
+}
+
+.mobile-stepper-line.completed {
+  background: var(--mobile-success);
+}

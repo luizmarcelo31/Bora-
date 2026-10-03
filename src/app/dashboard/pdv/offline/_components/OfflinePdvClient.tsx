@@ -154,11 +154,10 @@ export function OfflinePdvClient({ tenantId, userId }: { tenantId: number; userI
     <div className="flex flex-col gap-4">
       <SyncIndicator tenantId={tenantId} userId={userId} />
 
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm">
-        <CloudOff aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
+        <CloudOff aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
         <span>
-          <span className="font-semibold">Vendendo sem conexão.</span> As vendas ficam salvas neste
-          aparelho e sincronizam sozinhas quando a rede voltar.
+          <span className="font-semibold">Sem conexão.</span> Vendas salvas no aparelho.
         </span>
       </div>
 

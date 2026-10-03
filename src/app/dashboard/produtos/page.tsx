@@ -85,10 +85,19 @@ export default async function ProdutosPage({
       />
       <SearchParamToast okText="Produto criado com estoque zerado." okMap={{ imagem: "Foto do produto atualizada." }} errorMap={ERROR_MSG} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard title="Total" value={String(total)} hint={`${ativos} ativos`} />
-        <MetricCard title="Ativos" value={String(ativos)} hint={`${total - ativos} inativos`} />
-        <MetricCard title="Estoque baixo" value={String(baixo)} hint={baixo > 0 ? "Repor em breve" : "Tudo ok"} />
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{total}</p>
+          <p className="text-[10px] text-muted-foreground">Total</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{ativos}</p>
+          <p className="text-[10px] text-muted-foreground">Ativos</p>
+        </div>
+        <div className="rounded-lg border bg-card p-2 text-center">
+          <p className="text-lg font-semibold tabular-nums">{baixo}</p>
+          <p className="text-[10px] text-muted-foreground">Baixo est.</p>
+        </div>
       </div>
 
       <details className="rounded-xl border border-border/50 bg-card shadow-sm">

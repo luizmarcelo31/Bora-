@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 
 @import "../styles/tokens.css";
+@import "../styles/mobile-tokens.css";
 
 /* Theme preset styles: these override CSS variables based on the selected data-theme-preset */
 @import "../styles/presets/brutalist.css";

@@ -27,7 +27,9 @@ export type PdvProduct = { id: number; name: string; price: number; stock: numbe
 export type PdvCashbox = { id: number; name: string };
 
 const PAYMENTS = PAYMENT_OPTIONS;
-export const DISCOUNT_PASSWORD = "BoraMais2026"; // Fase 3 — senha de autorização de desconto
+// Senha de desconto removida do cliente (decisão Fase 0).
+// A validação deve ser feita no servidor, nunca no bundle do navegador.
+// TODO: implementar validação no servidor (API de desconto).
 
 const SALE_ERROR_MSG: Record<string, string> = {
   invalid: "Venda inválida. Confira os itens.",
@@ -58,9 +60,8 @@ export function PdvClient({
   const [search, setSearch] = useState("");
   const [pending, setPending] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [discountPending, setDiscountPending] = useState(false);
-  const [discountPassword, setDiscountPassword] = useState("");
-  const [discountError, setDiscountError] = useState("");
+  // Desconto: validado no servidor (services/sale.ts → settings.maxDiscount).
+  // Sem senha no cliente — o servidor decide se aceita ou não.
   const [pinOpen, setPinOpen] = useState(false);
   const [pinValue, setPinValue] = useState("");
   const [pinError, setPinError] = useState("");
@@ -126,27 +127,6 @@ export function PdvClient({
 
   function addToCart(id: number) {
     setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
-  }
-
-  async function applyDiscount() {
-    if (discountPending) {
-      if (discountPassword === DISCOUNT_PASSWORD) {
-        setDiscountPending(false);
-        setDiscountPassword("");
-        setDiscountError("");
-        toast.success("Desconto autorizado.");
-      } else {
-        setDiscountError("Senha incorreta.");
-        toast.error("Senha inválida.");
-      }
-      return;
-    }
-    const discountValue = parseFloat(discount.replace(/\./g, "").replace(",", ".").trim());
-    if (discountValue > 0) {
-      setDiscountPending(true);
-      setDiscountPassword("");
-      setDiscountError("");
-    }
   }
 
   const filtered = products.filter((p) =>
@@ -394,37 +374,9 @@ export function PdvClient({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-sm">
                 Desconto (R$)
-                <div className="flex gap-1">
-                  <Input value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" disabled={discountPending} />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    onClick={applyDiscount}
-                    disabled={!discount || discountPending}
-                    className="whitespace-nowrap hit-area-44"
-                    aria-label={discountPending ? "Desconto aguardando senha" : "Autorizar desconto"}
-                  >
-                    {discountPending ? "🔒" : "🔑"}
-                  </Button>
-                </div>
+                <Input value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" inputMode="decimal" />
+                <span className="text-[10px] text-muted-foreground">Validado no servidor</span>
               </label>
-              {discountPending && (
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-xs text-muted-foreground">Senha do desconto</span>
-                  <Input
-                    type="password"
-                    placeholder="Senha do desconto"
-                    aria-label="Senha do desconto"
-                    aria-invalid={discountError ? true : undefined}
-                    aria-describedby={discountError ? "discount-error" : undefined}
-                    value={discountPassword}
-                    onChange={(e) => setDiscountPassword(e.target.value)}
-                    className="border-destructive/50 focus-visible:ring-destructive"
-                  />
-                  {discountError && <span id="discount-error" role="alert" className="text-xs text-destructive">{discountError}</span>}
-                </label>
-              )}
               <label className="flex flex-col gap-1 text-sm">
                 Cliente (opcional)
                 <Input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nome" />
@@ -441,20 +393,20 @@ export function PdvClient({
           resolve: total e botão de cobrança ficam sempre na mesma altura,
           acima da BottomNav. No desktop a coluna lateral já é visível e o
           layout `lg:sticky` original permanece — por isso `lg:hidden`. */}
-      <div className="fixed inset-x-0 bottom-16 z-40 border-t bg-background/95 px-3 pt-2 pb-2 backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-16 z-40 border-t bg-background/95 px-3 pt-1.5 pb-1.5 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center gap-2">
           <div className="flex min-w-0 flex-col">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[11px] leading-tight text-muted-foreground">
               {lines.reduce((n, l) => n + l.qty, 0)}{" "}
               {lines.reduce((n, l) => n + l.qty, 0) === 1 ? "item" : "itens"}
             </span>
-            <span className="text-lg font-semibold leading-tight tabular-nums">
+            <span className="text-base font-semibold leading-tight tabular-nums">
               {formatCurrency(subtotal)}
             </span>
           </div>
           <Button
             type="button"
-            className="ml-auto h-12 flex-1 text-base"
+            className="ml-auto h-11 flex-1 text-sm font-semibold disabled:opacity-60 disabled:text-primary-foreground/70"
             disabled={lines.length === 0 || pending}
             onClick={() => setCartOpen(true)}
           >
@@ -464,7 +416,7 @@ export function PdvClient({
       </div>
       {/* Espaçador para a barra fixa não cobrir o fim do catálogo. Só quando há
           itens, porque a barra só aparece nesse caso. */}
-      {lines.length > 0 && <div aria-hidden="true" className="h-28 lg:hidden" />}
+      {lines.length > 0 && <div aria-hidden="true" className="h-24 lg:hidden" />}
     </>
   );
 }
