@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { paymentLabel } from '@/lib/payments';
+import { marcarAtividade } from '@/lib/atividade';
 import { Prisma, Sale, StatusVenda, TipoCategoria } from '@prisma/client';
 import {
   CreateProductInput,
@@ -745,6 +746,14 @@ export class SaleService {
     if (!sale) {
       throw new Error('Não foi possível numerar o cupom, tente novamente');
     }
+
+    // Fora da transação, de propósito. A venda precisa estar confirmada antes
+    // de contar como atividade: se a transação falhasse depois, a empresa
+    // ficaria marcada como ativa sem ter vendido. E fica fora para não
+    // segurar o lock do cupom com uma segunda escrita. A janela de 5 min em
+    // `marcarAtividade` faz o custo ser uma consulta barata na maior parte
+    // das vezes. Ver `src/lib/atividade.ts`.
+    await marcarAtividade(tenantId);
 
     // As divergências viajam junto da venda para a action escrever a auditoria.
     // Uma venda online sempre volta com a lista vazia — o comportamento antigo

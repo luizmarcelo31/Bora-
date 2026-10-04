@@ -10,15 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TableCard } from "@/components/shared/TableCard";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
-import { Activity, ArrowLeft, Receipt } from "lucide-react";
+import { Activity, ArrowLeft, ScrollText } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
 import {
   cicloCobrancaLabel,
@@ -91,13 +83,7 @@ export default async function EmpresaPage({
   if (!empresa) notFound();
 
   // Atividade e auditoria são o contexto de um chamado: quem mexeu e quando.
-  const [vendas, tickets, auditoria, ultimoLogin] = await Promise.all([
-    prisma.sale.findMany({
-      where: { tenantId: empresaId, status: "CONCLUIDA" },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, total: true, createdAt: true },
-    }),
+  const [tickets, auditoria, ultimoLogin] = await Promise.all([
     prisma.ticket.findMany({
       where: { tenantId: empresaId },
       orderBy: { createdAt: "desc" },
@@ -114,11 +100,6 @@ export default async function EmpresaPage({
       select: { lastLogin: true },
     }),
   ]);
-
-  const totalVendas = await prisma.sale.aggregate({
-    where: { tenantId: empresaId, status: "CONCLUIDA" },
-    _sum: { total: true },
-  });
 
   const erro = sp.error ? MENSAGEM_EMPRESA[sp.error as keyof typeof MENSAGEM_EMPRESA] : null;
 
@@ -169,16 +150,17 @@ export default async function EmpresaPage({
             apoio: "Contas vinculadas",
           },
           {
-            rotulo: "Produtos",
-            valor: <Valor tom="neutro">{empresa._count.products}</Valor>,
-            apoio: "Itens no catálogo",
-          },
-          {
-            rotulo: "Vendas concluídas",
-            valor: <Valor tom="neutro">{empresa._count.sales}</Valor>,
-            apoio: (
-              <Valor tom="positivo">{formatCurrency(totalVendas._sum.total ?? 0)}</Valor>
+            // Substitui "Produtos" e "Vendas concluídas". O card 360 mostrava
+            // tamanho de catálogo, número de vendas e faturamento total — ou
+            // seja, a operação inteira do cliente, com valor em reais. Nada
+            // disso é necessário para administer uma assinatura.
+            rotulo: "Uso",
+            valor: (
+              <Valor tom={empresa.lastActivityAt ? "neutro" : "atencao"}>
+                {dataRelativa(empresa.lastActivityAt)}
+              </Valor>
             ),
+            apoio: "Último acesso registrado",
           },
           {
             rotulo: "Tickets",
@@ -187,7 +169,7 @@ export default async function EmpresaPage({
                 {empresa._count.tickets}
               </Valor>
             ),
-            apoio: `Último acesso: ${dataRelativa(ultimoLogin?.lastLogin ?? empresa.lastActivityAt)}`,
+            apoio: `Último login: ${dataRelativa(ultimoLogin?.lastLogin ?? empresa.lastActivityAt)}`,
           },
         ]}
       />
@@ -334,54 +316,6 @@ export default async function EmpresaPage({
         </Card>
       </div>
 
-      {/* Vendas recentes */}
-      <TableCard
-        title="Vendas recentes"
-        description="Últimas vendas concluídas desta empresa."
-        footer={vendas.length > 0 ? `Mostrando as ${vendas.length} mais recentes` : undefined}
-      >
-        {vendas.length === 0 ? (
-          <p className="p-6 text-center text-sm text-muted-foreground">Nenhuma venda registrada.</p>
-        ) : (
-          <>
-          {/* Mobile: lista compacta — tabela só no desktop */}
-          <ul className="flex flex-col gap-2 p-3 md:hidden">
-            {vendas.map((v) => (
-              <li key={v.id} className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-sm font-semibold tabular-nums">#{v.id}</span>
-                  <span className="text-xs text-muted-foreground">{v.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span>
-                </div>
-                <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(v.total)}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Venda</TableHead>
-                <TableHead>Quando</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vendas.map((v) => (
-                <TableRow key={v.id}>
-                  <TableCell className="tabular-nums">#{v.id}</TableCell>
-                  <TableCell>{v.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">
-                    {formatCurrency(v.total)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </div>
-          </>
-        )}
-      </TableCard>
-
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Tickets */}
         <TableCard
@@ -421,7 +355,7 @@ export default async function EmpresaPage({
           action={
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/admin/auditoria?empresa=${empresa.id}`}>
-                <Receipt aria-hidden="true" className="size-4" />
+                <ScrollText aria-hidden="true" className="size-4" />
                 Ver tudo
               </Link>
             </Button>

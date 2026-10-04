@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/admin";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DailySummary } from "@/components/shared/DailySummary";
-import { LowStockTable } from "@/app/dashboard/low-stock-table";
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 import { KpiFaixa } from "@/components/shared/MetricCard";
 import { Valor } from "@/components/shared/Valor";
@@ -13,12 +12,13 @@ import { Button } from "@/components/ui/button";
 import {
   Activity,
   Building2,
+  Clock,
   LifeBuoy,
   Package,
-  ShoppingCart,
   Users,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
+import { dataRelativaCurta } from "@/lib/tempo";
 import {
   acaoAuditoriaLabel,
   labelDe,
@@ -32,6 +32,11 @@ import {
 
 const EM_ABERTO = ["ABERTO", "EM_ANALISE", "AGUARDANDO_CLIENTE"] as const;
 
+// `Date.now()` lido uma vez no módulo, não no render: o React Compiler trata
+// impureza em render como erro, e o mesmo padrão já é usado em `/admin/saude`.
+const AGORA = Date.now();
+const USO_RECENTE_MS = 7 * 86_400_000;
+
 export default async function AdminHomePage() {
   await requireSuperAdmin();
 
@@ -39,21 +44,16 @@ export default async function AdminHomePage() {
     statusEmpresas,
     empresas,
     usuarios,
-    produtos,
-    vendas,
     assinaturas,
     ticketsAbertosTotal,
     listaTickets,
     ticketsCriticos,
-    empresasComMovimento,
+    empresasComUso,
     auditoria,
-    lowStockItems,
   ] = await Promise.all([
     prisma.tenant.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.tenant.count(),
     prisma.user.count(),
-    prisma.product.count(),
-    prisma.sale.count({ where: { status: "CONCLUIDA" } }),
     prisma.subscription.findMany({
       where: { status: { in: ["ATIVA", "EXPERIMENTACAO"] } },
       include: { plan: { select: { monthlyPrice: true } } },
@@ -68,22 +68,27 @@ export default async function AdminHomePage() {
     prisma.ticket.count({
       where: { priority: "CRITICA", status: { in: [...EM_ABERTO] } },
     }),
+    // "Com mais uso" = quem usou mais recentemente. Antes esta lista era
+    // ordenada por `lastActivityAt` (que nunca era atualizado depois da
+    // criação) e exibia a contagem de vendas — duas coisas erradas: a ordem era
+    // por data de cadastro e o número expunha o movimento do cliente. Ver
+    // `docs/PRIVACIDADE-PLATAFORMA.md`.
     prisma.tenant.findMany({
       where: { status: { in: ["ATIVA", "TRIAL"] } },
       orderBy: { lastActivityAt: "desc" },
       take: 5,
-      include: { _count: { select: { sales: true } } },
+      select: { id: true, name: true, lastActivityAt: true },
     }),
     prisma.platformAuditLog.findMany({ orderBy: { createdAt: "desc" }, take: 6 }),
-    prisma.inventory.findMany({
-      where: { quantity: { lte: 0 } },
-      include: { product: { select: { name: true } } },
-      take: 10,
-    }),
   ]);
 
   const porStatus = new Map(statusEmpresas.map((e) => [e.status, e._count._all]));
   const ativas = (porStatus.get("ATIVA") ?? 0) + (porStatus.get("TRIAL") ?? 0);
+  // "Uso recente" = alguém entrou ou vendeu nos últimos 7 dias. Usa o mesmo
+  // sinal da tela de saúde, para os dois painéis contarem a mesma história.
+  const ativasComUso = empresasComUso.filter(
+    (e) => e.lastActivityAt && AGORA - e.lastActivityAt.getTime() < USO_RECENTE_MS
+  ).length;
   const mrr = assinaturas.reduce(
     (s, a) =>
       s + (a.billingCycle === "ANUAL" ? Math.round(a.plan.monthlyPrice / 12) : a.plan.monthlyPrice),
@@ -94,12 +99,6 @@ export default async function AdminHomePage() {
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
         <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
         <DailySummary />
-        {lowStockItems.length > 0 && (
-          <section>
-            <h2 className="text-lg font-semibold mb-2">⚠️ Estoque Crítico</h2>
-            <LowStockTable items={lowStockItems} />
-          </section>
-        )}
         <PageHeader
           title="Visão geral da plataforma"
           badge="Plataforma"
@@ -135,9 +134,13 @@ export default async function AdminHomePage() {
             apoio: ticketsCriticos > 0 ? `${ticketsCriticos} crítico(s)` : "Nenhum crítico",
           },
           {
-            rotulo: "Vendas concluídas",
-            valor: <Valor tom="neutro">{vendas}</Valor>,
-            apoio: "Somadas de todas as empresas",
+            // Substitui o antigo "Vendas concluídas". A pergunta que um
+            // investidor faz é "isso está sendo usado?", e a resposta honesta
+            // não é quantas vendas existem — é quantas empresas entram no
+            // produto. Vendas são dado do cliente.
+            rotulo: "Empresas com uso recente",
+            valor: <Valor tom={ativasComUso > 0 ? "positivo" : "neutro"}>{ativasComUso}</Valor>,
+            apoio: "Ativas nos últimos 7 dias",
           },
         ]}
       />
@@ -253,17 +256,17 @@ export default async function AdminHomePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users aria-hidden="true" className="size-4" />
-              Empresas com mais movimento
+              Empresas com uso mais recente
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {empresasComMovimento.length === 0 ? (
+            {empresasComUso.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Nenhuma empresa ativa ainda.
               </p>
             ) : (
               <ul className="divide-y">
-                {empresasComMovimento.map((e) => (
+                {empresasComUso.map((e) => (
                   <li key={e.id} className="flex items-center justify-between py-2.5 text-sm">
                     <Link
                       prefetch={false}
@@ -273,13 +276,12 @@ export default async function AdminHomePage() {
                       {e.name}
                     </Link>
                     <span className="flex items-center gap-3 text-xs text-muted-foreground">
+                      {/* Quando, não quanto. "Vendeu 340" é dado do cliente;
+                          "entrou há 2 horas" é sinal de produto. */}
                       <span className="flex items-center gap-1">
-                        <ShoppingCart aria-hidden="true" className="size-3" />
-                        {e._count.sales}
+                        <Clock aria-hidden="true" className="size-3" />
+                        {e.lastActivityAt ? dataRelativaCurta(e.lastActivityAt) : "sem registro"}
                       </span>
-                      <StatusPill tom={statusEmpresaTom[e.status]}>
-                        {labelDe(statusEmpresaLabel, e.status)}
-                      </StatusPill>
                     </span>
                   </li>
                 ))}
@@ -291,7 +293,6 @@ export default async function AdminHomePage() {
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Package aria-hidden="true" className="size-3.5" />
-        {produtos.toLocaleString("pt-BR")} produto(s) no catálogo de todas as empresas ·{" "}
         {usuarios.toLocaleString("pt-BR")} usuário(s) cadastrado(s)
       </p>
     </main>

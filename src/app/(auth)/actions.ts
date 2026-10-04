@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema } from "@/lib/validators";
 import { getUserContextByEmail } from "@/lib/tenant";
+import { marcarAtividade } from "@/lib/atividade";
 import { resolvePostLoginRedirect } from "@/lib/redirect";
 
 export async function login(formData: FormData) {
@@ -31,6 +32,12 @@ export async function login(formData: FormData) {
   // Destino validado pelo role: super admin só vai para /admin*,
   // demais roles nunca vão para /admin*. Sem vínculo → home padrão.
   const dbUser = await getUserContextByEmail(parsed.data.email);
+
+  // Entrar na plataforma é o sinal mais barato de vida que existe. Sem isto,
+  // `lastActivityAt` só mudaria na criação da empresa e todo o painel de
+  // churn ficaria cego. Ver `src/lib/atividade.ts`.
+  await marcarAtividade(dbUser?.tenantId);
+
   redirect(resolvePostLoginRedirect(dbUser?.role, rawNext));
 }
 

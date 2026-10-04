@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Building2, Users, ShoppingCart, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/validators";
+import { dataRelativaCurta } from "@/lib/tempo";
 import { calcularMRR } from "@/lib/plataforma";
 import {
   LABELS,
@@ -86,7 +87,11 @@ export default async function EmpresasPage({
       skip: (pagina - 1) * POR_PAGINA,
       take: POR_PAGINA,
       include: {
-        _count: { select: { users: true, products: true, sales: true, tickets: true } },
+        // Só `users` e `tickets`. `sales` e `products` saíram: contagem de venda
+        // e tamanho de catálogo são dado do cliente, e a plataforma não precisa
+        // deles para decidir nada. `users` continua porque é o que sustenta a
+        // cobrança do limite de plano.
+        _count: { select: { users: true, tickets: true } },
         subscription: { include: { plan: { select: { name: true, monthlyPrice: true } } } },
       },
     }),
@@ -205,7 +210,7 @@ export default async function EmpresasPage({
                       {t.name}
                     </Link>
                   }
-                  apoio={`${t._count.users} usuários · ${t._count.sales} vendas`}
+                  apoio={`${t._count.users} usuário(s) · ${dataRelativaCurta(t.lastActivityAt)}`}
                   badge={
                     <StatusPill tom={statusEmpresaTom[t.status]}>
                       {labelDe(statusEmpresaLabel, t.status)}
@@ -233,8 +238,7 @@ export default async function EmpresasPage({
                 <TableHead>Saúde</TableHead>
                 <TableHead>Plano</TableHead>
                 <TableHead className="text-right">Usuários</TableHead>
-                <TableHead className="text-right">Produtos</TableHead>
-                <TableHead className="text-right">Vendas</TableHead>
+                <TableHead className="text-right">Último uso</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -277,8 +281,9 @@ export default async function EmpresasPage({
                     )}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{t._count.users}</TableCell>
-                  <TableCell className="text-right tabular-nums">{t._count.products}</TableCell>
-                  <TableCell className="text-right tabular-nums">{t._count.sales}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {dataRelativaCurta(t.lastActivityAt)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

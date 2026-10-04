@@ -50,7 +50,7 @@ const CORTE_SEM_ATIVIDADE = new Date(AGORA - 14 * 86_400_000);
 export default async function SaudePage() {
   await requireSuperAdmin();
 
-  const [banco, empresas, ticketsAbertos, assinaturas, semAtividade, crticos, produtos, vendas] =
+  const [banco, empresas, ticketsAbertos, assinaturas, semAtividade, crticos, usuarios] =
     await Promise.all([
       checarBanco(),
       prisma.tenant.groupBy({ by: ["status"], _count: { _all: true } }),
@@ -70,8 +70,7 @@ export default async function SaudePage() {
       prisma.ticket.count({
         where: { priority: "CRITICA", status: { in: ["ABERTO", "EM_ANALISE"] } },
       }),
-      prisma.product.count(),
-      prisma.sale.count({ where: { status: "CONCLUIDA" } }),
+      prisma.user.count(),
     ]);
 
   const porStatus = new Map(empresas.map((e) => [e.status, e._count._all]));
@@ -112,8 +111,7 @@ export default async function SaudePage() {
 
   const volume: { recurso: string; registros: string }[] = [
     { recurso: "Empresas", registros: String(totalEmpresas) },
-    { recurso: "Produtos no catálogo", registros: String(produtos) },
-    { recurso: "Vendas concluídas", registros: String(vendas) },
+    { recurso: "Usuários", registros: String(usuarios) },
     { recurso: "Tickets", registros: `${ticketsAbertos} em aberto` },
   ];
 
@@ -232,12 +230,8 @@ export default async function SaudePage() {
                 <TableCell className="text-right tabular-nums">{totalEmpresas}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>Produtos no catálogo</TableCell>
-                <TableCell className="text-right tabular-nums">{produtos}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Vendas concluídas</TableCell>
-                <TableCell className="text-right tabular-nums">{vendas}</TableCell>
+                <TableCell>Usuários</TableCell>
+                <TableCell className="text-right tabular-nums">{usuarios}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Tickets</TableCell>
