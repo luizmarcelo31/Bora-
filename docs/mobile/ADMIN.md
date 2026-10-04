@@ -129,15 +129,77 @@ conferir uma dúvida e não encontra.
 
 ```
 npx tsc --noEmit                          → limpo
+npx eslint src/app/admin src/components/shared → 0 erros
 node scripts/auditar-cores-hardcoded.mjs   → 0 falhas
 node scripts/auditar-contraste.mjs         → 0 falhas
 node scripts/auditar-sentence-case.mjs     → sem regressão
 ```
 
-## Pendência
+### Em navegador, 390px, login real de Super Admin
 
-A prova em navegador das telas do admin exige login de Super Admin
-(`luizmarcelodev@gmail.com`). O `.env` do projeto tem a credencial do
-proprietário do tenant (`luizmarcelo31@gmail.com`), que recebe 403 em `/admin`.
-Sem essa credencial, o que está comprovado aqui é o TypeScript e os gates — não
-o pixels.
+`scripts/screenshot-admin-390.js` mede overflow horizontal, altura em telas e
+presença de lista mobile em cada rota. `scripts/screenshot-admin-listas.js` rola
+até a primeira linha e mede altura e estouro do pai.
+
+```
+00-visao-geral    overflowX=0px · 2.16 telas · lista mobile ok
+01-empresas      overflowX=0px · 1.34 telas · lista mobile ok
+02-empresa-360   overflowX=0px · 2.31 telas · lista mobile ok
+03-usuarios      overflowX=0px · 1.27 telas · lista mobile ok
+04-planos        overflowX=0px · 1.23 telas · tabela desktop oculta
+05-assinaturas   overflowX=0px · 1.34 telas · tabela desktop oculta
+06-suporte       overflowX=0px · 1.83 telas · tabela desktop oculta
+07-notificacoes  overflowX=0px · 1.23 telas · tabela desktop oculta
+08-permissoes    overflowX=0px · 2.13 telas · lista mobile ok
+09-auditoria     overflowX=0px · 1.01 telas · tabela desktop oculta
+10-saude         overflowX=0px · 1.47 telas · lista mobile ok
+11-configuracoes overflowX=0px · 1.21 telas · tabela desktop oculta
+```
+
+**Overflow horizontal zero nas 12 rotas** — a matriz de 7 colunas de permissões
+não vaza mais, porque no mobile ela virou lista.
+
+Altura das linhas: empresas 85px, usuários 82px, permissões 76px, saúde 56px,
+empresa-360 58px. Nenhuma estoura o pai.
+
+Screenshots em `docs/mobile/screens/admin/390/` e `.../390-lista/`.
+
+### O que a prova visual mudou
+
+Duas coisas que o código sozinho não pegaria:
+
+**"Assinat." não está cortado.** O agente de visão reportou o rótulo da barra
+inferior truncado. Medi: 43px de texto numa célula de 76.4px, `estoura: false`.
+Era erro de leitura do antialiasing em 2x. Nada a fazer.
+
+**A lista de usuários estava com 111px por linha.** Dois badges empilhados — o
+de função e o de status. O de status era "Ativo" em *todas* as linhas: numa lista
+de usuários quase todos estão ativos, e selo que se repete para sempre deixa de
+ser lido. Agora o badge de status só aparece quando o usuário está inativo, e a
+linha caiu para 82px.
+
+### Limite desta verificação
+
+O banco de demonstração tem **2 empresas, 2 usuários, 0 planos, 0 assinaturas,
+0 tickets, 0 logs de auditoria, 0 comunicações**. Cinco listas do admin renderizam
+`EmptyState` e não têm linha para medir.
+
+As variantes mobile dessas cinco rotas **existem no fonte** — confirmado por
+grep, todas com `<ul className="md:hidden">` pareada com
+`<div className="hidden md:block">`. O que não foi provado é como elas se
+comportam com muitos itens. Para isso o banco precisa de dados de demonstração.
+
+Um risco do mesmo tipo, já corrigido: o script procurava `<ul md:hidden>` *com*
+`li` dentro. Numa lista vazia o bloco nem renderiza, e o script reportava
+"FALTA A VARIANTE MOBILE" — alarme falso em cinco rotas. O teste agora separa
+os dois casos, e o comentário diz que o DOM não é fonte para essa conclusão.
+
+## Duas decisões que registrei
+
+**Login com `networkidle`, não `domcontentloaded`.** O login é uma Server
+Action. Clicar antes do React hidratar faz o browser submeter o formulário
+nativamente — como GET, com email e senha na URL. Aconteceu, e a senha ficou
+visível no log. O script agora espera a hidratação e falha alto se a sessão não
+entrar, em vez de fotografar doze telas de "Sem acesso".
+
+**Uma medição errada que quase virou bug reportada.** Ver acima.

@@ -116,8 +116,15 @@ export default async function UsuariosPage({
               <LinhaLista
                 titulo={u.name}
                 apoio={`${u.email} · ${u.tenant.name}`}
-                badge={<StatusBadge status={u.active ? "active" : "inactive"} />}
-                badges={<Badge variant="outline">{funcaoLabel[u.role]}</Badge>}
+                badges={
+                  <>
+                    <Badge variant="outline">{funcaoLabel[u.role]}</Badge>
+                    {/* "Ativo" em toda linha é ruído: numa lista de usuários
+                        quase todos estão ativos, e o selo que se repete para
+                        sempre deixa de ser lido. Só o inativo é informação. */}
+                    {!u.active ? <StatusBadge status="inactive" /> : null}
+                  </>
+                }
               />
             </li>
           ))}
