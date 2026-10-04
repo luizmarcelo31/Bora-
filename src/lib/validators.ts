@@ -10,6 +10,25 @@ import {
 // TENANT (Empresa)
 // ============================================================
 
+/**
+ * Segmentos que a plataforma atende.
+ *
+ * `Tenant.type` é String no banco, não enum — o Prisma não obriga. O validador
+ * abaixo é a fronteira real, e é aqui que o conjunto é fechado.
+ *
+ * v1 é `CONVENIENCE`. Os outros três já estavam no schema desde o começo para
+ * que a decisão de produto (outros segmentos, multi-loja) não dependesse de
+ * migration.
+ */
+export const SEGMENTOS = {
+  CONVENIENCE: 'Conveniência',
+  RESTAURANT: 'Restaurante',
+  RETAIL: 'Varejo',
+  SERVICE: 'Serviços',
+} as const;
+
+export type Segmento = keyof typeof SEGMENTOS;
+
 export const createTenantSchema = z.object({
   name: z.string()
     .min(1, 'Nome da empresa e obrigatorio')
@@ -21,9 +40,33 @@ export const createTenantSchema = z.object({
     .regex(/^\d{10,15}$/, 'Telefone deve ter 10-15 digitos')
     .optional()
     .or(z.literal('')),
+  /**
+   * Plano obrigatório. `Subscription.tenantId` é único, e empresa sem plano é
+   * uma empresa que a plataforma não sabe cobrar.
+   *
+   * `z.coerce.number()` sem `invalid_type_error`: no Zod 4 o parametro mudou de
+   * nome. O campo vazio cai no `int()` com a mensagem abaixo, que é a que o
+   * admin precisa ver.
+   */
+  planId: z.coerce.number().int('Escolha um plano').positive('Escolha um plano'),
+  /**
+   * Dias de teste. O plano sugere; o admin pode encurtar ou zerar na hora — é a
+   * alavanca comercial que precisa estar na mão sem entrar no cadastro de planos.
+   */
+  trialDays: z.coerce
+    .number()
+    .int('Dias de teste devem ser um numero inteiro')
+    .min(0, 'Dias de teste nao pode ser negativo')
+    .max(365, 'Dias de teste nao pode passar de 365')
+    .default(14),
 });
 
-export const updateTenantSchema = createTenantSchema.partial();
+/** O plano e o trial são de criação. Depois que a empresa existe, a assinatura
+ *  tem ciclo de vida próprio (renovação, suspensão, cancelamento) e não é
+ *  editada por este schema. */
+export const updateTenantSchema = createTenantSchema
+  .partial()
+  .omit({ planId: true, trialDays: true });
 
 export type CreateTenantInput = z.infer<typeof createTenantSchema>;
 export type UpdateTenantInput = z.infer<typeof updateTenantSchema>;
