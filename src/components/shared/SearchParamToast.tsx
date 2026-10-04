@@ -56,7 +56,12 @@ function SearchParamToastInner({
     seen.current = key;
 
     if (error) {
-      toast.error(errorMap?.[error] ?? fallbackError);
+      // `msg` carrega a mensagem que o servidor já calculou — usada quando o
+      // erro tem um número que o mapa estático não conhece ("limite do plano
+      // atingido: 300 produtos"). O mapa continua sendo o piso, para o caso de
+      // o servidor redirecionar sem detalhe.
+      const doServidor = searchParams.get("msg");
+      toast.error(doServidor ?? errorMap?.[error] ?? fallbackError);
     } else if (ok && (okText || okMap?.[ok])) {
       toast.success(okMap?.[ok] ?? okText!.replace("{v}", ok));
     }

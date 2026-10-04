@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Funcao } from "@prisma/client";
+import { verificarLimite } from "@/lib/limites";
 import { ProductService } from "@/services";
 import { requireSessionTenant } from "@/lib/tenant";
 import { requirePermission } from "@/lib/permissions";
@@ -21,6 +22,14 @@ function toCents(raw: FormDataEntryValue | null): number | undefined {
 export async function createProductAction(formData: FormData) {
   const { tenant, dbUser } = await requireSessionTenant("/dashboard/produtos");
   requirePermission(dbUser.role as Funcao, "products.create");
+
+  // Limite do plano, verificado no servidor e antes de qualquer escrita.
+  // Cadastrar produto é ação de configuração — o cliente está parado montando o
+  // catálogo, então recusar com mensagem clara é incômodo pequeno e upgrade
+  // concreto. (Venda por mês é a outra metade da regra e nunca bloqueia:
+  // ver `src/lib/limites.ts`.)
+  const limite = await verificarLimite(tenant.id, "produtos");
+  if (!limite.ok) redirect(`/dashboard/produtos?error=limite&msg=${encodeURIComponent(limite.mensagem)}`);
 
   const price = toCents(formData.get("price"));
   if (price === undefined) redirect("/dashboard/produtos?error=price");

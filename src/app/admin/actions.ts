@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireSuperAdmin, assertMutableUser } from "@/lib/admin";
+import { verificarLimite } from "@/lib/limites";
 import { createTenantSchema, createUserSchema } from "@/lib/validators";
 
 /**
@@ -106,6 +107,11 @@ export async function createUserAction(formData: FormData) {
 
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) redirect("/admin/usuarios?error=tenant");
+
+  // Limite do plano. Criar usuário é configuração, não operação: barrar aqui
+  // é o que faz o plano valer. Ver `src/lib/limites.ts`.
+  const limite = await verificarLimite(tenantId, "usuarios");
+  if (!limite.ok) redirect("/admin/usuarios?error=limite");
 
   const existing = await prisma.user.findFirst({
     where: { tenantId, email: parsed.data.email },

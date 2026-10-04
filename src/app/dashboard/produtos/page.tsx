@@ -40,6 +40,7 @@ const ERROR_MSG: Record<string, string> = {
   arquivo: "Arquivo inválido. Use JPG, PNG ou WebP até 2MB.",
   storage: "Storage não configurado. Veja docs/STORAGE.md.",
   fail: "Não foi possível concluir. Tente novamente.",
+  limite: "Limite do plano atingido.",
 };
 
 export default async function ProdutosPage({

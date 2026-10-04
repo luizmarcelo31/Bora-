@@ -30,6 +30,7 @@ const ERROR_MSG: Record<string, string> = {
   tenant: "Empresa inválida.",
   duplicate: "Este email já existe nesta empresa.",
   root: "A conta raiz não pode ser duplicada nem alterada.",
+  limite: "Limite de usuários do plano atingido nesta empresa.",
 };
 
 export default async function UsuariosPage({
