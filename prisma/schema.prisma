@@ -32,6 +32,7 @@ model Tenant {
 
   subscription Subscription?
   tickets      Ticket[]
+  featureFlags FeatureFlag[]
 
   users              User[]
   products           Product[]
@@ -920,4 +921,31 @@ model Integracao {
   updatedAt DateTime @updatedAt
 
   @@unique([key])
+}
+
+/// Feature flag por empresa.
+///
+/// Sem esta tabela, ligar uma feature nova para 10% da base exige deploy — e o
+/// deploy é o custo mais caro que existe enquanto a hipótese ainda é incerta.
+/// Uma vez no ar, a feature vira decisão de produto, não de engenharia.
+///
+/// `tenantId` nulo = ligado para a plataforma inteira. Preenchido = só para
+/// aquela empresa. Precedência na leitura: linha do tenant > linha global.
+model FeatureFlag {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  /// O que a flag controla. Aparece na tela do Super Admin: sem isso, quem liga
+  /// a flag daqui a seis meses não descobre o que acabou de ligar.
+  descricao String
+  enabled   Boolean  @default(false)
+  tenantId  Int?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  /// Quem ligou. Uma flag sem autoria é um mistério em produção.
+  updatedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
 }
