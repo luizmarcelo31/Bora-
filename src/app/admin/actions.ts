@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireSuperAdmin, assertMutableUser } from "@/lib/admin";
 import { verificarLimite } from "@/lib/limites";
 import { createTenantSchema, createUserSchema } from "@/lib/validators";
+import { ehChaveValida, salvarFeatureFlag as salvar } from "@/lib/feature-flags";
 
 /**
  * Cria empresa e assinatura juntas.
@@ -129,4 +130,17 @@ export async function createUserAction(formData: FormData) {
 
   revalidatePath("/admin/usuarios");
   redirect("/admin/usuarios?ok=1");
+}
+
+export async function salvarFeatureFlagAction(formData: FormData) {
+  const key = String(formData.get("key") ?? "");
+  const tenantId = Number(formData.get("tenantId") ?? "0");
+  const enabled = formData.get("enabled") === "true";
+
+  if (!ehChaveValida(key)) redirect("/admin/features?error=invalid");
+  if (tenantId < 0) redirect("/admin/features?error=tenant");
+
+  await salvar(key, tenantId, enabled);
+  revalidatePath("/admin/features");
+  redirect("/admin/features?ok=1");
 }

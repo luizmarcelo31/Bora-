@@ -77,6 +77,11 @@ export async function todosOsNovesAtivos(
   }));
 }
 
+
+export function ehChaveValida(key: string): key is FeatureKey {
+  return FEATURE_KEYS.includes(key as FeatureKey);
+}
+
 export async function salvarFeatureFlag(
   key: string,
   tenantId: number,
