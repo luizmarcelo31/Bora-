@@ -933,7 +933,7 @@ model Integracao {
 /// aquela empresa. Precedência na leitura: linha do tenant > linha global.
 model FeatureFlag {
   id        Int      @id @default(autoincrement())
-  key       String   @unique
+  key       String
   /// O que a flag controla. Aparece na tela do Super Admin: sem isso, quem liga
   /// a flag daqui a seis meses não descobre o que acabou de ligar.
   descricao String
@@ -943,6 +943,11 @@ model FeatureFlag {
 
   /// Quem ligou. Uma flag sem autoria é um mistério em produção.
   updatedBy String?
+
+  /// Uma flag é única no par (empresa, chave). O `key` sozinho é global,
+  /// e o mercado multi-estilo só faz sentido quando a mesma chave aparece
+  /// em duas empresas diferentes com status diferentes.
+  @@unique([tenantId, key])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
