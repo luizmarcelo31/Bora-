@@ -60,7 +60,7 @@ export default async function UsuariosPage({
           Novo usuário
         </h2>
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm dark:border-border dark:bg-card">
-          <form action={createUserAction} className="grid gap-3 sm:grid-cols-2">
+          <form action={createUserAction} className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
               Empresa*
               <SelectField
@@ -103,6 +103,9 @@ export default async function UsuariosPage({
           </form>
         </div>
       </section>
+
+      {/* Separador visual entre criação e listagem */}
+      <div className="border-t border-border/50" />
 
       {/* Lista: mobile usa LinhaLista, desktop usa Table. */}
       <section aria-labelledby="usuarios-aria">

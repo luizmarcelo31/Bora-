@@ -258,13 +258,13 @@ export function PdvClient({
         </Button>
       </div>
       <Dialog open={pinOpen} onOpenChange={(o) => { setPinOpen(o); if (!o) { setPinValue(""); setPinError(""); } }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm border-border bg-card shadow-sm dark:border-border dark:bg-card">
           <DialogHeader>
             <DialogTitle>Trocar operador</DialogTitle>
             <DialogDescription>Digite o PIN para trocar de operador.</DialogDescription>
           </DialogHeader>
-            <label className="flex flex-col gap-1 text-sm">
-              PIN do operador
+          <label className="flex flex-col gap-1.5 text-sm">
+            PIN do operador
             <Input
               type="password"
               placeholder="PIN do operador"
@@ -273,7 +273,7 @@ export function PdvClient({
               aria-describedby={pinError ? "pin-error" : undefined}
               value={pinValue}
               onChange={(e) => { setPinValue(e.target.value); setPinError(""); }}
-              className="mb-3"
+              className="border-border bg-background shadow-sm dark:border-border dark:bg-background"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && pinValue === "1234") {
                   setPinOpen(false);
@@ -284,9 +284,9 @@ export function PdvClient({
                 }
               }}
             />
-            </label>
             {pinError && <span id="pin-error" role="alert" className="text-xs text-destructive">{pinError}</span>}
-            <p className="text-xs text-muted-foreground mt-2">PIN: 1234 (demo)</p>
+            <p className="text-xs text-muted-foreground mt-1">PIN: 1234 (demo)</p>
+          </label>
         </DialogContent>
       </Dialog>
       <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
@@ -375,7 +375,7 @@ export function PdvClient({
               <label className="flex flex-col gap-1 text-sm">
                 Desconto (R$)
                 <Input value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" inputMode="decimal" />
-                <span className="text-[10px] text-muted-foreground">Validado no servidor</span>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">Validado no servidor</span>
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 Cliente (opcional)
