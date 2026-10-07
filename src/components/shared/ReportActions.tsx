@@ -89,6 +89,37 @@ function proporcaoNatural(dataUrl: string): number | null {
   }
 }
 
+/** Cor semântica para valores de pagamento no PDF. */
+function paymentColor(method: string): [number, number, number] | null {
+  const m = method.toLowerCase();
+  if (m.includes("pix") || m.includes("dinheiro")) return [5, 150, 105];
+  if (m.includes("cartão") || m.includes("credit") || m.includes("debit")) return [37, 99, 235];
+  return null;
+}
+
+/** Cor semântica para tipo financeiro no PDF. */
+function financialTypeColor(type: string): [number, number, number] | null {
+  if (type === "RECEITA") return [5, 150, 105];
+  if (type === "DESPESA") return [220, 38, 38];
+  if (type === "TRANSFERENCIA") return [37, 99, 235];
+  return null;
+}
+
+/** Cor semântica para situação de estoque no PDF. */
+function stockStatusColor(status: string): [number, number, number] | null {
+  if (status === "Baixo") return [220, 38, 38];
+  if (status === "Ok") return [5, 150, 105];
+  return null;
+}
+
+/** Cor semântica para ação de auditoria no PDF. */
+function auditActionColor(action: string): [number, number, number] | null {
+  if (action === "CREATE") return [5, 150, 105];
+  if (action === "UPDATE") return [37, 99, 235];
+  if (action === "DELETE") return [220, 38, 38];
+  return null;
+}
+
 /** Largura que preserva a proporção, para não distorcer a logo. */
 function larguraDaLogo(dataUrl: string, alturaMm: number): number {
   const proporcao = proporcaoNatural(dataUrl);
@@ -164,12 +195,35 @@ export function ReportActions({
     } else {
       autoTable(doc, {
         head: [columns],
-        body: rows,
+        body: rows.map((r) =>
+          r.map((cell, ci) => {
+            const colName = (columns[ci] || "").toLowerCase();
+            let color: [number, number, number] | null = null;
+            const cellStr = String(cell).toLowerCase();
+            if (colName.includes("pagamento") || colName.includes("tipo")) {
+              color = paymentColor(cellStr);
+            } else if (colName === "situação") {
+              color = stockStatusColor(cellStr);
+            } else if (colName === "ação" || colName === "a\\\\u00e7\\\\u00e3o") {
+              color = auditActionColor(cellStr.toUpperCase());
+            } else if (colName === "pago") {
+              color = cellStr === "pago" ? [5, 150, 105] : [220, 38, 38];
+            }
+            return color ? { content: cell, styles: { textColor: color } } : cell;
+          })
+        ),
         foot: footer ? [footer] : undefined,
         startY: subtitle ? yTitulo + 12 : yTitulo + 6,
         styles: { fontSize: 9 },
         headStyles: { fillColor: [24, 24, 27] },
         footStyles: { fillColor: [248, 250, 252], textColor: [24, 24, 27], fontStyle: "bold" },
+        didParseCell: (info) => {
+          if (info.section === "foot" && info.column.index === 1 && footer && footer.length > 1) {
+            info.cell.styles.fillColor = [248, 250, 252];
+            info.cell.styles.textColor = [220, 38, 38];
+            info.cell.styles.fontStyle = "bold";
+          }
+        },
       });
     }
 
