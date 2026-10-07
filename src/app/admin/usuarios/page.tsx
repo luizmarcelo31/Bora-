@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { createUserAction } from "@/app/admin/actions";
 import { funcaoLabel } from "@/lib/labels";
 import type { Funcao } from "@prisma/client";
+import { Users } from "lucide-react";
 
 const FUNCOES: Funcao[] = [
   "PROPRIETARIO",
@@ -53,11 +54,12 @@ export default async function UsuariosPage({
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <PageHeader title="Usuários" description="Todos os usuários da plataforma." />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Novo usuário</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Formulário de criação — usa Cards com bordas sutis, sem sombras agressivas. */}
+      <section aria-labelledby="novo-usuario-aria">
+        <h2 id="novo-usuario-aria" className="sr-only">
+          Novo usuário
+        </h2>
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm dark:border-border dark:bg-card">
           <form action={createUserAction} className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
               Empresa*
@@ -99,65 +101,70 @@ export default async function UsuariosPage({
               <Button type="submit">Criar usuário</Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-
-      {users.length === 0 ? (
-        <EmptyState title="Nenhum usuário" description="Crie o primeiro acima." />
-      ) : (
-        <TableCard
-          title="Usuários da plataforma"
-          description="Função e vínculo por empresa."
-          footer={`${users.length} usuário(s)`}
-        >
-        {/* Mobile: lista compacta — tabela só no desktop */}
-        <ul className="flex flex-col gap-2 p-3 md:hidden">
-          {users.map((u) => (
-            <li key={u.id}>
-              <LinhaLista
-                titulo={u.name}
-                apoio={`${u.email} · ${u.tenant.name}`}
-                badges={
-                  <>
-                    <Badge variant="outline">{funcaoLabel[u.role]}</Badge>
-                    {/* "Ativo" em toda linha é ruído: numa lista de usuários
-                        quase todos estão ativos, e o selo que se repete para
-                        sempre deixa de ser lido. Só o inativo é informação. */}
-                    {!u.active ? <StatusBadge status="inactive" /> : null}
-                  </>
-                }
-              />
-            </li>
-          ))}
-        </ul>
-        <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Empresa</TableHead>
-              <TableHead>Função</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell>{u.name}</TableCell>
-                <TableCell>{u.email}</TableCell>
-                <TableCell>{u.tenant.name}</TableCell>
-                <TableCell>{funcaoLabel[u.role]}</TableCell>
-                <TableCell>
-                  <StatusBadge status={u.active ? "active" : "inactive"} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
         </div>
-        </TableCard>
-      )}
+      </section>
+
+      {/* Lista: mobile usa LinhaLista, desktop usa Table. */}
+      <section aria-labelledby="usuarios-aria">
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="usuarios-aria" className="flex items-center gap-2 text-base font-semibold">
+            <Users aria-hidden="true" className="size-4" />
+            Usuários
+          </h2>
+          <span className="text-sm text-muted-foreground">{users.length} cadastrado(s)</span>
+        </div>
+
+        {users.length === 0 ? (
+          <EmptyState title="Nenhum usuário" description="Crie o primeiro acima." />
+        ) : (
+          <>
+            {/* Mobile: lista compacta */}
+            <ul className="flex flex-col gap-1.5 p-3 md:hidden">
+              {users.map((u) => (
+                <li key={u.id}>
+                  <LinhaLista
+                    titulo={u.name}
+                    apoio={`${u.email} · ${u.tenant.name}`}
+                    badges={
+                      <>
+                        <Badge variant="outline">{funcaoLabel[u.role]}</Badge>
+                        {!u.active ? <StatusBadge status="inactive" /> : null}
+                      </>
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+            {/* Desktop: tabela com scroll horizontal */}
+            <div className="hidden overflow-x-auto md:block rounded-xl border border-border bg-card shadow-sm dark:border-border dark:bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Empresa</TableHead>
+                    <TableHead>Função</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell>{u.name}</TableCell>
+                      <TableCell>{u.email}</TableCell>
+                      <TableCell>{u.tenant.name}</TableCell>
+                      <TableCell>{funcaoLabel[u.role]}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={u.active ? "active" : "inactive"} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        )}
+      </section>
     </main>
   );
 }

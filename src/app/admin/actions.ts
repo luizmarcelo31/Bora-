@@ -134,11 +134,12 @@ export async function createUserAction(formData: FormData) {
 
 export async function salvarFeatureFlagAction(formData: FormData) {
   const key = String(formData.get("key") ?? "");
-  const tenantId = Number(formData.get("tenantId") ?? "0");
+  const tenantIdRaw = String(formData.get("tenantId") ?? "0");
+  const tenantId = tenantIdRaw === "" || tenantIdRaw === "0" ? null : Number(tenantIdRaw);
   const enabled = formData.get("enabled") === "true";
 
   if (!ehChaveValida(key)) redirect("/admin/features?error=invalid");
-  if (tenantId < 0) redirect("/admin/features?error=tenant");
+  if (tenantId !== null && tenantId < 0) redirect("/admin/features?error=tenant");
 
   await salvar(key, tenantId, enabled);
   revalidatePath("/admin/features");

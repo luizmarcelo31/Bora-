@@ -110,7 +110,7 @@ export default async function AdminHomePage() {
           }
         />
 
-      {/* Linha 1: o dinheiro e o cliente. */}
+      {/* KPIs: hierarquia clara, valores tabulares, apoio menor e silencioso. */}
       <KpiFaixa
         colunas={4}
         itens={[
@@ -134,10 +134,6 @@ export default async function AdminHomePage() {
             apoio: ticketsCriticos > 0 ? `${ticketsCriticos} crítico(s)` : "Nenhum crítico",
           },
           {
-            // Substitui o antigo "Vendas concluídas". A pergunta que um
-            // investidor faz é "isso está sendo usado?", e a resposta honesta
-            // não é quantas vendas existem — é quantas empresas entram no
-            // produto. Vendas são dado do cliente.
             rotulo: "Empresas com uso recente",
             valor: <Valor tom={ativasComUso > 0 ? "positivo" : "neutro"}>{ativasComUso}</Valor>,
             apoio: "Ativas nos últimos 7 dias",
@@ -145,21 +141,21 @@ export default async function AdminHomePage() {
         ]}
       />
 
-      {/* Linha 2: o que precisa de ação hoje. */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <LifeBuoy aria-hidden="true" className="size-4" />
-                Tickets que precisam de você
-              </span>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/suporte">Ver todos</Link>
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+
+      {/* Painéis: 2 colunas desktop, 1 coluna mobile. Cards com bordas sutis, sem sombras agressivas. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Tickets que precisam de ação */}
+        <section aria-labelledby="tickets-aria">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="tickets-aria" className="flex items-center gap-2 text-base font-semibold">
+              <LifeBuoy aria-hidden="true" className="size-4" />
+              Ações hoje
+            </h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/admin/suporte">Ver todos</Link>
+            </Button>
+          </div>
+          <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
             {listaTickets.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Nenhum ticket em aberto. Tudo resolvido.
@@ -167,10 +163,10 @@ export default async function AdminHomePage() {
             ) : (
               <ul className="divide-y">
                 {listaTickets.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <li key={t.id} className="flex items-center justify-between gap-3 py-2.5 first:rounded-t-xl" style={{ borderTop: "1px solid var(--border)" }}>
                     <div className="min-w-0">
-                      <p className="truncate font-semibold">{t.subject}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="truncate text-sm font-semibold text-foreground">{t.subject}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         {t.tenant.name} · {t.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </p>
                     </div>
@@ -186,22 +182,21 @@ export default async function AdminHomePage() {
                 ))}
               </ul>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Activity aria-hidden="true" className="size-4" />
-                Ações administrativas recentes
-              </span>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/auditoria">Ver auditoria</Link>
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Auditoria recente */}
+        <section aria-labelledby="auditoria-aria">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="auditoria-aria" className="flex items-center gap-2 text-base font-semibold">
+              <Activity aria-hidden="true" className="size-4" />
+              Ações recentes
+            </h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/admin/auditoria">Ver auditoria</Link>
+            </Button>
+          </div>
+          <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
             {auditoria.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Nenhuma ação registrada ainda.
@@ -209,57 +204,59 @@ export default async function AdminHomePage() {
             ) : (
               <ul className="divide-y">
                 {auditoria.map((a) => (
-                  <li key={a.id} className="py-2.5 text-sm">
-                    <p className="font-semibold">{labelDe(acaoAuditoriaLabel, a.action)}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <li key={a.id} className="py-2.5 first:rounded-t-xl" style={{ borderTop: "1px solid var(--border)" }}>
+                    <p className="text-sm font-semibold text-foreground">
+                      {labelDe(acaoAuditoriaLabel, a.action)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {a.actorEmail} · {a.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                     </p>
                   </li>
                 ))}
               </ul>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
 
-      {/* Linha 3: quem são meus clientes. */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Building2 aria-hidden="true" className="size-4" />
-                Empresas por situação
-              </span>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/empresas">Gerenciar</Link>
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Clientes: empresas ativas, com uso recente. 2 colunas desktop, 1 coluna mobile. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Empresas por situação */}
+        <section aria-labelledby="situacao-aria">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="situacao-aria" className="flex items-center gap-2 text-base font-semibold">
+              <Building2 aria-hidden="true" className="size-4" />
+              Situação das empresas
+            </h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/admin/empresas">Gerenciar</Link>
+            </Button>
+          </div>
+          <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
             <ul className="divide-y">
               {statusEmpresas.map((s) => (
-                <li key={s.status} className="flex items-center justify-between py-2.5 text-sm">
+                <li key={s.status} className="flex items-center justify-between py-2.5 first:rounded-t-xl" style={{ borderTop: "1px solid var(--border)" }}>
                   <StatusPill tom={statusEmpresaTom[s.status]}>
                     {labelDe(statusEmpresaLabel, s.status)}
                   </StatusPill>
-                  <span className="tabular-nums text-muted-foreground">
+                  <span className="tabular-nums text-sm text-muted-foreground">
                     {s._count._all} empresa(s)
                   </span>
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        {/* Empresas com uso mais recente */}
+        <section aria-labelledby="uso-aria">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="uso-aria" className="flex items-center gap-2 text-base font-semibold">
               <Users aria-hidden="true" className="size-4" />
-              Empresas com uso mais recente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+              Mais recente
+            </h2>
+          </div>
+          <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
             {empresasComUso.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Nenhuma empresa ativa ainda.
@@ -267,34 +264,25 @@ export default async function AdminHomePage() {
             ) : (
               <ul className="divide-y">
                 {empresasComUso.map((e) => (
-                  <li key={e.id} className="flex items-center justify-between py-2.5 text-sm">
+                  <li key={e.id} className="flex items-center justify-between gap-3 py-2.5 first:rounded-t-xl" style={{ borderTop: "1px solid var(--border)" }}>
                     <Link
                       prefetch={false}
                       href={`/admin/empresas/${e.id}`}
-                      className="truncate font-semibold hover:underline"
+                      className="min-w-0 truncate text-sm font-semibold text-foreground hover:underline"
                     >
                       {e.name}
                     </Link>
-                    <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                      {/* Quando, não quanto. "Vendeu 340" é dado do cliente;
-                          "entrou há 2 horas" é sinal de produto. */}
-                      <span className="flex items-center gap-1">
-                        <Clock aria-hidden="true" className="size-3" />
-                        {e.lastActivityAt ? dataRelativaCurta(e.lastActivityAt) : "sem registro"}
-                      </span>
+                    <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                      <Clock aria-hidden="true" className="size-3" />
+                      {e.lastActivityAt ? dataRelativaCurta(e.lastActivityAt) : "sem registro"}
                     </span>
                   </li>
                 ))}
               </ul>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
-
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Package aria-hidden="true" className="size-3.5" />
-        {usuarios.toLocaleString("pt-BR")} usuário(s) cadastrado(s)
-      </p>
     </main>
   );
 }

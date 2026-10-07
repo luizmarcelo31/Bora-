@@ -129,195 +129,202 @@ export default async function EmpresasPage({
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
         <PageHeader
-        title="Empresas"
-        badge="Plataforma"
-        description="Cada empresa é um cliente da plataforma, com dados, usuários e assinatura isolados."
-        actions={
-          <Button asChild>
-            <Link href="/admin/empresas/nova">Nova empresa</Link>
-          </Button>
-        }
-      />
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
           title="Empresas"
-          value={String(totalEmpresas)}
-          hint="Todas as situações, sem filtro"
-          icon={Building2}
-        />
-        <MetricCard
-          title="Ativas"
-          value={String((porStatus.get("ATIVA") ?? 0) + (porStatus.get("TRIAL") ?? 0))}
-          hint="Em uso ou em experimentação"
-          icon={Users}
-        />
-        <MetricCard
-          title="Precisam de atenção"
-          value={
-            <Valor tom="negativo">
-              {(porStatus.get("SUSPENSA") ?? 0) + (porStatus.get("CANCELADA") ?? 0)}
-            </Valor>
+          badge="Plataforma"
+          description="Cada empresa é um cliente da plataforma, com dados, usuários e assinatura isolados."
+          actions={
+            <Button asChild>
+              <Link href="/admin/empresas/nova">Nova empresa</Link>
+            </Button>
           }
-          hint="Suspensas ou canceladas"
-          icon={AlertTriangle}
-        />
-        <MetricCard
-          title="Receita mensal"
-          value={<Valor tom="positivo">{formatCurrency(mrr)}</Valor>}
-          hint="Planos ativos e em experimentação"
-          icon={ShoppingCart}
-        />
-      </div>
-
-      <TableCard
-        title="Empresas cadastradas"
-        description="Clique no nome para abrir o painel completo da empresa."
-        footer={
-          total === 0
-            ? undefined
-            : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(
-                pagina * POR_PAGINA,
-                total
-              )} de ${total}`
-        }
-      >
-        <AdminFilterBar
-          placeholder="Buscar por nome ou email…"
-          chips={FILTROS.map((f) => ({ valor: f.valor, rotulo: f.rotulo }))}
-          chipAtivo={status}
-          descricao="Filtrar por situação da empresa"
         />
 
-        {paginaAtual.length === 0 ? (
-          <EmptyState
-            title="Nenhuma empresa encontrada"
-            description="Ajuste os filtros ou cadastre a primeira empresa."
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            title="Empresas"
+            value={String(totalEmpresas)}
+            hint="Todas as situações, sem filtro"
+            icon={Building2}
           />
-        ) : (
-          <>
-          {/* Mobile: lista compacta — tabela só no desktop */}
-          <ul className="flex flex-col gap-2 p-3 md:hidden">
-            {paginaAtual.map((t) => (
-              <li key={t.id}>
-                <LinhaLista
-                  titulo={
-                    <Link
-                      prefetch={false}
-                      href={`/admin/empresas/${t.id}`}
-                      className="hover:underline"
-                    >
-                      {t.name}
-                    </Link>
-                  }
-                  apoio={`${t._count.users} usuário(s) · ${dataRelativaCurta(t.lastActivityAt)}`}
-                  badge={
-                    <StatusPill tom={statusEmpresaTom[t.status]}>
-                      {labelDe(statusEmpresaLabel, t.status)}
-                    </StatusPill>
-                  }
-                  valor={
-                    t.subscription ? (
-                      <Valor tom="positivo" className="text-xs font-normal">
-                        {formatCurrency(t.subscription.plan.monthlyPrice)}/mês
-                      </Valor>
-                    ) : (
-                      <span className="text-xs font-normal text-muted-foreground">Sem plano</span>
-                    )
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-          <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Empresa</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead>Saúde</TableHead>
-                <TableHead>Plano</TableHead>
-                <TableHead className="text-right">Usuários</TableHead>
-                <TableHead className="text-right">Último uso</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginaAtual.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell>
-                    <Link
-                      prefetch={false}
-                      href={`/admin/empresas/${t.id}`}
-                      className="font-semibold hover:underline"
-                    >
-                      {t.name}
-                    </Link>
-                    {t.email ? (
-                      <p className="text-xs text-muted-foreground">{t.email}</p>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>
-                    <StatusPill tom={statusEmpresaTom[t.status]}>
-                      {labelDe(statusEmpresaLabel, t.status)}
-                    </StatusPill>
-                  </TableCell>
-                  <TableCell>
-                    <StatusPill tom={statusSaudeTom[t.health]}>
-                      {labelDe(statusSaudeLabel, t.health)}
-                    </StatusPill>
-                  </TableCell>
-                  <TableCell>
-                    {t.subscription ? (
-                      <>
-                        {t.subscription.plan.name}
-                        <p className="text-xs">
-                          <Valor tom="positivo">
-                            {formatCurrency(t.subscription.plan.monthlyPrice)}/mês
-                          </Valor>
-                        </p>
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">Sem plano</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">{t._count.users}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {dataRelativaCurta(t.lastActivityAt)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </div>
-          </>
-        )}
+          <MetricCard
+            title="Ativas"
+            value={String((porStatus.get("ATIVA") ?? 0) + (porStatus.get("TRIAL") ?? 0))}
+            hint="Em uso ou em experimentação"
+            icon={Users}
+          />
+          <MetricCard
+            title="Precisam de atenção"
+            value={
+              <Valor tom="negativo">
+                {(porStatus.get("SUSPENSA") ?? 0) + (porStatus.get("CANCELADA") ?? 0)}
+              </Valor>
+            }
+            hint="Suspensas ou canceladas"
+            icon={AlertTriangle}
+          />
+          <MetricCard
+            title="Receita mensal"
+            value={<Valor tom="positivo">{formatCurrency(mrr)}</Valor>}
+            hint="Planos ativos e em experimentação"
+            icon={ShoppingCart}
+          />
+        </div>
 
-        {totalPaginas > 1 ? (
-          <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
-            {pagina > 1 ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/empresas${comQuery(pagina - 1)}`}>Anterior</Link>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Anterior
-              </Button>
-            )}
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {pagina} de {totalPaginas}
-            </span>
-            {pagina < totalPaginas ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/empresas${comQuery(pagina + 1)}`}>Próxima</Link>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Próxima
-              </Button>
-            )}
-          </nav>
-        ) : null}
-      </TableCard>
+        {/* Tabela: card com borda sutil, sem sombra pesada. Mobile: lista compacta. */}
+        <section aria-labelledby="empresas-aria">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="empresas-aria" className="flex items-center gap-2 text-base font-semibold">
+              Empresas cadastradas
+            </h2>
+          </div>
+          <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
+            <TableCard
+              title="Empresas cadastradas"
+              description="Clique no nome para abrir o painel completo da empresa."
+              footer={
+                total === 0
+                  ? undefined
+                  : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
+              }
+            >
+              <AdminFilterBar
+                placeholder="Buscar por nome ou email…"
+                chips={FILTROS.map((f) => ({ valor: f.valor, rotulo: f.rotulo }))}
+                chipAtivo={status}
+                descricao="Filtrar por situação da empresa"
+              />
+
+              {paginaAtual.length === 0 ? (
+                <EmptyState
+                  title="Nenhuma empresa encontrada"
+                  description="Ajuste os filtros ou cadastre a primeira empresa."
+                />
+              ) : (
+                <>
+                  {/* Mobile: lista compacta */}
+                  <ul className="flex flex-col gap-1.5 p-3 md:hidden">
+                    {paginaAtual.map((t) => (
+                      <li key={t.id}>
+                        <LinhaLista
+                          titulo={
+                            <Link
+                              prefetch={false}
+                              href={`/admin/empresas/${t.id}`}
+                              className="hover:underline"
+                            >
+                              {t.name}
+                            </Link>
+                          }
+                          apoio={`${t._count.users} usuário(s) · ${dataRelativaCurta(t.lastActivityAt)}`}
+                          badge={
+                            <StatusPill tom={statusEmpresaTom[t.status]}>
+                              {labelDe(statusEmpresaLabel, t.status)}
+                            </StatusPill>
+                          }
+                          valor={
+                            t.subscription ? (
+                              <Valor tom="positivo" className="text-xs font-normal">
+                                {formatCurrency(t.subscription.plan.monthlyPrice)}/mês
+                              </Valor>
+                            ) : (
+                              <span className="text-xs font-normal text-muted-foreground">Sem plano</span>
+                            )
+                          }
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden overflow-x-auto md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Empresa</TableHead>
+                          <TableHead>Situação</TableHead>
+                          <TableHead>Saúde</TableHead>
+                          <TableHead>Plano</TableHead>
+                          <TableHead className="text-right">Usuários</TableHead>
+                          <TableHead className="text-right">Último uso</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginaAtual.map((t) => (
+                          <TableRow key={t.id}>
+                            <TableCell>
+                              <Link
+                                prefetch={false}
+                                href={`/admin/empresas/${t.id}`}
+                                className="font-semibold hover:underline"
+                              >
+                                {t.name}
+                              </Link>
+                              {t.email ? (
+                                <p className="text-xs text-muted-foreground">{t.email}</p>
+                              ) : null}
+                            </TableCell>
+                            <TableCell>
+                              <StatusPill tom={statusEmpresaTom[t.status]}>
+                                {labelDe(statusEmpresaLabel, t.status)}
+                              </StatusPill>
+                            </TableCell>
+                            <TableCell>
+                              <StatusPill tom={statusSaudeTom[t.health]}>
+                                {labelDe(statusSaudeLabel, t.health)}
+                              </StatusPill>
+                            </TableCell>
+                            <TableCell>
+                              {t.subscription ? (
+                                <>
+                                  {t.subscription.plan.name}
+                                  <p className="text-xs">
+                                    <Valor tom="positivo">
+                                      {formatCurrency(t.subscription.plan.monthlyPrice)}/mês
+                                    </Valor>
+                                  </p>
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">Sem plano</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{t._count.users}</TableCell>
+                            <TableCell className="text-right tabular-nums">
+                              {dataRelativaCurta(t.lastActivityAt)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              )}
+
+              {totalPaginas > 1 ? (
+                <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
+                  {pagina > 1 ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/admin/empresas${comQuery(pagina - 1)}`}>Anterior</Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Anterior
+                    </Button>
+                  )}
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {pagina} de {totalPaginas}
+                  </span>
+                  {pagina < totalPaginas ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/admin/empresas${comQuery(pagina + 1)}`}>Próxima</Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Próxima
+                    </Button>
+                  )}
+                </nav>
+              ) : null}
+            </TableCard>
+          </div>
+        </section>
     </main>
   );
 }

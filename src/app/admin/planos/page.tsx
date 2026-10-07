@@ -152,66 +152,66 @@ export default async function PlanosPage({
                   </li>
                 ))}
               </ul>
-              <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Plano</TableHead>
-                    <TableHead className="text-right">Mensal</TableHead>
-                    <TableHead className="text-right">Anual</TableHead>
-                    <TableHead className="text-right">Limites</TableHead>
-                    <TableHead className="text-right">Empresas</TableHead>
-                    <TableHead>Situação</TableHead>
-                    <TableHead />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {planos.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell>
-                        <span className="font-semibold">{p.name}</span>
-                        <p className="text-xs text-muted-foreground">
-                          {p.trialDays > 0 ? `${p.trialDays} dias de experimentação` : "Sem experimentação"}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        <Valor tom="neutro">{formatCurrency(p.monthlyPrice)}</Valor>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {p.annualPrice ? (
-                          <Valor tom="neutro">{formatCurrency(p.annualPrice)}</Valor>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground">
-                        {p.maxUsers ? `${p.maxUsers} usuários` : "Ilimitado"}
-                        <br />
-                        {p.maxProducts ? `${p.maxProducts} produtos` : "Ilimitado"}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{p._count.subscriptions}</TableCell>
-                      <TableCell>
-                        <StatusPill tom={p.active ? "positivo" : "neutro"}>
-                          {p.active ? "Disponível" : "Indisponível"}
-                        </StatusPill>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/admin/planos/${p.id}`}>Editar</Link>
-                          </Button>
-                          <form action={alternarPlanoAtivoAction}>
-                            <input type="hidden" name="id" value={p.id} />
-                            <Button variant="ghost" size="sm" type="submit">
-                              {p.active ? "Desativar" : "Ativar"}
-                            </Button>
-                          </form>
-                        </div>
-                      </TableCell>
+              <div className="hidden overflow-x-auto md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Plano</TableHead>
+                      <TableHead className="text-right">Mensal</TableHead>
+                      <TableHead className="text-right">Anual</TableHead>
+                      <TableHead className="text-right">Limites</TableHead>
+                      <TableHead className="text-right">Empresas</TableHead>
+                      <TableHead>Situação</TableHead>
+                      <TableHead />
                     </TableRow>
-                  ))}
+                  </TableHeader>
+                  <TableBody>
+                    {planos.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                          <span className="font-semibold">{p.name}</span>
+                          <p className="text-xs text-muted-foreground">
+                            {p.trialDays > 0 ? `${p.trialDays} dias de experimentação` : "Sem experimentação"}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          <Valor tom="neutro">{formatCurrency(p.monthlyPrice)}</Valor>
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {p.annualPrice ? (
+                            <Valor tom="neutro">{formatCurrency(p.annualPrice)}</Valor>
+                          ) : (
+                            "—"
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {p.maxUsers ? `${p.maxUsers} usuários` : "Ilimitado"}
+                          <br />
+                          {p.maxProducts ? `${p.maxProducts} produtos` : "Ilimitado"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{p._count.subscriptions}</TableCell>
+                        <TableCell>
+                          <StatusPill tom={p.active ? "positivo" : "neutro"}>
+                            {p.active ? "Disponível" : "Indisponível"}
+                          </StatusPill>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/admin/planos/${p.id}`}>Editar</Link>
+                            </Button>
+                            <form action={alternarPlanoAtivoAction}>
+                              <input type="hidden" name="id" value={p.id} />
+                              <Button variant="ghost" size="sm" type="submit">
+                                {p.active ? "Desativar" : "Ativar"}
+                              </Button>
+                            </form>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
-              </Table>
+                </Table>
               </div>
               </>
             )}

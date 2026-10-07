@@ -114,146 +114,155 @@ export default async function AuditoriaPage({
         description="Quem mudou o quê na plataforma, e quando. Não guarda dado operacional das empresas."
       />
 
-      <TableCard
-        title="Ações administrativas"
-        description={
-          total === 0
-            ? "Nenhum registro no filtro atual."
-            : `Página ${pagina} de ${totalPaginas} · ${total} registro(s).`
-        }
-        footer={
-          total === 0
-            ? undefined
-            : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
-        }
-      >
-        <AdminFilterBar
-          placeholder="Filtrar por autor ou detalhe…"
-          chips={acoes.slice(0, 6).map((a) => ({ valor: a, rotulo: acaoAuditoriaLabel[a] }))}
-          chipAtivo={params.acao}
-          paramChip="acao"
-          descricao="Filtrar por tipo de ação"
-        />
+      <section aria-labelledby="auditoria-aria">
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="auditoria-aria" className="flex items-center gap-2 text-base font-semibold">
+            Ações administrativas
+          </h2>
+        </div>
+        <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
+          <TableCard
+            title="Ações administrativas"
+            description={
+              total === 0
+                ? "Nenhum registro no filtro atual."
+                : `Página ${pagina} de ${totalPaginas} · ${total} registro(s).`
+            }
+            footer={
+              total === 0
+                ? undefined
+                : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
+            }
+          >
+            <AdminFilterBar
+              placeholder="Filtrar por autor ou detalhe…"
+              chips={acoes.slice(0, 6).map((a) => ({ valor: a, rotulo: acaoAuditoriaLabel[a] }))}
+              chipAtivo={params.acao}
+              paramChip="acao"
+              descricao="Filtrar por tipo de ação"
+            />
 
-        {logs.length === 0 ? (
-          <EmptyState
-            title="Nada registrado"
-            description="As ações administrativas aparecem aqui assim que acontecerem."
-          />
-        ) : (
-          <>
-          {/* Mobile: lista compacta — tabela só no desktop */}
-          <ul className="flex flex-col gap-2 p-3 md:hidden">
-            {logs.map((l) => (
-              <li key={l.id}>
-                <LinhaLista
-                  titulo={`${acaoAuditoriaLabel[l.action]} · ${ENTIDADE[l.entity] ?? l.entity}${l.entityId ? ` #${l.entityId}` : ""}`}
-                  apoio={`${l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${l.actorEmail}`}
-                  badges={
-                    <>
-                      <Badge variant={VARIANTE[l.action]}>
-                        {acaoAuditoriaLabel[l.action]}
-                      </Badge>
-                      {l.tenantId ? (
-                        <Badge variant="outline" asChild>
-                          <a href={`/admin/empresas/${l.tenantId}`}>
-                            {nomeEmpresa.get(l.tenantId) ?? `Empresa ${l.tenantId}`}
-                          </a>
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Plataforma</Badge>
-                      )}
-                    </>
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-          <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Quando</TableHead>
-                <TableHead>Ação</TableHead>
-                <TableHead>Alvo</TableHead>
-                <TableHead>Empresa</TableHead>
-                <TableHead>Autor</TableHead>
-                <TableHead>Detalhe</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs.map((l) => (
-                <TableRow key={l.id}>
-                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                    {l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{acaoAuditoriaLabel[l.action]}</span>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {ENTIDADE[l.entity] ?? l.entity}
-                    {l.entityId ? ` #${l.entityId}` : ""}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {l.tenantId ? (
-                      <Button variant="link" size="sm" asChild className="h-auto p-0">
-                        <a href={`/admin/empresas/${l.tenantId}`}>
-                          {nomeEmpresa.get(l.tenantId) ?? `Empresa ${l.tenantId}`}
-                        </a>
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground">Plataforma</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs">{l.actorEmail}</TableCell>
-                  <TableCell className="max-w-md text-xs text-muted-foreground">
-                    {l.metadata ? (
-                      <details>
-                        <summary className="cursor-pointer">ver</summary>
-                        <pre className="mt-1 overflow-x-auto rounded bg-muted p-2 text-[11px] whitespace-pre-wrap">
-                          {l.metadata}
-                        </pre>
-                      </details>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </div>
-          </>
-        )}
-
-        {totalPaginas > 1 ? (
-          <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
-            {pagina > 1 ? (
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/admin/auditoria${comQuery(pagina - 1)}`}>Anterior</a>
-              </Button>
+            {logs.length === 0 ? (
+              <EmptyState
+                title="Nenhum registro"
+                description="As ações administrativas aparecem aqui assim que acontecem."
+              />
             ) : (
-              <Button variant="outline" size="sm" disabled>
-                Anterior
-              </Button>
+              <>
+                {/* Mobile: lista compacta */}
+                <ul className="flex flex-col gap-1.5 p-3 md:hidden">
+                  {logs.map((l) => (
+                    <li key={l.id}>
+                      <LinhaLista
+                        titulo={`${acaoAuditoriaLabel[l.action]} · ${ENTIDADE[l.entity] ?? l.entity}${l.entityId ? ` #${l.entityId}` : ""}`}
+                        apoio={`${l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${l.actorEmail}`}
+                        badges={
+                          <>
+                            <Badge variant={VARIANTE[l.action]}>
+                              {acaoAuditoriaLabel[l.action]}
+                            </Badge>
+                            {l.tenantId ? (
+                              <Badge variant="outline" asChild>
+                                <a href={`/admin/empresas/${l.tenantId}`}>
+                                  {nomeEmpresa.get(l.tenantId) ?? `Empresa ${l.tenantId}`}
+                                </a>
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">Plataforma</Badge>
+                            )}
+                          </>
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
+                <div className="hidden overflow-x-auto md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Quando</TableHead>
+                        <TableHead>Ação</TableHead>
+                        <TableHead>Alvo</TableHead>
+                        <TableHead>Empresa</TableHead>
+                        <TableHead>Autor</TableHead>
+                        <TableHead>Detalhe</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {logs.map((l) => (
+                        <TableRow key={l.id}>
+                          <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                            {l.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">{acaoAuditoriaLabel[l.action]}</span>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {ENTIDADE[l.entity] ?? l.entity}
+                            {l.entityId ? ` #${l.entityId}` : ""}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {l.tenantId ? (
+                              <Button variant="link" size="sm" asChild className="h-auto p-0">
+                                <a href={`/admin/empresas/${l.tenantId}`}>
+                                  {nomeEmpresa.get(l.tenantId) ?? `Empresa ${l.tenantId}`}
+                                </a>
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground">Plataforma</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs">{l.actorEmail}</TableCell>
+                          <TableCell className="max-w-md text-xs text-muted-foreground">
+                            {l.metadata ? (
+                              <details>
+                                <summary className="cursor-pointer">ver</summary>
+                                <pre className="mt-1 overflow-x-auto rounded bg-muted p-2 text-[11px] whitespace-pre-wrap">
+                                  {l.metadata}
+                                </pre>
+                              </details>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {pagina} de {totalPaginas}
-            </span>
-            {pagina < totalPaginas ? (
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/admin/auditoria${comQuery(pagina + 1)}`}>Próxima</a>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Próxima
-              </Button>
-            )}
-          </nav>
-        ) : null}
-      </TableCard>
 
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            {totalPaginas > 1 ? (
+              <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
+                {pagina > 1 ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`/admin/auditoria${comQuery(pagina - 1)}`}>Anterior</a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Anterior
+                  </Button>
+                )}
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {pagina} de {totalPaginas}
+                </span>
+                {pagina < totalPaginas ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`/admin/auditoria${comQuery(pagina + 1)}`}>Próxima</a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Próxima
+                  </Button>
+                )}
+              </nav>
+            ) : null}
+          </TableCard>
+        </div>
+      </section>
+
+      <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <ScrollText aria-hidden="true" className="size-3.5" />
         A retenção vem de <code className="rounded bg-muted px-1">auditRetentionDays</code>, nas
         configurações da plataforma.

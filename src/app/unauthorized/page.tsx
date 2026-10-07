@@ -17,11 +17,11 @@ export default function UnauthorizedPage() {
             ter acesso, peça ao administrador para ajustar seu role.
           </p>
           <div className="flex gap-3">
-            <Link className={buttonVariants()} href="/dashboard">
-              Voltar ao painel
-            </Link>
             <Link className={buttonVariants({ variant: "outline" })} href="/">
               Início
+            </Link>
+            <Link className={buttonVariants()} href="/login?redirect=/unauthorized">
+              Voltar ao login
             </Link>
           </div>
         </CardContent>

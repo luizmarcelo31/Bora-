@@ -1,21 +1,9 @@
 import { cn } from "cn"
 
 type StatusType =
-  | "active"
-  | "inactive"
-  | "open"
-  | "closed"
-  | "paid"
-  | "pending"
-  | "ok"
-  | "low"
-  | "out"
-  | "income"
-  | "expense"
-  | "transfer"
-  | "entry"
-  | "exit"
-  | "adjustment"
+  | "active" | "inactive" | "open" | "closed" | "paid" | "pending"
+  | "ok" | "low" | "out" | "income" | "expense" | "transfer"
+  | "entry" | "exit" | "adjustment"
 
 interface StatusBadgeProps {
   status: StatusType
@@ -51,13 +39,13 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
     <span
       data-slot="status-badge"
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-black/5 px-2.5 py-1 text-xs font-semibold dark:border-white/5",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold",
         config.bg,
         config.text,
+        "border-black/5 dark:border-white/5",
         className
       )}
     >
-      {/* Dot indicator */}
       <span
         aria-hidden="true"
         className={cn("inline-block size-1.5 shrink-0 rounded-full", config.dot)}

@@ -71,22 +71,29 @@ export default async function NotificacoesPage({
       />
 
       {params.error ? (
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+        >
           {ERROS_COMUNICACAO[params.error] ?? "Não foi possível salvar a comunicação."}
         </p>
       ) : null}
       {params.ok ? (
-        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
+        <p
+          role="status"
+          className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]"
+        >
           Comunicação salva.
         </p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Nova comunicação</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Formulário de nova comunicação */}
+        <section aria-labelledby="nova-comunicacao-aria">
+          <h2 id="nova-comunicacao-aria" className="sr-only">
+            Nova comunicação
+          </h2>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-sm dark:border-border dark:bg-card">
             <form action={salvarComunicacaoAction} className="grid gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 Assunto*
@@ -112,7 +119,7 @@ export default async function NotificacoesPage({
                 Escolha o segmento
                 <SelectField
                   name="targetRef"
-                  placeholder="Selecionar…"
+                  placeholder="Selecionar..."
                   options={[
                     ...planos.map((p) => ({ value: String(p.id), label: `Plano: ${p.name}` })),
                     ...empresas.map((e) => ({ value: String(e.id), label: `Empresa: ${e.name}` })),
@@ -132,88 +139,96 @@ export default async function NotificacoesPage({
                 Salvar comunicação
               </Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <div className="lg:col-span-2">
-          <TableCard
-            title="Comunicações"
-            description="Últimas 50."
-            footer={`${comunicacoes.length} comunicação(ões)`}
-          >
-            {comunicacoes.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">
-                Nenhuma comunicação enviada ainda.
-              </p>
-            ) : (
-              <>
-              {/* Mobile: lista compacta — tabela só no desktop */}
-              <ul className="flex flex-col gap-2 p-3 md:hidden">
-                {comunicacoes.map((c) => (
-                  <li key={c.id}>
-                    <LinhaLista
-                      titulo={c.subject}
-                      apoio={`${labelDe(alvoNotificacaoLabel, c.target)} · ${labelDe(statusEnvioLabel, c.status)}`}
-                      valor={
-                        <ValorNum
-                          valor={c.recipients}
-                          formatar={(v) => `${v} dest.`}
-                          zero="atencao"
-                          className="text-xs font-normal"
+        {/* Tabela de comunicações */}
+        <section aria-labelledby="comunicacoes-aria">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="comunicacoes-aria" className="flex items-center gap-2 text-base font-semibold">
+              Comunicações
+            </h2>
+          </div>
+          <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
+            <TableCard
+              title="Comunicações"
+              description="Últimas 50."
+              footer={`${comunicacoes.length} comunicação(ões)`}
+            >
+              {comunicacoes.length === 0 ? (
+                <p className="p-6 text-center text-sm text-muted-foreground">
+                  Nenhuma comunicação enviada ainda.
+                </p>
+              ) : (
+                <>
+                  {/* Mobile: lista compacta */}
+                  <ul className="flex flex-col gap-1.5 p-3 md:hidden">
+                    {comunicacoes.map((c) => (
+                      <li key={c.id}>
+                        <LinhaLista
+                          titulo={c.subject}
+                          apoio={`${labelDe(alvoNotificacaoLabel, c.target)} · ${labelDe(statusEnvioLabel, c.status)}`}
+                          valor={
+                            <ValorNum
+                              valor={c.recipients}
+                              formatar={(v) => `${v} dest.`}
+                              zero="atencao"
+                              className="text-xs font-normal"
+                            />
+                          }
+                          badges={
+                            <span className="text-xs text-muted-foreground">
+                              {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                            </span>
+                          }
                         />
-                      }
-                      badges={
-                        <span className="text-xs text-muted-foreground">
-                          {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
-                        </span>
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-              <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Assunto</TableHead>
-                    <TableHead>Público</TableHead>
-                    <TableHead>Situação</TableHead>
-                    <TableHead className="text-right">Destinatários</TableHead>
-                    <TableHead>Quando</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {comunicacoes.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-semibold">{c.subject}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {labelDe(alvoNotificacaoLabel, c.target)}
-                      </TableCell>
-                      <TableCell>
-                        <StatusPill tom={TOM_ENVIO[c.status] ?? "neutro"}>
-                          {labelDe(statusEnvioLabel, c.status)}
-                        </StatusPill>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{c.recipients}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              </div>
-              </>
-            )}
-          </TableCard>
-
-          <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <Megaphone aria-hidden="true" className="size-3.5" />
-            O envio efetivo de e-mail depende do provedor configurado. Sem provedor, a comunicação é
-            registrada com o público-alvo mas não entrega.
-          </p>
-        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden overflow-x-auto md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Assunto</TableHead>
+                          <TableHead>Público</TableHead>
+                          <TableHead>Situação</TableHead>
+                          <TableHead className="text-right">Destinatários</TableHead>
+                          <TableHead>Quando</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {comunicacoes.map((c) => (
+                          <TableRow key={c.id}>
+                            <TableCell className="font-semibold">{c.subject}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {labelDe(alvoNotificacaoLabel, c.target)}
+                            </TableCell>
+                            <TableCell>
+                              <StatusPill tom={TOM_ENVIO[c.status] ?? "neutro"}>
+                                {labelDe(statusEnvioLabel, c.status)}
+                              </StatusPill>
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{c.recipients}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {(c.sentAt ?? c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              )}
+            </TableCard>
+          </div>
+        </section>
       </div>
+
+      <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+        <Megaphone aria-hidden="true" className="size-3.5" />
+        O envio efetivo de e-mail depende do provedor configurado. Sem provedor, a comunicação é
+        registrada com o público-alvo mas não entrega.
+      </p>
     </main>
   );
 }

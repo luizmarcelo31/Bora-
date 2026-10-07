@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
 export function PageHeader({
   title,
@@ -8,28 +8,28 @@ export function PageHeader({
   actions,
   className,
 }: {
-  title: string;
-  description?: string;
-  badge?: string;
-  actions?: React.ReactNode;
-  className?: string;
+  title: string
+  description?: string
+  badge?: string
+  actions?: React.ReactNode
+  className?: string
 }) {
   return (
-    // Roadmap Fase 1.3 — "Header de página: fundo laranja no day, #111 no dark".
-    // A faixa é uma faixa: cantos arredondados e respiro, não uma tarja cheia.
     <div
       className={cn(
-        "flex flex-col gap-1 rounded-xl bg-[var(--page-header-bg)] px-5 py-4 text-[var(--page-header-fg)]",
+        "flex flex-col gap-1 rounded-xl border border-[var(--border)] bg-card px-4 py-3 text-card-foreground shadow-sm",
+        "dark:border-[var(--border)] dark:bg-[var(--card)] dark:shadow-none",
         className
       )}
     >
-      <div className="flex flex-wrap items-center gap-2.5">
-        <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="font-heading text-base font-semibold tracking-tight md:text-lg">
           {title}
         </h1>
         {badge ? (
           <Badge
-            className="rounded-full border border-current/25 bg-white/15 px-2.5 py-0.5 text-xs font-semibold text-current"
+            className="rounded-full px-2.5 py-0.5 text-xs font-semibold text-current border-[var(--border)] dark:border-[var(--border)]"
+            variant="outline"
           >
             {badge}
           </Badge>
@@ -39,8 +39,8 @@ export function PageHeader({
         ) : null}
       </div>
       {description ? (
-        <p className="text-sm text-current/80">{description}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
       ) : null}
     </div>
-  );
+  )
 }

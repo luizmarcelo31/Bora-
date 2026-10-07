@@ -128,223 +128,233 @@ export default async function AssinaturasPage({
 <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Assinaturas" }]} />
         <PageHeader
           title="Assinaturas"
-        badge="Receita"
-        description="Plano contratado por cada empresa. Cancelar nunca apaga o histórico."
-      />
-
-      {params.error ? (
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-          {ERROS_ASSINATURA[params.error] ?? "Não foi possível alterar a assinatura."}
-        </p>
-      ) : null}
-      {params.ok ? (
-        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
-          Assinatura alterada.
-        </p>
-      ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          title="Receita mensal"
-          value={<Valor tom="positivo">{formatCurrency(mrr)}</Valor>}
-          hint="Planos ativos e em experimentação"
-          icon={TrendingUp}
-        />
-        <MetricCard title="Ativas" value={String(porStatus.get("ATIVA") ?? 0)} hint="Assinaturas em dia" icon={CreditCard} />
-        <MetricCard
-          title="Pagamento pendente"
-          value={
-            <Valor tom={(porStatus.get("PENDENTE_PAGAMENTO") ?? 0) > 0 ? "negativo" : "neutro"}>
-              {porStatus.get("PENDENTE_PAGAMENTO") ?? 0}
-            </Valor>
-          }
-          hint="Precisam de cobrança"
-          icon={AlertTriangle}
-        />
-        <MetricCard
-          title="Suspensas"
-          value={
-            <Valor tom={(porStatus.get("SUSPENSA") ?? 0) > 0 ? "atencao" : "neutro"}>
-              {porStatus.get("SUSPENSA") ?? 0}
-            </Valor>
-          }
-          hint="Acesso restrito"
-          icon={PauseCircle}
-        />
-      </div>
-
-      <TableCard
-        title="Assinaturas"
-        description={
-          total === 0
-            ? "Nenhuma assinatura no filtro atual."
-            : `Página ${pagina} de ${Math.max(1, Math.ceil(total / POR_PAGINA))} · ${total} assinatura(s). Renovação mais próxima primeiro.`
-        }
-        footer={
-          total === 0
-            ? undefined
-            : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
-        }
-      >
-        <AdminFilterBar
-          placeholder="Filtrar por empresa…"
-          chips={FILTROS.map((f) => ({ valor: f.valor, rotulo: f.rotulo }))}
-          chipAtivo={status}
-          descricao="Filtrar por situação da assinatura"
+          badge="Receita"
+          description="Plano contratado por cada empresa. Cancelar nunca apaga o histórico."
         />
 
-        {assinaturas.length === 0 ? (
-          <EmptyState
-            title="Nenhuma assinatura"
-            description="Vincule um plano a uma empresa no painel da empresa."
-          />
-        ) : (
-          <>
-          {/* Mobile: lista compacta — tabela só no desktop */}
-          <ul className="flex flex-col gap-2 p-3 md:hidden">
-            {assinaturas.map((a) => (
-              <li key={a.id}>
-                <LinhaLista
-                  titulo={
-                    <a href={`/admin/empresas/${a.tenant.id}`} className="hover:underline">
-                      {a.tenant.name}
-                    </a>
-                  }
-                  apoio={`${a.plan.name} · ${cicloCobrancaLabel[a.billingCycle]}`}
-                  badge={
-                    <StatusPill tom={statusAssinaturaTom[a.status]}>
-                      {labelDe(statusAssinaturaLabel, a.status)}
-                    </StatusPill>
-                  }
-                  valor={
-                    <Valor tom={tomMensalidade(a.status)}>
-                      {formatCurrency(a.plan.monthlyPrice)}
-                    </Valor>
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-          <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Empresa</TableHead>
-                <TableHead>Plano</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead className="text-right">Mensalidade</TableHead>
-                <TableHead>Renova</TableHead>
-                <TableHead>Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {assinaturas.map((a) => {
-                const proximas = TRANSICOES_ASSINATURA[a.status];
-                const padrao = proximas[0];
-                const alternativa = proximas.find((s) => s !== padrao);
-                return (
-                  <TableRow key={a.id}>
-                    <TableCell>
-                      <a
-                        href={`/admin/empresas/${a.tenant.id}`}
-                        className="font-semibold hover:underline"
-                      >
-                        {a.tenant.name}
-                      </a>
-                    </TableCell>
-                    <TableCell>{a.plan.name}</TableCell>
-                    <TableCell>
-                      <StatusPill tom={statusAssinaturaTom[a.status]}>
-                        {labelDe(statusAssinaturaLabel, a.status)}
-                      </StatusPill>
-                      {a.cancelReason ? (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {labelDe(motivoCancelamentoLabel, a.cancelReason)}
-                        </p>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      <Valor tom={tomMensalidade(a.status)}>
-                        {formatCurrency(a.plan.monthlyPrice)}
-                      </Valor>
-                      <span className="block text-xs text-muted-foreground">
-                        {cicloCobrancaLabel[a.billingCycle]}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {a.renewsAt.toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      {padrao ? (
-                        <form action={mudarStatusAssinaturaAction} className="flex items-center gap-1">
-                          <input type="hidden" name="id" value={a.id} />
-                          <input type="hidden" name="status" value={padrao} />
-                          <Input
-                            name="motivo"
-                            placeholder="Motivo"
-                            className="h-8 w-28 text-xs"
-                            required={padrao === "CANCELADA"}
-                            minLength={3}
-                          />
-                          <Button type="submit" size="sm" variant={padrao === "CANCELADA" ? "destructive" : "outline"}>
-                            {rotuloAssinatura(padrao)}
-                          </Button>
-                          {alternativa ? (
-                            <Button
-                              type="submit"
-                              size="sm"
-                              variant="ghost"
-                              name="status"
-                              value={alternativa}
-                              formNoValidate
-                            >
-                              {rotuloAssinatura(alternativa)}
-                            </Button>
-                          ) : null}
-                        </form>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Arquivada</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          </div>
-          </>
-        )}
-
-        {total > POR_PAGINA ? (
-          <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
-            {pagina > 1 ? (
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/admin/assinaturas${comQuery(pagina - 1)}`}>Anterior</a>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Anterior
-              </Button>
-            )}
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {pagina} de {Math.max(1, Math.ceil(total / POR_PAGINA))}
-            </span>
-            {pagina < Math.max(1, Math.ceil(total / POR_PAGINA)) ? (
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/admin/assinaturas${comQuery(pagina + 1)}`}>Próxima</a>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Próxima
-              </Button>
-            )}
-          </nav>
+        {params.error ? (
+          <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+            {ERROS_ASSINATURA[params.error] ?? "Não foi possível alterar a assinatura."}
+          </p>
         ) : null}
-      </TableCard>
+        {params.ok ? (
+          <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
+            Assinatura alterada.
+          </p>
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            title="Receita mensal"
+            value={<Valor tom="positivo">{formatCurrency(mrr)}</Valor>}
+            hint="Planos ativos e em experimentação"
+            icon={TrendingUp}
+          />
+          <MetricCard title="Ativas" value={String(porStatus.get("ATIVA") ?? 0)} hint="Assinaturas em dia" icon={CreditCard} />
+          <MetricCard
+            title="Pagamento pendente"
+            value={
+              <Valor tom={(porStatus.get("PENDENTE_PAGAMENTO") ?? 0) > 0 ? "negativo" : "neutro"}>
+                {porStatus.get("PENDENTE_PAGAMENTO") ?? 0}
+              </Valor>
+            }
+            hint="Precisam de cobrança"
+            icon={AlertTriangle}
+          />
+          <MetricCard
+            title="Suspensas"
+            value={
+              <Valor tom={(porStatus.get("SUSPENSA") ?? 0) > 0 ? "atencao" : "neutro"}>
+                {porStatus.get("SUSPENSA") ?? 0}
+              </Valor>
+            }
+            hint="Acesso restrito"
+            icon={PauseCircle}
+          />
+        </div>
+
+        {/* Tabela: card com borda sutil, sem sombra pesada. Mobile: lista compacta. */}
+        <section aria-labelledby="assinaturas-aria">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="assinaturas-aria" className="flex items-center gap-2 text-base font-semibold">
+              Assinaturas
+            </h2>
+          </div>
+          <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
+            <TableCard
+              title="Assinaturas"
+              description={
+                total === 0
+                  ? "Nenhuma assinatura no filtro atual."
+                  : `Página ${pagina} de ${Math.max(1, Math.ceil(total / POR_PAGINA))} · ${total} assinatura(s). Renovação mais próxima primeiro.`
+              }
+              footer={
+                total === 0
+                  ? undefined
+                  : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
+              }
+            >
+              <AdminFilterBar
+                placeholder="Filtrar por empresa…"
+                chips={FILTROS.map((f) => ({ valor: f.valor, rotulo: f.rotulo }))}
+                chipAtivo={status}
+                descricao="Filtrar por situação da assinatura"
+              />
+
+              {assinaturas.length === 0 ? (
+                <EmptyState
+                  title="Nenhuma assinatura"
+                  description="Vincule um plano a uma empresa no painel da empresa."
+                />
+              ) : (
+                <>
+                  {/* Mobile: lista compacta */}
+                  <ul className="flex flex-col gap-2 p-3 md:hidden">
+                    {assinaturas.map((a) => (
+                      <li key={a.id}>
+                        <LinhaLista
+                          titulo={
+                            <a href={`/admin/empresas/${a.tenant.id}`} className="hover:underline">
+                              {a.tenant.name}
+                            </a>
+                          }
+                          apoio={`${a.plan.name} · ${cicloCobrancaLabel[a.billingCycle]}`}
+                          badge={
+                            <StatusPill tom={statusAssinaturaTom[a.status]}>
+                              {labelDe(statusAssinaturaLabel, a.status)}
+                            </StatusPill>
+                          }
+                          valor={
+                            <Valor tom={tomMensalidade(a.status)}>
+                              {formatCurrency(a.plan.monthlyPrice)}
+                            </Valor>
+                          }
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden overflow-x-auto md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Empresa</TableHead>
+                          <TableHead>Plano</TableHead>
+                          <TableHead>Situação</TableHead>
+                          <TableHead className="text-right">Mensalidade</TableHead>
+                          <TableHead>Renova</TableHead>
+                          <TableHead>Ação</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {assinaturas.map((a) => {
+                          const proximas = TRANSICOES_ASSINATURA[a.status];
+                          const padrao = proximas[0];
+                          const alternativa = proximas.find((s) => s !== padrao);
+                          return (
+                            <TableRow key={a.id}>
+                              <TableCell>
+                                <a
+                                  href={`/admin/empresas/${a.tenant.id}`}
+                                  className="font-semibold hover:underline"
+                                >
+                                  {a.tenant.name}
+                                </a>
+                              </TableCell>
+                              <TableCell>{a.plan.name}</TableCell>
+                              <TableCell>
+                                <StatusPill tom={statusAssinaturaTom[a.status]}>
+                                  {labelDe(statusAssinaturaLabel, a.status)}
+                                </StatusPill>
+                                {a.cancelReason ? (
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {labelDe(motivoCancelamentoLabel, a.cancelReason)}
+                                  </p>
+                                ) : null}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                <Valor tom={tomMensalidade(a.status)}>
+                                  {formatCurrency(a.plan.monthlyPrice)}
+                                </Valor>
+                                <span className="block text-xs text-muted-foreground">
+                                  {cicloCobrancaLabel[a.billingCycle]}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                {a.renewsAt.toLocaleDateString("pt-BR", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </TableCell>
+                              <TableCell>
+                                {padrao ? (
+                                  <form action={mudarStatusAssinaturaAction} className="flex items-center gap-1">
+                                    <input type="hidden" name="id" value={a.id} />
+                                    <input type="hidden" name="status" value={padrao} />
+                                    <Input
+                                      name="motivo"
+                                      placeholder="Motivo"
+                                      className="h-8 w-28 text-xs"
+                                      required={padrao === "CANCELADA"}
+                                      minLength={3}
+                                    />
+                                    <Button type="submit" size="sm" variant={padrao === "CANCELADA" ? "destructive" : "outline"}>
+                                      {rotuloAssinatura(padrao)}
+                                    </Button>
+                                    {alternativa ? (
+                                      <Button
+                                        type="submit"
+                                        size="sm"
+                                        variant="ghost"
+                                        name="status"
+                                        value={alternativa}
+                                        formNoValidate
+                                      >
+                                        {rotuloAssinatura(alternativa)}
+                                      </Button>
+                                    ) : null}
+                                  </form>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">Arquivada</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              )}
+
+              {total > POR_PAGINA ? (
+                <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
+                  {pagina > 1 ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/admin/assinaturas${comQuery(pagina - 1)}`}>Anterior</a>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Anterior
+                    </Button>
+                  )}
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {pagina} de {Math.max(1, Math.ceil(total / POR_PAGINA))}
+                  </span>
+                  {pagina < Math.max(1, Math.ceil(total / POR_PAGINA)) ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/admin/assinaturas${comQuery(pagina + 1)}`}>Próxima</a>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Próxima
+                    </Button>
+                  )}
+                </nav>
+              ) : null}
+            </TableCard>
+          </div>
+        </section>
     </main>
   );
 }

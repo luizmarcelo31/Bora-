@@ -118,262 +118,275 @@ export default async function SuportePage({
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5 md:gap-6 md:px-6 md:py-8">
       <AdminBreadcrumb items={[{ label: "Início", href: "/admin" }, { label: "Visão geral" }]} />
         <PageHeader
-        title="Suporte"
-        badge="Atendimento"
-        description="Chamados das empresas, com prazo de resposta por prioridade."
-      />
-
-      {params.error ? (
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-          {ERROS_TICKET[params.error] ?? "Não foi possível concluir a ação."}
-        </p>
-      ) : null}
-      {params.ok ? (
-        <p role="status" className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]">
-          Ticket atualizado.
-        </p>
-      ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard title="Em andamento" value={String(abertos)} hint="Abertos ou em análise" icon={LifeBuoy} />
-        <MetricCard title="Críticos" value={String(contagens.find((c) => c.status === "ABERTO")?._count._all ?? 0)} hint="Novos e não tratados" icon={AlertTriangle} />
-        <MetricCard
-          title="Fora do prazo"
-          value={<Valor tom={vencidos > 0 ? "atencao" : "neutro"}>{vencidos}</Valor>}
-          hint="Passaram do SLA"
-          icon={Timer}
+          title="Suporte"
+          badge="Atendimento"
+          description="Chamados das empresas, com prazo de resposta por prioridade."
         />
-        <MetricCard title="Total" value={String(contagens.reduce((s, c) => s + c._count._all, 0))} hint="Todos os tickets" icon={Clock} />
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Abrir chamado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={abrirTicketAction} className="grid gap-3">
-              <label className="flex flex-col gap-1 text-sm">
-                Empresa*
-                <SelectField
-                  name="tenantId"
-                  required
-                  placeholder="Selecionar…"
-                  options={empresas.map((e) => ({ value: String(e.id), label: e.name }))}
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                Assunto*
-                <Input name="subject" required placeholder="Erro ao finalizar venda" />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                Descrição*
-                <Textarea name="description" rows={5} required placeholder="O que aconteceu, desde quando, e o que já foi tentado." />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                Prioridade
-                <SelectField
-                  name="priority"
-                  defaultValue="MEDIA"
-                  options={(["BAIXA", "MEDIA", "ALTA", "CRITICA"] as PrioridadeTicket[]).map((p) => ({
-                    value: p,
-                    label: `${labelDe(prioridadeTicketLabel, p)} — resposta em ${
-                      p === "CRITICA" ? "1h" : p === "ALTA" ? "4h" : p === "MEDIA" ? "8h" : "24h"
-                    }`,
-                  }))}
-                />
-              </label>
-              <Button type="submit">Abrir chamado</Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="lg:col-span-2">
-          <TableCard
-            title="Chamados"
-            description={
-              total === 0
-                ? "Nenhum chamado no filtro atual."
-                : `Página ${pagina} de ${Math.max(1, Math.ceil(total / POR_PAGINA))} · ${total} ticket(s). Prioridade mais alta primeiro.`
-            }
-            footer={
-              total === 0
-                ? undefined
-                : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
-            }
+        {params.error ? (
+          <p
+            role="alert"
+            className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
           >
-            <AdminFilterBar
-              placeholder="Filtrar por empresa ou assunto…"
-              chips={FILTROS.map((f) => ({ valor: f.valor, rotulo: f.rotulo }))}
-              chipAtivo={status}
-              descricao="Filtrar por situação do ticket"
-            />
+            {ERROS_TICKET[params.error] ?? "Não foi possível concluir a ação."}
+          </p>
+        ) : null}
+        {params.ok ? (
+          <p
+            role="status"
+            className="rounded-lg border border-[var(--status-success-dot)]/40 bg-[var(--status-success-bg)] p-3 text-sm text-[var(--status-success-fg)]"
+          >
+            Ticket atualizado.
+          </p>
+        ) : null}
 
-            {tickets.length === 0 ? (
-              <EmptyState title="Nenhum ticket" description="Não há chamados com esses filtros." />
-            ) : (
-              <>
-              {/* Mobile: lista compacta — tabela só no desktop */}
-              <ul className="flex flex-col gap-2 p-3 md:hidden">
-                {tickets.map((t) => (
-                  <li key={t.id}>
-                    <LinhaLista
-                      titulo={t.subject}
-                      apoio={`#${t.id} · ${t.tenant.name}`}
-                      valor={
-                        t.slaDueAt ? (
-                          // Mesmo dialeto do desktop: prazo estourado é danger,
-                          // não warning — aqui só muda o peso da linha.
-                          <span
-                            className={
-                              slaVencido(t.slaDueAt, t.status)
-                                ? "text-xs font-normal text-[var(--status-danger-fg)]"
-                                : "text-xs font-normal text-muted-foreground"
-                            }
-                          >
-                            {t.slaDueAt.toLocaleString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                            {slaVencido(t.slaDueAt, t.status) ? " · vencido" : ""}
-                          </span>
-                        ) : (
-                          <span className="text-xs font-normal text-muted-foreground">—</span>
-                        )
-                      }
-                      acoes={
-                        <span className="flex items-center gap-1">
-                          <StatusPill tom={prioridadeTicketTom[t.priority]}>
-                            {labelDe(prioridadeTicketLabel, t.priority)}
-                          </StatusPill>
-                          <StatusPill tom={statusTicketTom[t.status]}>
-                            {labelDe(statusTicketLabel, t.status)}
-                          </StatusPill>
-                        </span>
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-              <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Assunto</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Prioridade</TableHead>
-                    <TableHead>Situação</TableHead>
-                    <TableHead>Prazo</TableHead>
-                    <TableHead>Mover</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tickets.map((t) => {
-                    const proximos =
-                      t.status === "ABERTO"
-                        ? ["EM_ANALISE", "FECHADO"]
-                        : t.status === "EM_ANALISE" || t.status === "AGUARDANDO_CLIENTE"
-                          ? ["RESOLVIDO", "EM_ANALISE"]
-                          : t.status === "RESOLVIDO"
-                            ? ["FECHADO", "EM_ANALISE"]
-                            : ["ABERTO"];
-                    return (
-                      <TableRow key={t.id}>
-                        <TableCell>
-                          <span className="font-semibold">{t.subject}</span>
-                          <p className="text-xs text-muted-foreground">
-                            #{t.id} · {t._count.messages} mensagem(ns) ·{" "}
-                            {t.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <a href={`/admin/empresas/${t.tenant.id}`} className="hover:underline">
-                            {t.tenant.name}
-                          </a>
-                        </TableCell>
-                        <TableCell>
-                          <StatusPill tom={prioridadeTicketTom[t.priority]}>
-                            {labelDe(prioridadeTicketLabel, t.priority)}
-                          </StatusPill>
-                        </TableCell>
-                        <TableCell>
-                          <StatusPill tom={statusTicketTom[t.status]}>
-                            {labelDe(statusTicketLabel, t.status)}
-                          </StatusPill>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {t.slaDueAt ? (
-                            <span className={slaVencido(t.slaDueAt, t.status) ? "text-[var(--status-danger-fg)]" : "text-muted-foreground"}>
-                              {t.slaDueAt.toLocaleString("pt-BR", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                              {slaVencido(t.slaDueAt, t.status) ? " · vencido" : ""}
-                            </span>
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {proximos.map((s) => (
-                              <form key={s} action={mudarStatusTicketAction}>
-                                <input type="hidden" name="id" value={t.id} />
-                                <input type="hidden" name="status" value={s} />
-                                <Button type="submit" size="sm" variant="outline">
-                                  {s === "EM_ANALISE"
-                                    ? "Analisar"
-                                    : s === "RESOLVIDO"
-                                      ? "Resolver"
-                                      : s === "FECHADO"
-                                        ? "Fechar"
-                                        : "Reabrir"}
-                                </Button>
-                              </form>
-                            ))}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              </div>
-              </>
-            )}
-
-            {total > POR_PAGINA ? (
-              <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
-                {pagina > 1 ? (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={`/admin/suporte${comQuery(pagina - 1)}`}>Anterior</a>
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" disabled>
-                    Anterior
-                  </Button>
-                )}
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {pagina} de {Math.max(1, Math.ceil(total / POR_PAGINA))}
-                </span>
-                {pagina < Math.max(1, Math.ceil(total / POR_PAGINA)) ? (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={`/admin/suporte${comQuery(pagina + 1)}`}>Próxima</a>
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" disabled>
-                    Próxima
-                  </Button>
-                )}
-              </nav>
-            ) : null}
-          </TableCard>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard title="Em andamento" value={String(abertos)} hint="Abertos ou em análise" icon={LifeBuoy} />
+          <MetricCard title="Críticos" value={String(contagens.find((c) => c.status === "ABERTO")?._count._all ?? 0)} hint="Novos e não tratados" icon={AlertTriangle} />
+          <MetricCard
+            title="Fora do prazo"
+            value={<Valor tom={vencidos > 0 ? "atencao" : "neutro"}>{vencidos}</Valor>}
+            hint="Passaram do SLA"
+            icon={Timer}
+          />
+          <MetricCard title="Total" value={String(contagens.reduce((s, c) => s + c._count._all, 0))} hint="Todos os tickets" icon={Clock} />
         </div>
-      </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* Formulário de novo ticket */}
+          <section aria-labelledby="novo-ticket-aria">
+            <h2 id="novo-ticket-aria" className="sr-only">
+              Novo ticket
+            </h2>
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm dark:border-border dark:bg-card">
+              <form action={abrirTicketAction} className="grid gap-3">
+                <label className="flex flex-col gap-1 text-sm">
+                  Empresa*
+                  <SelectField
+                    name="tenantId"
+                    required
+                    placeholder="Selecionar..."
+                    options={empresas.map((e) => ({ value: String(e.id), label: e.name }))}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  Assunto*
+                  <Input name="subject" required placeholder="Erro ao finalizar venda" />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  Descrição*
+                  <Textarea name="description" rows={5} required placeholder="O que aconteceu, desde quando, e o que já foi tentado." />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  Prioridade
+                  <SelectField
+                    name="priority"
+                    defaultValue="MEDIA"
+                    options={(["BAIXA", "MEDIA", "ALTA", "CRITICA"] as PrioridadeTicket[]).map((p) => ({
+                      value: p,
+                      label: `${labelDe(prioridadeTicketLabel, p)} — resposta em ${
+                        p === "CRITICA" ? "1h" : p === "ALTA" ? "4h" : p === "MEDIA" ? "8h" : "24h"
+                      }`,
+                    }))}
+                  />
+                </label>
+                <Button type="submit">Abrir chamado</Button>
+              </form>
+            </div>
+          </section>
+
+          {/* Tabela de tickets */}
+          <section aria-labelledby="tickets-aria">
+            <div className="flex items-center justify-between gap-2">
+              <h2 id="tickets-aria" className="flex items-center gap-2 text-base font-semibold">
+                Chamados
+              </h2>
+            </div>
+            <div className="mt-3 rounded-xl border border-border bg-card p-3 shadow-sm dark:border-border dark:bg-card">
+              <TableCard
+                title="Chamados"
+                description={
+                  total === 0
+                    ? "Nenhum chamado no filtro atual."
+                    : `Página ${pagina} de ${Math.max(1, Math.ceil(total / POR_PAGINA))} · ${total} ticket(s). Prioridade mais alta primeiro.`
+                }
+                footer={
+                  total === 0
+                    ? undefined
+                    : `Mostrando ${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}`
+                }
+              >
+                <AdminFilterBar
+                  placeholder="Filtrar por empresa ou assunto…"
+                  chips={FILTROS.map((f) => ({ valor: f.valor, rotulo: f.rotulo }))}
+                  chipAtivo={status}
+                  descricao="Filtrar por situação do ticket"
+                />
+
+                {tickets.length === 0 ? (
+                  <EmptyState title="Nenhum ticket" description="Não há chamados com esses filtros." />
+                ) : (
+                  <>
+                    {/* Mobile: lista compacta */}
+                    <ul className="flex flex-col gap-1.5 p-3 md:hidden">
+                      {tickets.map((t) => (
+                        <li key={t.id}>
+                          <LinhaLista
+                            titulo={t.subject}
+                            apoio={`#${t.id} · ${t.tenant.name}`}
+                            valor={
+                              t.slaDueAt ? (
+                                <span
+                                  className={
+                                    slaVencido(t.slaDueAt, t.status)
+                                      ? "text-xs font-normal text-[var(--status-danger-fg)]"
+                                      : "text-xs font-normal text-muted-foreground"
+                                  }
+                                >
+                                  {t.slaDueAt.toLocaleString("pt-BR", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                  {slaVencido(t.slaDueAt, t.status) ? " · vencido" : ""}
+                                </span>
+                              ) : (
+                                <span className="text-xs font-normal text-muted-foreground">—</span>
+                              )
+                            }
+                            acoes={
+                              <span className="flex items-center gap-1">
+                                <StatusPill tom={prioridadeTicketTom[t.priority]}>
+                                  {labelDe(prioridadeTicketLabel, t.priority)}
+                                </StatusPill>
+                                <StatusPill tom={statusTicketTom[t.status]}>
+                                  {labelDe(statusTicketLabel, t.status)}
+                                </StatusPill>
+                              </span>
+                            }
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="hidden overflow-x-auto md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Assunto</TableHead>
+                            <TableHead>Empresa</TableHead>
+                            <TableHead>Prioridade</TableHead>
+                            <TableHead>Situação</TableHead>
+                            <TableHead>Prazo</TableHead>
+                            <TableHead>Mover</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {tickets.map((t) => {
+                            const proximos =
+                              t.status === "ABERTO"
+                                ? ["EM_ANALISE", "FECHADO"]
+                                : t.status === "EM_ANALISE" || t.status === "AGUARDANDO_CLIENTE"
+                                  ? ["RESOLVIDO", "EM_ANALISE"]
+                                  : t.status === "RESOLVIDO"
+                                    ? ["FECHADO", "EM_ANALISE"]
+                                    : ["ABERTO"];
+                            return (
+                              <TableRow key={t.id}>
+                                <TableCell>
+                                  <span className="font-semibold">{t.subject}</span>
+                                  <p className="text-xs text-muted-foreground">
+                                    #{t.id} · {t._count.messages} mensagem(ns) ·{" "}
+                                    {t.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                                  </p>
+                                </TableCell>
+                                <TableCell>
+                                  <a href={`/admin/empresas/${t.tenant.id}`} className="hover:underline">
+                                    {t.tenant.name}
+                                  </a>
+                                </TableCell>
+                                <TableCell>
+                                  <StatusPill tom={prioridadeTicketTom[t.priority]}>
+                                    {labelDe(prioridadeTicketLabel, t.priority)}
+                                  </StatusPill>
+                                </TableCell>
+                                <TableCell>
+                                  <StatusPill tom={statusTicketTom[t.status]}>
+                                    {labelDe(statusTicketLabel, t.status)}
+                                  </StatusPill>
+                                </TableCell>
+                                <TableCell className="text-xs">
+                                  {t.slaDueAt ? (
+                                    <span className={slaVencido(t.slaDueAt, t.status) ? "text-[var(--status-danger-fg)]" : "text-muted-foreground"}>
+                                      {t.slaDueAt.toLocaleString("pt-BR", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                      {slaVencido(t.slaDueAt, t.status) ? " · vencido" : ""}
+                                    </span>
+                                  ) : (
+                                    "—"
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    {proximos.map((s) => (
+                                      <form key={s} action={mudarStatusTicketAction}>
+                                        <input type="hidden" name="id" value={t.id} />
+                                        <input type="hidden" name="status" value={s} />
+                                        <Button type="submit" size="sm" variant="outline">
+                                          {s === "EM_ANALISE"
+                                            ? "Analisar"
+                                            : s === "RESOLVIDO"
+                                              ? "Resolver"
+                                              : s === "FECHADO"
+                                                ? "Fechar"
+                                                : "Reabrir"}
+                                        </Button>
+                                      </form>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                )}
+
+                {total > POR_PAGINA ? (
+                  <nav aria-label="Paginação" className="flex items-center justify-end gap-2 px-1">
+                    {pagina > 1 ? (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/admin/suporte${comQuery(pagina - 1)}`}>Anterior</a>
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" disabled>
+                        Anterior
+                      </Button>
+                    )}
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {pagina} de {Math.max(1, Math.ceil(total / POR_PAGINA))}
+                    </span>
+                    {pagina < Math.max(1, Math.ceil(total / POR_PAGINA)) ? (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/admin/suporte${comQuery(pagina + 1)}`}>Próxima</a>
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" disabled>
+                        Próxima
+                      </Button>
+                    )}
+                  </nav>
+                ) : null}
+              </TableCard>
+            </div>
+          </section>
+        </div>
     </main>
   );
 }

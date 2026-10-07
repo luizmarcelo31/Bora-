@@ -84,7 +84,7 @@ export function ehChaveValida(key: string): key is FeatureKey {
 
 export async function salvarFeatureFlag(
   key: string,
-  tenantId: number,
+  tenantId: number | null,
   enabled: boolean
 ): Promise<void> {
   // So chaves conhecidas. O banco é um repositório de rótulos, não um
