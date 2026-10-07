@@ -33,12 +33,12 @@ const LOGO_ALTURA_MM = 25;
 const MARGEM_MM = 14;
 
 const TH: React.CSSProperties = {
-  border: "1px solid #999",
+  border: "1px solid #cbd5e1",
   padding: "4px 6px",
-  background: "#eee",
+  background: "#f8fafc",
   textAlign: "left",
 };
-const TD: React.CSSProperties = { border: "1px solid #999", padding: "4px 6px" };
+const TD: React.CSSProperties = { border: "1px solid #cbd5e1", padding: "4px 6px" };
 
 /**
  * Carrega a logo como data URL.
@@ -127,15 +127,13 @@ export function ReportActions({
 
   async function buildPdf(): Promise<jsPDF> {
     const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
+    doc.setProperties({ title, subject: subtitle, author: "BoraMais" });
 
-    // A logo empurra o título e a tabela para baixo; sem ela, o layout é o de
-    // sempre. Este é o único ponto do documento que depende da sua presença.
     const logo = companyLogoUrl ? await carregarLogo(companyLogoUrl) : null;
-    let alturaLogo = 0;
+    let alturaLogo = LOGO_ALTURA_MM;
 
     if (logo) {
       try {
-        alturaLogo = LOGO_ALTURA_MM;
         doc.addImage(
           logo,
           logo.startsWith("data:image/png") ? "PNG" : "JPEG",
@@ -145,30 +143,36 @@ export function ReportActions({
           alturaLogo
         );
       } catch {
-        // Formato que o addImage não aceita: segue sem logo e sem deslocar o
-        // resto do cabeçalho.
-        alturaLogo = 0;
+        alturaLogo = LOGO_ALTURA_MM;
       }
     }
 
     const yTitulo = alturaLogo > 0 ? 8 + alturaLogo + 8 : 16;
     doc.setFontSize(14);
+    doc.setTextColor(24, 24, 27);
     doc.text(title, MARGEM_MM, yTitulo);
     if (subtitle) {
       doc.setFontSize(10);
-      doc.setTextColor(100);
+      doc.setTextColor(100, 100, 100);
       doc.text(subtitle, MARGEM_MM, yTitulo + 7);
-      doc.setTextColor(0);
     }
-    autoTable(doc, {
-      head: [columns],
-      body: rows,
-      foot: footer ? [footer] : undefined,
-      startY: subtitle ? yTitulo + 12 : yTitulo + 6,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [24, 24, 27] },
-      footStyles: { fillColor: [244, 244, 245], textColor: [24, 24, 27], fontStyle: "bold" },
-    });
+    doc.setTextColor(24, 24, 27);
+
+    if (rows.length === 0) {
+      doc.setFontSize(10);
+      doc.text("Sem dados para este período.", MARGEM_MM, yTitulo + 14);
+    } else {
+      autoTable(doc, {
+        head: [columns],
+        body: rows,
+        foot: footer ? [footer] : undefined,
+        startY: subtitle ? yTitulo + 12 : yTitulo + 6,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [24, 24, 27] },
+        footStyles: { fillColor: [248, 250, 252], textColor: [24, 24, 27], fontStyle: "bold" },
+      });
+    }
+
     const pageCount = doc.getNumberOfPages();
     doc.setFontSize(8);
     doc.setTextColor(120);
@@ -229,7 +233,7 @@ export function ReportActions({
           <div data-print-root>
             <div
               data-print-paper
-              style={{ padding: "12mm", color: "#000", background: "#fff", fontFamily: "Arial, sans-serif" }}
+              style={{ padding: "12mm", color: "#000", background: "#fff", fontFamily: "Helvetica, sans-serif" }}
             >
               {/* A logo precisa estar DENTRO de data-print-root: o `@media print`
                   em globals.css esconde tudo que está fora dele. Logo fora daqui
@@ -243,7 +247,7 @@ export function ReportActions({
               ) : null}
               <h1 style={{ fontSize: 18, margin: "0 0 4px" }}>{title}</h1>
               {subtitle ? <p style={{ fontSize: 11, color: "#555", margin: "0 0 12px" }}>{subtitle}</p> : null}
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "Helvetica, sans-serif" }}>
                 <thead>
                   <tr>
                     {columns.map((c) => (
@@ -254,15 +258,23 @@ export function ReportActions({
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={i}>
-                      {r.map((cell, j) => (
-                        <td key={j} style={TD}>
-                          {cell}
-                        </td>
-                      ))}
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={columns.length} style={{ ...TD, textAlign: "center", color: "#64748b" }}>
+                        Sem dados para este período.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    rows.map((r, i) => (
+                      <tr key={i}>
+                        {r.map((cell, j) => (
+                          <td key={j} style={TD}>
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
                 {footer ? (
                   <tfoot>
@@ -276,7 +288,9 @@ export function ReportActions({
                   </tfoot>
                 ) : null}
               </table>
-              <p style={{ fontSize: 10, color: "#555" }}>Gerado em {new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
+              <p style={{ fontSize: 10, color: "#555" }}>
+                Gerado em {new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} — Página 1
+              </p>
             </div>
           </div>,
           document.body

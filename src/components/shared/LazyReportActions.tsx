@@ -35,7 +35,7 @@ const ReportActions = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center gap-2" aria-hidden="true">
+      <div className="flex items-center gap-2" role="status" aria-label="Carregando ações do relatório">
         <div className="h-7 w-28 rounded-md bg-muted" />
       </div>
     ),
