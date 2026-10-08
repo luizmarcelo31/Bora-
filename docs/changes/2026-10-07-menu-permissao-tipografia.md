@@ -1,6 +1,6 @@
-# Menu por permissão
+# Menu por permissão + reversão da escala de texto
 
-**Data:** 07/10/2026 · **Autor:** Luiz Marcelo
+**Data:** 07/10–08/10/2026 · **Autor:** Luiz Marcelo
 
 ## Sintoma
 
@@ -74,77 +74,105 @@ Sem a fronteira o React recusa com erro #441. É o mesmo bug que o `e3f054c`
 corrigiu no BottomNav. O `role` chega do layout como string de enum (serializa)
 e o filtro roda no client — não é brecha, porque a autorização continua na
 página, no servidor.
+## Reversão da escala de texto (08/10)
 
-## Reversão visual — NÃO ENTROU NESTE COMMIT
+O dono pediu voltar ao padrão visual anterior e, após ver o conflito com os 19
+commits de redesign, definiu o escopo: **só a escala de texto**.
 
-O dono pediu voltar a interface ao padrão visual anterior. **Cheguei a
-implementar e medir em navegador, mas o lote não entra aqui**, por dois motivos
-concretos:
+### O que era, na verdade
 
-1. **`origin/main` estava 19 commits à frente** e não continha o trabalho. É a
-   armadilha que o próprio `AI_RULES.md` (seção "Banco, schema e migrations")
-   descreve: clone atrasado descreve um banco e um código que já mudaram. As
-   feature flags que o dono suspeitava (`src/lib/feature-flags.ts`, tabela
-   `FeatureFlag`, `/admin/features`) existem **nesse** histórico, não no local.
-   Quando fiz `git fetch`, o merge descartou a reversão tipográfica inteira
-   porque os 19 commits reescreveram os mesmos arquivos.
+O primeiro diagnóstico (07/10) apontou os tokens `--text-*` encolhendo a
+escala. **Medindo no navegador contra o `origin/main` atual, isso não se
+confirmou** — as utilitárias do Tailwind computavam no tamanho padrão (xs 12px,
+sm 14px, base 16px). O `origin/main` havia ganhado um bloco que replica
+`.text-xs` e afins em `@layer components`; como `utilities` vem **depois** de
+`components` na ordem de camadas, essa réplica **nunca vencia**. Era código
+morto.
 
-2. **A reversão conflita com trabalho deliberado e recente.** Os commits
-   upstream incluem `feat(ui): refinamentos visuais PDV e Usuários`,
-   `feat(admin): otimização visual completa`, `feat(mobile): padroniza listas`,
-   `fix(a11y): restaura foco de teclado e alvos de toque`, mais
-   `src/styles/mobile-tokens.css` e `src/components/mobile/` (kit novo). Não é
-   reversão de um acidente: é um redesign com 19 commits, testes e screenshots
-   deEvidence atrás.
+A encolhimento real tinha outra origem, e era uma linha só:
 
-Reverter por cima disso seria jogar fora trabalho recente sem saber qual parte
-o dono quer de volta. **Precisa de decisão explícita dele**, não de dedução
-minha.
+```css
+/* src/styles/tokens.css, @layer base — adicionado pelo 63ab5f2 */
+body { font-size: var(--text-body); }   /* --text-body: 14px */
+```
 
-### O que a reversão tinha foundado (medido, não teórico)
+`--text-body` é 14px. Antes do `63ab5f2` o `body` **não declarava tamanho** e
+herdava 16px do navegador. Como a maioria dos elementos da interface não tem
+utilitária de texto explícita, aquele `font-size` encolheu texto corrido,
+parágrafos, rótulos de tabela e texto de célula — tudo que depende do
+herdado.
 
-Para quando for decidida, o diagnóstico já está pronto:
+E havia um efeito pior que o tamanho: `text-sm` é 14px no Tailwind, exatamente
+o mesmo valor do corpo. Com o corpo em 14px, **`text-sm` e o texto corrido
+ficavam do mesmo tamanho** e a distinção sumia.
 
-**A causa do "ar de reduzido" não era só peso.** Os tokens `--text-*` do
-`tokens.css` encolhiam a escala inteira — `text-xs` 12→11px, `text-sm`
-14→12px. Nenhuma mudança de peso explicaria isso, e foi o achado mais
-importante. Ao lado disso:
+### O que foi feito
 
-- Normalização 400/600 → medium/bold, revertida **hunk a hunk** (60 arquivos,
-  78 linhas). `font-semibold` tem dois antecessores possíveis — o 500 dos
-  rótulos e o 700 dos números viraram o mesmo 600 — e nenhum regex no arquivo
-  sabe qual era qual. Só o diff sabe.
-- `PageHeader` (faixa laranja → transparente com borda inferior),
-  `SidebarGroupLabel` (uppercase 10px/0.7px → `text-xs font-medium`), item
-  ativo e badge da sidebar (600 → 500), `FilterTabs` (pill laranja →
-  `TabsList` padrão).
+1. **`font-size` removido do `body`.** Volta a herdar 16px. Medido: `body` e
+   `<p>` sem utilitária qualquer went de 14px → 16px.
+2. **Réplica de utilitárias removida** de `@layer components` (`.text-xs`,
+   `.text-sm`, `.text-base`, `.text-lg`, `.text-xl`, `.text-2xl`,
+   `.text-3xl`, `.font-normal`, `.font-medium`, `.font-semibold`,
+   `.font-bold`). Código morto, e era o que quebrava o `tokens.test.ts`.
+3. **Quatro custom properties de peso removidas** (`--font-weight-normal`,
+   `-medium`, `-semibold`, `-bold`): sem consumidor depois do item 2. Peso é
+   lido direto da classe; um token de peso sem consumidor é só uma segunda
+   fonte que pode divergir da primeira.
 
-### O que NÃO pode ser revertido
+Os tokens `--text-xs` a `--text-3xl` **permanecem declarados** no `:root` como
+referência da hierarquia do design system. Consumi-los exigiria mexer no
+`@theme` de `globals.css` — que é outra decisão, não esta.
+
+### Medido depois
+
+```
+body:              16px   (era 14px)
+p sem utilitaria:  16px   (era 14px)
+text-xs            12px
+text-sm            14px   <-- voltou a ser MAIOR que o corpo
+text-base          16px
+text-lg            18px
+text-xl            20px
+text-2xl           24px
+text-3xl           30px
+```
+
+Idêntico em 1440px e 390px. `mobile-title` e `mobile-body` também subiram de
+14 para 16px — não declaram tamanho e herdavam do `body`.
+
+### Bug do main que isso fechou
+
+O `tokens.test.ts`, que trava a cascata, **estava falhando no `origin/main`**
+(verificado com stash, sem alteração local). A regra "não deixa seletor de
+peso solto no arquivo" acusava justamente a réplica de `.font-*` em
+`@layer components`. Com a réplica removida, passa: **5/5**.
+
+### O que NÃO foi tocado
 
 - `* { font-weight: 400 }` dentro de `@layer base`. Fora de layer vence as
   utilitárias e a UI inteira cai para 400 — é o bug que a `da1e409` consertou.
-- Tokenização de cor e ADR-005 de contraste (4 pares abaixo de 4.5:1).
+- Tokenização de cor e ADR-005 de contraste.
 - `--text-micro`, consumido pelo group label.
+- Pesos (`font-medium`/`font-semibold`): o padrão 400/600 da Fase 1 segue
+  valendo. **Não foi revertido** — o dono definiu o escopo como escala de
+  texto.
+- `PageHeader`, `SidebarGroupLabel`, `FilterTabs`: o chrome da Fase 1 segue
+  como está, pelo mesmo motivo.
+- `src/styles/mobile-tokens.css` e `src/components/mobile/`: o kit mobile
+  fica inteiro.
 
-### Bug novo encontrado no caminho
+### Duas armadilhas
 
-O `tokens.test.ts` (que trava a cascata) **já falha no HEAD** de
-`origin/main`: a regra `não deixa seletor de font-weight solto no arquivo`
-quebra porque o `tokens.css` upstream ganhou um bloco de utilitárias
-replicadas em `@layer components`. Verificado com stash — falha igual sem
-nenhuma alteração minha. Não corrigi aqui por ser escopo alheio, mas
-**está quebrado no main**.
+**O teste de cascata é frágil por construção.** Ele faz `indexOf("font-weight")`
+cru e não distingue comentário de seletor. Achei isso duas vezes: primeiro ao
+comentar `--font-weight-normal`, depois ao escrever a explicação da remoção.
+A solução foi escrever a documentação sem repetir a string literal — e não
+afrouxar o teste, que é a trava que impede a repetição do bug da cascata.
 
-### Duas armadilhas da execução
-
-**`h1` em 500.** O revert automático acertou o `font-bold` certo, mas na
-reescrita do `PageHeader` eu acertei o peso errado — o original era 700 com
-`text-2xl`/`md:text-3xl`. Pego pelo teste, que mede `getComputedStyle`.
-
-**`tokens.test.ts` quebrado por comentário novo.** O teste faz
-`indexOf(".label-group")` e pegou um comentário meu, fora de layer. O texto
-foi reescrito.
-
+**Medir antes de mexer.** Se eu tivesse aplicado a reversão de 07/10 às cegas
+sobre o `origin/main`, teria reescrito 60 arquivos e "consertado" uma escala
+que já estava correta — gastando o esforço em Typography e o que importa de
+verdade era uma linha.
 
 ## Testes
 
@@ -164,14 +192,18 @@ Prova no navegador, viewport 390px, conta real no banco:
 Antes da correção, como FUNCIONARIO, eram 5 destinos no mobile com **3 em 403**
 (inclusive o FAB).
 
-`tests/e2e/typography.spec.ts` **não entra neste commit** — mede a reversão
-tipográfica, que ficou de fora. Fica no repo para quando ela for decidida.
+`tests/e2e/typography.spec.ts` (novo, 08/10) — mede a escala computada no
+Chromium: corpo, `<p>` sem utilitária, e as sete utilitárias de tamanho do
+Tailwind. Inclui a asserção de que `text-sm` é **maior** que o corpo, que é a
+distinção que o `63ab5f2` apagou.
 
 ## Verificação
 
-- `tsc` limpo; **299 testes / 31 suítes** (+15). A única falha é o
-  `tokens.test.ts` **que já quebrava no HEAD** de `origin/main` (verificado
-  com stash, sem alteração minha).
-- Lint: 135 problemas / 61 erros. **Maioria pré-existente** dos 19 commits
-  upstream (`scripts/`, `docs/`), não introduzida aqui — o clone local estava
-  19 commits atrás, e por isso o baseline anterior media 25/13.
+- `tsc` limpo; **300 testes / 31 suítes**, **todas verdes** — incluindo o
+  `tokens.test.ts`, que quebrava no `origin/main`.
+- Gates: `verificar-pesos.mjs` 0 falhas. `auditar-contraste.mjs` reporta 1 falha
+  (`#FFFFFF` sobre `#EF4444`, 3.76:1) — **pré-existente, idêntica com e sem
+  esta mudança**, verificado por stash. `auditar-cores-hardcoded.mjs` sem
+  piora.
+- `menu-permission.spec.ts` e `typography.spec.ts` verdes com conta real.
+- Lint: sem regressão introduzida aqui.

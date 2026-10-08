@@ -93,6 +93,18 @@ Next.js 16 App Router · Prisma · Supabase (Auth + Postgres) · Zod · Tailwind
   `SUPER_ADMIN` inteiro). Menu estático × página que barra = 403 no toque.
 - **O FAB da BottomNav é marcado por `fab: true`, nunca por índice.** A lista é
   filtrada por permissão e a posição do PDV muda conforme o role.
+- **O `body` não declara `font-size`.** Sem isso, `--text-body` (14px) encolhe
+  todo elemento sem utilitária de texto — texto corrido, parágrafos, rótulos de
+  tabela — e deixa `text-sm` (14px) do mesmo tamanho que o corpo, apagando a
+  distinção. O corpo herda 16px do navegador, que é o que as utilitárias do
+  Tailwind assumem.
+- **Não replique utilitárias do Tailwind em `@layer components`.** `utilities`
+  vem depois de `components` na cascata e sempre vence: a réplica é código morto
+  (o `63ab5f2` fez isso e achou que estava funcionando). Consumir os tokens
+  `--text-*` exigiria mexer no `@theme` de `globals.css`, não em replicar
+  classe aqui.
+- Mediu antes de mexer: o sintoma "texto pequeno" pode ser `font-size` no
+  corpo, não token de tamanho. `tests/e2e/typography.spec.ts` mede o computado.
 
 ## Depois de codar (obrigatório — parte do "done", sem exceção)
 Ordem: código → testes → docs → commit. Nenhuma tarefa está concluída sem docs.

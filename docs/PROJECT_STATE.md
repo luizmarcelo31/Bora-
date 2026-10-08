@@ -47,10 +47,9 @@
   defeito do shadow do Prisma 6.19.3 com Supabase, não do SQL
 
 ## Bugs conhecidos
-- **`src/styles/tokens.test.ts` falha no `origin/main`** (07/10): a regra "não
-  deixa seletor de `font-weight` solto" acusa o bloco de utilitárias replicadas
-  em `@layer components` que o `tokens.css` ganhou. Verificado com stash —
-  falha sem nenhuma alteração local. **Pendente de correção**
+- **Contraste: 1 par abaixo de WCAG AA** — `#FFFFFF` sobre `#EF4444`
+  (botão destrutivo, 3.76:1, mínimo 4.5:1). **Pré-existente**, idêntico com e
+  sem a reversão da escala. Aponta para uma correção de cor
 - **3 `<Select>` (shadcn) sem nome acessível** em `/dashboard/produtos`: o
   `Select` não gera `aria-label` sozinho e o consumidor não nomeia. Leitor de
   tela anuncia "combobox" sem dizer o que é. Decisão de conteúdo (rótulo por
@@ -61,7 +60,7 @@
   Vem do commit `0d4f962` (modo offline), **não é regressão do lote de
   migrations**. Falta um lote próprio.
 
-Corrigido em 07/10: **menu oferecia item que a página rejeitava.** A sidebar e a
+Corrigido em 07/10: **o menu oferecia item que a página rejeitava.** A sidebar e a
 BottomNav listavam destinos fixos enquanto cada página barra com
 `requirePermission` → `/unauthorized`. Para `FUNCIONARIO` eram 3 de 5 destinos
 do mobile, **inclusive o FAB (PDV)** — que é a única navegação no celular.
@@ -69,6 +68,16 @@ do mobile, **inclusive o FAB (PDV)** — que é a única navegação no celular.
 Prova em navegador nos dois roles: PROPRIETARIO 16/16 e 5/5, FUNCIONARIO 11/11
 e 2/2, **zero 403**. Detalhe em
 `docs/changes/2026-10-07-menu-permissao-tipografia.md`.
+
+Corrigido em 08/10: **a escala de texto estava encolhida.** O `63ab5f2` pôs
+`font-size: var(--text-body)` (14px) no `body`; como quase todo elemento não tem
+utilitária de texto explícita, texto corrido, parágrafos e rótulos de tabela
+herdavam 14px em vez de 16px — e `text-sm` (14px) ficava do mesmo tamanho do
+corpo, apagando a distinção. Removido o `font-size` do `body` e a réplica
+morta das utilitárias em `@layer components` (que também quebrava o
+`tokens.test.ts`, agora **5/5 verde**). Medido em 1440px e 390px: escala
+inteira no padrão do Tailwind. **Pesos e chrome não foram revertidos** — o
+escopo definido pelo dono foi escala de texto.
 
 ## Acessibilidade — verificado no navegador (02/10/2026)
 Auditoria real em 16 rotas (desktop 1249px + mobile 390px), com login e
@@ -87,17 +96,6 @@ medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
   `DATABASE_URL`/`DIRECT_URL` no `.env` e `.env.local`.
 
 ## Próxima tarefa
-- **Reversão da escala tipográfica: decisão do dono pendente.** O pedido
-  existe ("interface de UI UX no padrão antes das mudanças visuais") e o
-  diagnóstico está pronto em
-  `docs/changes/2026-10-07-menu-permissao-tipografia.md` — inclusive o achado de
-  que a escala encolhida vinha dos tokens `--text-*` (text-xs 12→11px), não dos
-  pesos. **Não foi aplicado** porque `origin/main` ganhou 19 commits de
-  redesign por cima (`mobile-tokens.css`, kit novo em `components/mobile/`,
-  refinamentos em PDV/Usuários/admin, ajuste de alvos de toque) e reverter em
-  cima disso jogaria fora trabalho recente sem saber qual parte ele quer de
-  volta. `tests/e2e/typography.spec.ts` já está no repo medindo o padrão
-  antigo, pronto para ser o gate do lote
 - **Backlog de UX escrito da perspectiva do dono da conveniência:**
   `docs/backlog-pedidos-dono.md` — 9 itens priorizados com o cenário do dia a
   dia que faz cada um acontecer, mais a seção "O que NÃO mudar". Nenhum código
@@ -117,9 +115,9 @@ medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
 
 ## Documentei nesta sessão
 - `docs/changes/2026-10-07-menu-permissao-tipografia.md` — menu por permissão na
-  sidebar e na BottomNav (com o FAB marcado por flag em vez de índice), mais o
-  diagnóstico da reversão tipográfica que ficou de fora por conflitar com os 19
-  commits de redesign do `origin/main`
+  sidebar e na BottomNav (FAB marcado por flag em vez de índice), e a reversão
+  da escala de texto: a causa era o `font-size` no `body`, não os tokens
+  `--text-*` como o primeiro diagnóstico apontava
 - `docs/changes/2026-10-02-modo-offline-pdv.md` — Fase 3.1 completa: 6 passos,
   as 4 políticas de conflito, o achado de migration que travava o banco, e o
   roteiro de verificação manual

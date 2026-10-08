@@ -94,11 +94,19 @@
   --text-caption: 12px;   /* Caption */
   --text-micro: 10px;     /* Micro */
 
-  /* --- Font weights --- */
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
+  /* --- Pesos ---
+   * Sem token próprio de peso, de propósito. O 63ab5f2 declarava quatro
+   * custom properties de peso (normal/medium/semibold/bold) para as réplicas
+   * de `.font-*` que ele colocou em @layer components; como réplica de
+   * utilitária do Tailwind nunca vence — utilities vem depois de components na
+   * cascata — nenhuma delas usava o token. As custom properties foram
+   * removidas junto: peso é lido direto da classe, e um token de peso sem
+   * consumidor é só uma segunda fonte que pode divergir da primeira.
+   *
+   * Este bloco não repete o nome das custom properties removidas porque o
+   * teste de cascata procura a string de peso cru no arquivo e não distingue
+   * comentário de seletor. É a mesma armadilha que já pegou o comentário do
+   * group label. */
 
   /* --- Letter spacing --- */
   --tracking-display: -0.02em;
@@ -296,9 +304,23 @@
     font-weight: 600;
   }
 
+  /*
+   * SEM `font-size` aqui, de propósito.
+   *
+   * O 63ab5f2 pôs `font-size: var(--text-body)` (14px) no body. Isso encolhe
+   * tudo que não tem utilitária de texto explícita — e a maioria dos elementos
+   * da interface não tem. Antes desse commit o body não declarava tamanho e
+   * herdava 16px do navegador, que é o que as utilitárias do Tailwind
+   * assumem: `text-sm` = 14px existe para ser um passo ACIMA do corpo, não
+   * igual a ele. Com o corpo em 14px, `text-sm` e o texto corrido ficavam do
+   * mesmo tamanho e a hierarquia sumia.
+   *
+   * Declarar o tamanho do corpo em token próprio não dá escala: dá um segundo
+   * lugar, paralelo ao do Tailwind, onde os dois discordam. `--text-body`
+   * continua declarado como referência da hierarquia do design system.
+   */
   body {
     font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-    font-size: var(--text-body);
     line-height: 1.6;
     color: var(--foreground);
     background: var(--background);
@@ -332,20 +354,23 @@
     color: var(--muted-foreground);
   }
 
-  /* Heading scale */
-  .text-xs { font-size: var(--text-xs); line-height: 1.5; }
-  .text-sm { font-size: var(--text-sm); line-height: 1.5; }
-  .text-base { font-size: var(--text-base); line-height: 1.6; }
-  .text-lg { font-size: var(--text-lg); line-height: 1.6; }
-  .text-xl { font-size: var(--text-xl); line-height: 1.5; }
-  .text-2xl { font-size: var(--text-2xl); line-height: 1.4; }
-  .text-3xl { font-size: var(--text-3xl); line-height: 1.3; }
-
-  /* Font weights */
-  .font-normal { font-weight: var(--font-weight-normal); }
-  .font-medium { font-weight: var(--font-weight-medium); }
-  .font-semibold { font-weight: var(--font-weight-semibold); }
-  .font-bold { font-weight: var(--font-weight-bold); }
+  /*
+   * NÃO replica aqui as utilitárias de tamanho e peso do Tailwind
+   * (.text-xs, .font-semibold, ...).
+   *
+   * O 63ab5f2 as replicou aqui "para respeitar os tokens". Não funciona: o
+   * Tailwind v4 emite as utilitárias em @layer utilities, que vem DEPOIS de
+   * components na ordem de camadas e por isso sempre vence. Medido no
+   * Chromium: `.text-xs` computava 12px (o valor do Tailwind), nunca os 11px do
+   * token. Era código morto — e, por estar solto fora do @layer base que o
+   * resto deste arquivo respeita, quebrava a regra "não deixa seletor de
+   * peso solto" do tokens.test.ts.
+   *
+   * Os tokens --text-xs a --text-3xl seguem declarados no :root como
+   * REFERÊNCIA da hierarquia do design system. Consumir uma hierarquia
+   * paralela exige mexer no @theme de globals.css, não em replicar utilitária
+   * aqui.
+   */
 
   /* Letter spacing */
   .tracking-label { letter-spacing: var(--tracking-label); }
