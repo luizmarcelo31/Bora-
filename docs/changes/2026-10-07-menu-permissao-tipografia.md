@@ -176,6 +176,27 @@ verdade era uma linha.
 
 ## Testes
 
+## Fecha de dois gates quebrados no main (08/10)
+
+Lever os quatro gates a zero revelou que dois já estavam vermelhos no
+`origin/main`, sem relação com o escopo deste lote:
+
+**Contraste WCAG AA.** Botão destrutivo no dark: `#EF4444` sob texto branco,
+3.76:1 (mínimo 4.5:1). O light já usava `#DC2626` e passava com 4.83:1 — a
+divergência é o dark estar **mais claro** que o light, o oposto do que a
+hierarquia de superfície pede. Escureci o dark para `#D73D3D` (4.54:1).
+Corrige sem tocar no light, que já estava certo.
+
+**Cor fora do token.** `pdv-client.tsx:378` usava `text-neutral-500` +
+`dark:text-neutral-400` no texto de apoio do desconto. Trocado por
+`text-muted-foreground`, que é o token de texto secundário e se ajusta ao modo
+sozinho.
+
+Depois: `auditar-contraste.mjs` **0 falhas**, `auditar-cores-hardcoded.mjs` **0
+em 295 arquivos**.
+
+## Testes
+
 - `src/navigation/tenant-nav.test.ts` (novo, 15 testes) — inclui a invariante
   central: **nenhum role recebe item cuja permissão não tem**, e nenhum role
   fica sem navegação.
@@ -201,9 +222,10 @@ distinção que o `63ab5f2` apagou.
 
 - `tsc` limpo; **300 testes / 31 suítes**, **todas verdes** — incluindo o
   `tokens.test.ts`, que quebrava no `origin/main`.
-- Gates: `verificar-pesos.mjs` 0 falhas. `auditar-contraste.mjs` reporta 1 falha
-  (`#FFFFFF` sobre `#EF4444`, 3.76:1) — **pré-existente, idêntica com e sem
-  esta mudança**, verificado por stash. `auditar-cores-hardcoded.mjs` sem
-  piora.
+- **Os quatro gates de design system em zero:** contraste 0 falhas, 0 cor fora
+  do token (295 arquivos), pesos 0 falhas, sentence case com 5 apontamentos
+  pré-existentes que são placeholders legítimos ("Ex.: Bebidas, Aluguel",
+  "Ambev S.A.") — falsos positivos do gate, não interface.
 - `menu-permission.spec.ts` e `typography.spec.ts` verdes com conta real.
+- `prisma migrate status`: 14 migrations, schema up to date.
 - Lint: sem regressão introduzida aqui.

@@ -47,18 +47,25 @@
   defeito do shadow do Prisma 6.19.3 com Supabase, não do SQL
 
 ## Bugs conhecidos
-- **Contraste: 1 par abaixo de WCAG AA** — `#FFFFFF` sobre `#EF4444`
-  (botão destrutivo, 3.76:1, mínimo 4.5:1). **Pré-existente**, idêntico com e
-  sem a reversão da escala. Aponta para uma correção de cor
 - **3 `<Select>` (shadcn) sem nome acessível** em `/dashboard/produtos`: o
   `Select` não gera `aria-label` sozinho e o consumidor não nomeia. Leitor de
   tela anuncia "combobox" sem dizer o que é. Decisão de conteúdo (rótulo por
   filtro), precisa de lote próprio
-- **43 testes falhando** em `src/lib/offline/queue.test.ts` (+1 arquivo):
-  `TypeError: Cannot read properties of undefined (reading 'clear')` —
-  `window.localStorage` indefinido por falta de jsdom no ambiente de teste.
-  Vem do commit `0d4f962` (modo offline), **não é regressão do lote de
-  migrations**. Falta um lote próprio.
+
+Corrigido em 08/10: **43 testes do `src/lib/offline/queue.test.ts` estavam
+falhando** (`TypeError: Cannot read properties of undefined (reading 'clear')` —
+`window.localStorage` indefinido). O arquivo não existe mais no repositório:
+a suíte hoje é 31 arquivos e **300 testes, todos verdes**. A pendência
+registrada em 02/10 descrevia um estado que os 19 commits seguintes
+resolveram; verificado com `npm test`, não por leitura.
+
+Corrigido em 08/10: **contraste WCAG AA de volta a 0 falhas.** O botão
+destrutivo no dark usava `#EF4444` sob texto branco (3.76:1, mínimo 4.5:1).
+Escureci para `#D73D3D` (4.54:1) — o mesmo vermelho do light (`#DC2626`) já
+passava com 4.83:1, então a divergência era o dark estar mais claro que o
+light. Tokenizado também o `text-neutral-500`/`text-neutral-400` que sobrou no
+PDV: `auditar-cores-hardcoded.mjs` volta a **0 utilitárias fora da marca em
+295 arquivos**.
 
 Corrigido em 07/10: **o menu oferecia item que a página rejeitava.** A sidebar e a
 BottomNav listavam destinos fixos enquanto cada página barra com

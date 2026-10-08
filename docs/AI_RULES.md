@@ -85,6 +85,15 @@ Next.js 16 App Router · Prisma · Supabase (Auth + Postgres) · Zod · Tailwind
 - Contraste WCAG AA é gate, não sugestão:
   `node scripts/auditar-contraste.mjs` (tem de sair 0 falhas).
   Mudou cor, rode o script.
+  **Os quatro gates rodam antes de qualquer commit:**
+  ```bash
+  npm test                                  # tem de sair tudo verde
+  node scripts/auditar-contraste.mjs         # 0 falhas
+  node scripts/auditar-cores-hardcoded.mjs  # 0 fora do token
+  node scripts/verificar-pesos.mjs          # 0 falhas
+  ```
+  Contraste e cor/token já estavam quebrados no main em 08/10 e foram
+  corrigidos; se voltarem a falhar, é regressão, não baseline.
 - Pesos: 400 (corpo), **500 (rótulo)** e 600 (ênfase). 700 é reservado ao
   valor de KPI e à enfase numérica.
 - **Item de menu declara a permissão que a página exige.** `tenantNav` e

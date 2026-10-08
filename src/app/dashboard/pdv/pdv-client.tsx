@@ -375,7 +375,7 @@ export function PdvClient({
               <label className="flex flex-col gap-1 text-sm">
                 Desconto (R$)
                 <Input value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" inputMode="decimal" />
-                <span className="text-xs text-neutral-500 dark:text-neutral-400">Validado no servidor</span>
+                <span className="text-muted-foreground text-xs">Validado no servidor</span>
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 Cliente (opcional)
