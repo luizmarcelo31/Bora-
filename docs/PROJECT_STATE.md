@@ -47,10 +47,30 @@
   defeito do shadow do Prisma 6.19.3 com Supabase, não do SQL
 
 ## Bugs conhecidos
-- **3 `<Select>` (shadcn) sem nome acessível** em `/dashboard/produtos`: o
-  `Select` não gera `aria-label` sozinho e o consumidor não nomeia. Leitor de
-  tela anuncia "combobox" sem dizer o que é. Decisão de conteúdo (rótulo por
-  filtro), precisa de lote próprio
+- Nenhum aberto.
+
+Corrigido em 08/10: **`ControlledSelect` não nomeava o campo.** O
+`SelectTrigger` do Radix é `<button role="combobox">` e button não é
+form-control nativo — um `<label>` envolvente rotula o hidden input, não ele. E
+o placeholder é valor de estado, não rótulo: some quando há seleção. Três
+call sites (PDV clássico, PDV Expresso, diálogo de fechar caixa) ficavam sem
+nome acessível. `label` agora é **obrigatório** no tipo, e
+`tests/e2e/accessible-names.spec.ts` mede a árvore de acessibilidade real em
+28 rotas (68 campos) para isso não voltar.
+
+Corrigido em 08/10: **venda offline podia ficar presa na fila com o dinheiro já
+no banco.** `createSaleAction` devolvia `{error: "sale"}` para qualquer falha
+inesperada — inclusive auditoria e revalidação, que acontecem DEPOIS do
+create. O reconciliador tratava como erro desconhecido e **bloqueava** a
+entrada. Observado: venda gravada com `offline=true` e a entrada da fila
+correspondente presa, com `tentativas: 1`. Agora devolve `{error: "rede"}`, que
+reenfileira; o reenvio bate na idempotencyKey e vira no-op. Verificado em
+navegador: 7 vendas offline, **0 duplicação**, 0 perdida.
+
+Corrigido em 08/10: **`auditar-cores-hardcoded.mjs` saía com status 0 mesmo
+achando violação.** Imprimia o achado e não setava `exitCode` — qualquer coisa
+que o envolvesse lia "ok". Por isso dois gates ficaram vermelhos no main sem
+ninguém ver. Agora seta `exitCode = 1`.
 
 Corrigido em 08/10: **43 testes do `src/lib/offline/queue.test.ts` estavam
 falhando** (`TypeError: Cannot read properties of undefined (reading 'clear')` —
@@ -103,6 +123,15 @@ medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
   `DATABASE_URL`/`DIRECT_URL` no `.env` e `.env.local`.
 
 ## Próxima tarefa
+- **Rodar `npm run gate:hook` depois de um `git clone`.** O `.git/hooks/` não é
+  versionado, então a trava não viaja com o repositório. O instalador é
+  idempotente e a lógica vive em `scripts/gate-design-system.mjs`, que é
+  versionado. Sem isto, quem clona fica sem trava nenhuma — que foi como os
+  gates ficaram vermelhos no main
+- **Duas etapas do modo offline continuam manuais** (precisam de dois
+  dispositivos ou de um operador): 2º aparelho vendendo o mesmo estoque
+  enquanto o 1º está offline, e fechamento de caixa com pendência.
+  `scripts/verificar-offline.mjs` cobre o resto e roda em 1 comando
 - **Backlog de UX escrito da perspectiva do dono da conveniência:**
   `docs/backlog-pedidos-dono.md` — 9 itens priorizados com o cenário do dia a
   dia que faz cada um acontecer, mais a seção "O que NÃO mudar". Nenhum código
@@ -121,6 +150,11 @@ medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
   modelo multi-loja trava a Fase 4 inteira. Precisa de decisão de negócio.
 
 ## Documentei nesta sessão
+- `docs/changes/2026-10-08-pendencias-e-gate-precommit.md` — as três pendências
+  (nome acessível do `Select`, verificação do modo offline, `migrate dev`) e a
+  trava de gate no pre-commit. Achou dois bugs de verdade: venda offline presa
+  na fila com o dinheiro já no banco, e `auditar-cores-hardcoded.mjs` que
+  imprimia violação e saía com status 0
 - `docs/changes/2026-10-07-menu-permissao-tipografia.md` — menu por permissão na
   sidebar e na BottomNav (FAB marcado por flag em vez de índice), e a reversão
   da escala de texto: a causa era o `font-size` no `body`, não os tokens

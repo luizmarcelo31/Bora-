@@ -36,9 +36,19 @@ export interface ResumoSync {
   ultimaVenda?: number;
 }
 
-/** Converte a resposta da action no vocabulário do reconciliador. */
+/**
+ * Converte a resposta da action no vocabulário do reconciliador.
+ *
+ * `error: "rede"` é o caso especial: a action devolve isso para falha de
+ * infraestrutura, que pode ter ocorrido DEPOIS da venda já estar gravada
+ * (auditoria, revalidação). Não é recusa do negócio — tratar como tal
+ * bloqueava a entrada com o dinheiro no banco. Aqui vira `erro_de_rede`, que
+ * reenfileira; o reenvio bate na idempotencyKey e vira no-op (achado de 08/10).
+ */
 function paraResultado(res: { ok: number } | { error: string }): ResultadoEnvio {
-  return "ok" in res ? { tipo: "aceita", saleId: res.ok } : { tipo: "rejeitada", erro: res.error };
+  if ("ok" in res) return { tipo: "aceita", saleId: res.ok };
+  if (res.error === "rede") return { tipo: "erro_de_rede", causa: "falha de infraestrutura" };
+  return { tipo: "rejeitada", erro: res.error };
 }
 
 /**
@@ -107,6 +117,10 @@ export function useSync(tenantId: number, userId: number): ResumoSync & { sincro
       }
 
       const resultado = await enviarPendente(venda);
+      // `rede` devolvido pela action é falha de infraestrutura, não recusa do
+      // negócio — e pode ter acontecido DEPOIS da venda já estar gravada. O
+      // reconciliador trata como erro de rede e reenfileira; o reenvio bate na
+      // idempotencyKey e vira no-op no banco (services/index.ts trata replay).
       const decisao = reconciliar(venda, resultado, venda.tentativas);
 
       if (decisao.tipo === "remover") {

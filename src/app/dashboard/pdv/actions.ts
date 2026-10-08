@@ -174,7 +174,19 @@ export async function createSaleAction(formData: FormData): Promise<CreateSaleRe
       cashBoxId,
       cause: e instanceof Error ? e.message : String(e),
     });
-    return { error: "sale" };
+    // `rede`: erro de infraestrutura NA É recusa do negócio.
+    //
+    // Este catch cobre também o que acontece DEPOIS do create — auditoria e
+    // revalidação —, quando a venda JÁ está gravada. Devolver `{error: "sale"}`
+    // ali fazia o reconciliador tratar como erro desconhecido e BLOQUEAR a
+    // entrada: o dinheiro estava no banco e a venda não saía da fila, sem o
+    // operador ter como saber que syncou (achado de 08/10, ver
+    // scripts/verificar-offline.mjs).
+    //
+    // `rede` faz o reconciliador reenfileirar: com a idempotencyKey, o reenvio
+    // vira no-op no banco (services/index.ts trata replay) e aí sim a entrada
+    // sai. Reenvio é barato; venda presa na fila é dinheiro invisível.
+    return { error: "rede" };
   }
 }
 

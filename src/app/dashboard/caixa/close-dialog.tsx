@@ -91,6 +91,7 @@ export function CloseCashBoxDialog({
             Caixa*
             <ControlledSelect
               name="cashBoxId"
+              label="Caixa"
               required
               value={selectedId}
               onValueChange={setSelectedId}

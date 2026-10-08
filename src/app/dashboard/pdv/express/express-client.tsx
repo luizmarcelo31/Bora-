@@ -250,6 +250,7 @@ export function ExpressPdvClient({
             <div className="flex gap-1.5">
               <div className="flex-1">
                 <ControlledSelect
+                  label="Caixa"
                   value={cashBoxId}
                   onValueChange={setCashBoxId}
                   placeholder="Sem caixa"

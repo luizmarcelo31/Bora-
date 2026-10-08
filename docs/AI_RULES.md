@@ -94,6 +94,15 @@ Next.js 16 App Router · Prisma · Supabase (Auth + Postgres) · Zod · Tailwind
   ```
   Contraste e cor/token já estavam quebrados no main em 08/10 e foram
   corrigidos; se voltarem a falhar, é regressão, não baseline.
+- **O pre-commit roda `npm run gate`** (instalado por `npm run gate:hook`).
+  `.git/hooks/` não é versionado, então é preciso rodar o instalador depois de
+  cada `git clone`. Para pular de propósito: `SKIP_GATE=1 git commit …`.
+- **Todo script de gate precisa setar `process.exitCode`.** Imprimir o achado e
+  sair com 0 faz o gate parecer "ok" para quem o invoca — foi assim que
+  `auditar-cores-hardcoded.mjs` enganou todo mundo. Se o gate imprime erro, tem
+  que sair com 1.
+- **Teste o gate com uma violação de verdade antes de confiar nele.** Gate que
+  nunca reprovou não é gate. Para pular: `SKIP_GATE=1`.
 - Pesos: 400 (corpo), **500 (rótulo)** e 600 (ênfase). 700 é reservado ao
   valor de KPI e à enfase numérica.
 - **Item de menu declara a permissão que a página exige.** `tenantNav` e

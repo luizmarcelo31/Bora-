@@ -35,6 +35,18 @@ const RE = new RegExp(
   "g"
 );
 
+// Prefixos que NÃO são utilitária: `color: red-500` e afins em CSS cru.
+// Sem esta segunda passagem a violação passa: o teste do gate com
+// `color: red-500` não acusou nada na primeira tentativa.
+//
+// O padrão precisa tolerar o `:` do separador (`color: red-500`), e por isso
+// o `\s*` vem depois dos dois-pontos, não antes da propriedade. Os dois
+// grupos existem para o nome poder ser montado na chave do achado.
+const PROPRIEDADE_CSS = new RegExp(
+  `(color|background-color|border-color|outline-color|caret-color|accent-color|text-decoration-color)\\s*:\\s*((?:${FORA_DA_MARCA})-(\\d{2,3}))\\b`,
+  "g"
+);
+
 const achados = new Map(); // chave -> [arquivos]
 
 for (const arq of ARQUIVOS) {
@@ -42,6 +54,13 @@ for (const arq of ARQUIVOS) {
   linhas.forEach((linha, i) => {
     for (const m of linha.matchAll(RE)) {
       const chave = m[0];
+      if (!achados.has(chave)) achados.set(chave, []);
+      achados.get(chave).push(`${arq}:${i + 1}`);
+    }
+    // CSS cru: `color: red-500`. Chave com propriedade e cor, que é o que o
+    // leitor precisa ver para saber o que trocar.
+    for (const m of linha.matchAll(PROPRIEDADE_CSS)) {
+      const chave = `${m[1]}: ${m[2]}`;
       if (!achados.has(chave)) achados.set(chave, []);
       achados.get(chave).push(`${arq}:${i + 1}`);
     }
@@ -62,4 +81,10 @@ if (achados.size === 0) {
   }
   const total = ordenados.reduce((s, [, l]) => s + l.length, 0);
   console.log(`\nTotal de ocorrencias: ${total}`);
+
+  // `exitCode` é o que faz este script ser gate. Sem ele, o script imprime a
+  // violação e SAI COM 0 — e qualquer coisa que o envolva lê "ok". Foi
+  // exatamente o que aconteceu ao ligar este gate no pre-commit: a violação
+  // aparecia na tela e o commit passava. (achado de 08/10)
+  process.exitCode = 1;
 }

@@ -65,14 +65,22 @@ async function clicarCadaItem(page: import("@playwright/test").Page, seletor: st
 
   const linhas: string[] = [];
   for (const item of itens) {
-    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    // Voltar pelo histórico em vez de `goto`: `goto` cancela a navegação
+    // disparada pelo item anterior e o `waitForLoadState` seguinte mede a
+    // página errada.
+    await page.goBack({ waitUntil: "domcontentloaded" }).catch(() => {});
+    await page.waitForURL("**/dashboard", { timeout: 15000 }).catch(async () => {
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    });
     await fecharDialogos(page);
+
     const el = page.locator(seletor, { hasText: item.text }).first();
     // `force`: o badge do dev overlay do Next monta um nextjs-portal que
     // intercepta o ponteiro no viewport estreito. É artefato de dev, não do menu.
     await el.click({ timeout: 10000, force: true });
-    await page.waitForLoadState("networkidle").catch(() => {});
-    await page.waitForTimeout(350);
+    await page.waitForURL(`**${item.href}**`, { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(400);
+
     const caiu = new URL(page.url()).pathname;
     linhas.push(
       `${caiu.includes("unauthorized") ? "FALHA" : "ok   "} | ${item.text.padEnd(22)} | ${item.href!.padEnd(26)} | ${caiu}`

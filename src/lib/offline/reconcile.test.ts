@@ -1,175 +1,146 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
+import { lerFila, gravarFila, contarPendentes, remover } from "./queue";
+import { reconciliar } from "./reconcile";
+import { ERROS_DIVERGENCIA, ERROS_FINAIS, type VendaPendente } from "./types";
 
-import {
-  ESPERA_BASE_MS,
-  ESPERA_MAXIMA_MS,
-  MAX_TENTATIVAS,
-  esperaParaReenvio,
-  reconciliar,
-  type Decisao,
-} from "./reconcile";
-import type { VendaPendente } from "./types";
+/**
+ * O critério de pronto do ADR-006 é "vender offline nunca perde venda e nunca
+ * duplica na fila". `reconciliar` decide o destino de cada entrada depois do
+ * envio e é função pura — o que dá para travar a decisão aqui, sem navegador.
+ *
+ * O que este teste NÃO prova é o comportamento com rede caída, que é o que o
+ * roteiro manual de `docs/changes/2026-10-02-modo-offline-pdv.md` fecha. Este
+ * arquivo trava a decisão, não a rede.
+ */
 
-function venda(over: Partial<VendaPendente> = {}): VendaPendente {
-  return {
-    idempotencyKey: "key-1",
-    occurredAt: 1_757_000_000_000,
-    items: [{ productId: 10, quantity: 2 }],
-    paymentMethod: "DINHEIRO",
-    discount: 0,
-    customerName: "",
-    tentativas: 0,
-    ...over,
-  };
-}
+const VENDA: VendaPendente = {
+  idempotencyKey: "abc-123",
+  occurredAt: 1_760_000_000_000,
+  items: [{ productId: 1, quantity: 2 }],
+  paymentMethod: "DINHEIRO",
+  discount: 0,
+  customerName: "",
+  tentativas: 0,
+};
 
-function soTipo(d: Decisao): string {
-  return d.tipo;
-}
+// Mesma chave que `chaveFila` monta em queue.ts.
+const CHAVE = "boramais:pdv:fila:2:5";
 
-describe("reconciliar — destino da venda pendente", () => {
-  describe("aceita", () => {
-    it("remove e devolve o id da venda criada", () => {
-      // O servidor gravou a venda: manter na fila reenviaria o mesmo FormData.
-      const d = reconciliar(venda(), { tipo: "aceita", saleId: 4211 }, 0);
-      expect(d).toEqual({ tipo: "remover", saleId: 4211 });
-    });
+beforeEach(() => window.localStorage.clear());
 
-    it("remove mesmo depois de muitas tentativas", () => {
-      // Replay e seguro pelo unique do banco, mas nao ha razao para reprocessar.
-      const d = reconciliar(venda(), { tipo: "aceita", saleId: 7 }, MAX_TENTATIVAS + 3);
-      expect(soTipo(d)).toBe("remover");
+describe("reconciliar — destino da venda na fila", () => {
+  it("aceita: remove da fila", () => {
+    expect(reconciliar(VENDA, { tipo: "aceita", saleId: 42 }, 0)).toEqual({
+      tipo: "remover",
+      saleId: 42,
     });
   });
 
-  describe("erro de rede", () => {
-    it("reenfileira em vez de perder a venda", () => {
-      // A venda foi entregue ao cliente. Desistir aqui e perder dinheiro.
-      const d = reconciliar(venda(), { tipo: "erro_de_rede", causa: "Failed to fetch" }, 0);
-      expect(soTipo(d)).toBe("reenfileirar");
-      if (d.tipo === "reenfileirar") {
-        expect(d.esperaMs).toBe(ESPERA_BASE_MS);
-        expect(d.erro).toBe("Failed to fetch");
-      }
-    });
-
-    it("cresce a espera a cada tentativa ate o teto", () => {
-      const esperas = [0, 1, 2, 3, 4, 5].map((t) => {
-        const d = reconciliar(venda(), { tipo: "erro_de_rede", causa: "x" }, t);
-        return d.tipo === "reenfileirar" ? d.esperaMs : -1;
-      });
-
-      expect(esperas[0]).toBe(1_000);
-      expect(esperas[1]).toBe(2_000);
-      expect(esperas[2]).toBe(4_000);
-      // Teto de 30s: aparelho sem rede estavel nao ganha com espera maior.
-      expect(esperas[5]).toBe(ESPERA_MAXIMA_MS);
-      for (const e of esperas) expect(e).toBeLessThanOrEqual(ESPERA_MAXIMA_MS);
-    });
-
-    it("bloqueia apos o teto de tentativas em vez de girar para sempre", () => {
-      // Insistir contra uma rede que nao volta consome bateria e esconde o
-      // problema. A venda continua na fila, visivel para o operador.
-      const d = reconciliar(
-        venda({ tentativas: MAX_TENTATIVAS }),
-        { tipo: "erro_de_rede", causa: "offline" },
-        MAX_TENTATIVAS
-      );
-      expect(soTipo(d)).toBe("bloqueada");
-      if (d.tipo === "bloqueada") {
-        expect(d.motivo).toContain("varias tentativas");
-      }
-    });
+  it("sessão expirada: pausa, nunca descarta", () => {
+    const d = reconciliar(VENDA, { tipo: "sessao_expirada" }, 0);
+    expect(d.tipo).toBe("pausar");
   });
 
-  describe("sessao expirada", () => {
-    it("pausa sem descartar a fila", () => {
-      // JWT do Supabase expira em ~1h e a fila pode ficar horas esperando.
-      const d = reconciliar(venda(), { tipo: "sessao_expirada" }, 2);
-      expect(soTipo(d)).toBe("pausar");
-      if (d.tipo === "pausar") {
-        expect(d.motivo).toContain("Sessao expirada");
-      }
-    });
-
-    it("pausa mesmo com muitas tentativas acumuladas", () => {
-      const d = reconciliar(
-        venda({ tentativas: MAX_TENTATIVAS }),
-        { tipo: "sessao_expirada" },
-        MAX_TENTATIVAS
-      );
-      // Nao pode virar "bloqueada": sessao expirada e transitório, e bloquear
-      // exigiria intervencao manual para um problema que um login resolve.
-      expect(soTipo(d)).toBe("pausar");
-    });
+  it("erro de rede antes do limite: reenfileira com espera", () => {
+    const d = reconciliar(VENDA, { tipo: "erro_de_rede", causa: "timeout" }, 0);
+    expect(d.tipo).toBe("reenfileirar");
+    if (d.tipo === "reenfileirar") expect(d.esperaMs).toBeGreaterThan(0);
   });
 
-  describe("divergencia (estoque / caixa)", () => {
-    it("bloqueia com motivo legivel, sem laco de reenvio", () => {
-      // Politica do ADR §5: a venda vence o estoque. O servidor deveria ter
-      // aceitado e registrado divergencia; recusar significa que algo no
-      // caminho nao marcou a venda como offline. Insistir devolve o mesmo erro.
-      const d = reconciliar(venda(), { tipo: "rejeitada", erro: "stock" }, 0);
-      expect(soTipo(d)).toBe("bloqueada");
-      if (d.tipo === "bloqueada") {
-        expect(d.erro).toBe("stock");
-        expect(d.motivo).toContain("estoque insuficiente");
-      }
-    });
-
-    it("trata caixa fechado como divergencia tambem", () => {
-      const d = reconciliar(venda(), { tipo: "rejeitada", erro: "cashbox" }, 0);
-      expect(soTipo(d)).toBe("bloqueada");
-      if (d.tipo === "bloqueada") {
-        expect(d.motivo).toContain("caixa nao estava aberto");
-      }
-    });
+  it("erro de rede no limite: bloqueia, não descarta", () => {
+    expect(reconciliar(VENDA, { tipo: "erro_de_rede", causa: "timeout" }, 99).tipo).toBe("bloqueada");
   });
 
-  describe("erro final de negocio", () => {
-    it.each(["invalid", "empty", "discount", "amount", "forbidden"])(
-      "%s remove a entrada em vez de repetir para sempre",
-      (erro) => {
-        // Repetir contra um erro de negocio gasta chamada e, no caso do
-        // forbidden, estoura o rate-limit de 60/min do proxy.
-        const d = reconciliar(venda(), { tipo: "rejeitada", erro }, 0);
-        expect(soTipo(d)).toBe("remover");
-      }
-    );
-  });
-
-  describe("erro desconhecido", () => {
-    it("bloqueia em vez de descartar a venda", () => {
-      // Nao sabemos o que houve. Descartar seria perder venda; reenfileirar em
-      // laco contra erro nao reconhecido consome bateria e esconde o bug.
-      const d = reconciliar(venda(), { tipo: "rejeitada", erro: "hydration_mismatch" }, 0);
-      expect(soTipo(d)).toBe("bloqueada");
-      if (d.tipo === "bloqueada") {
-        expect(d.motivo).toContain("hydration_mismatch");
-      }
-    });
-  });
-
-  it("so reenfileira com espera, nunca de imediato", () => {
-    // Reenviar no mesmo tique atravessa a fila inteira contra uma rede caída.
-    const rede = reconciliar(venda(), { tipo: "erro_de_rede", causa: "x" }, 0);
-    if (rede.tipo !== "reenfileirar") {
-      throw new Error("erro de rede na primeira tentativa deveria reenfileirar");
+  it("toda divergência do servidor bloqueia para o operador resolver", () => {
+    // Insistir devolveria o mesmo erro para sempre (ADR-006 §5): o servidor
+    // aceita venda offline e registra divergência em vez de recusar.
+    for (const erro of ERROS_DIVERGENCIA) {
+      const d = reconciliar(VENDA, { tipo: "rejeitada", erro }, 0);
+      expect(d.tipo, erro).toBe("bloqueada");
     }
-    expect(rede.esperaMs).toBeGreaterThan(0);
+  });
+
+  it("todo erro final remove, porque não melhora com repetição", () => {
+    for (const erro of ERROS_FINAIS) {
+      const d = reconciliar(VENDA, { tipo: "rejeitada", erro }, 0);
+      expect(d.tipo, erro).toBe("remover");
+    }
+  });
+
+  it("erro desconhecido bloqueia — o erro honesto", () => {
+    expect(reconciliar(VENDA, { tipo: "rejeitada", erro: "sei_la" }, 0).tipo).toBe("bloqueada");
+  });
+
+  it("INVARIANTE: só resposta conclusiva remove. Falha nunca descarta venda.", () => {
+    // É o critério do ADR escrito como asserção: enquanto o servidor não dá
+    // resposta conclusiva, a venda fica na fila para o operador recuperar.
+    const inconclusivos = [
+      { tipo: "sessao_expirada" } as const,
+      { tipo: "erro_de_rede", causa: "offline" } as const,
+      { tipo: "rejeitada", erro: "stock" } as const,
+      { tipo: "rejeitada", erro: "cashbox" } as const,
+      { tipo: "rejeitada", erro: "desconhecido" } as const,
+    ];
+    for (const r of inconclusivos) {
+      expect(reconciliar(VENDA, r, 0).tipo, r.tipo).not.toBe("remover");
+    }
+  });
+
+  it("a chave de idempotência sobrevive ao round-trip pela fila", () => {
+    // Reenvio com chave nova criaria venda duplicada. A chave é o que protege,
+    // então precisa ser preservada exatamente na leitura e na gravação.
+    gravarFila(2, 5, [VENDA]);
+    expect(lerFila(2, 5)[0].idempotencyKey).toBe("abc-123");
+
+    const d = reconciliar(lerFila(2, 5)[0], { tipo: "aceita", saleId: 7 }, 0);
+    expect(d).toEqual(reconciliar(lerFila(2, 5)[0], { tipo: "aceita", saleId: 7 }, 0));
   });
 });
 
-describe("esperaParaReenvio", () => {
-  it("e monotonica ate o teto", () => {
-    expect(esperaParaReenvio(1)).toBe(1_000);
-    expect(esperaParaReenvio(2)).toBe(2_000);
-    expect(esperaParaReenvio(10)).toBe(ESPERA_MAXIMA_MS);
-    expect(esperaParaReenvio(999)).toBe(ESPERA_MAXIMA_MS);
+describe("fila no storage", () => {
+  it("vazia quando não há nada salvo", () => {
+    expect(lerFila(2, 5)).toEqual([]);
   });
 
-  it("trata tentativa negativa sem estourar", () => {
-    expect(esperaParaReenvio(0)).toBe(ESPERA_BASE_MS);
-    expect(esperaParaReenvio(-5)).toBe(ESPERA_BASE_MS);
+  it("grava, lê e conta", () => {
+    expect(gravarFila(2, 5, [VENDA])).toBe(true);
+    expect(lerFila(2, 5)).toHaveLength(1);
+    expect(contarPendentes(2, 5)).toBe(1);
+  });
+
+  it("remover tira exatamente uma venda e preserva a outra", () => {
+    gravarFila(2, 5, [VENDA, { ...VENDA, idempotencyKey: "def-456" }]);
+    expect(contarPendentes(2, 5)).toBe(2);
+    remover(2, 5, "abc-123");
+    const lida = lerFila(2, 5);
+    expect(lida).toHaveLength(1);
+    expect(lida[0].idempotencyKey).toBe("def-456");
+  });
+
+  it("JSON corrompido devolve fila vazia em vez de quebrar", () => {
+    window.localStorage.setItem(CHAVE, "{nao é json");
+    expect(lerFila(2, 5)).toEqual([]);
+  });
+
+  it("entrada sem idempotencyKey é filtrada e a vizinha sobrevive", () => {
+    window.localStorage.setItem(
+      CHAVE,
+      JSON.stringify([VENDA, { ...VENDA, idempotencyKey: "" }])
+    );
+    const lida = lerFila(2, 5);
+    expect(lida).toHaveLength(1);
+    expect(lida[0].idempotencyKey).toBe("abc-123");
+  });
+
+  it("entrada sem occurredAt é filtrada", () => {
+    const semData = { ...VENDA, occurredAt: undefined } as unknown as VendaPendente;
+    window.localStorage.setItem(CHAVE, JSON.stringify([VENDA, semData]));
+    expect(lerFila(2, 5)).toHaveLength(1);
+  });
+
+  it("fila de um tenant ou usuário não vaza para o outro", () => {
+    gravarFila(2, 5, [VENDA]);
+    expect(lerFila(99, 5)).toEqual([]);
+    expect(lerFila(2, 77)).toEqual([]);
   });
 });

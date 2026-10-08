@@ -353,6 +353,7 @@ export function PdvClient({
               <label className="flex flex-col gap-1 text-sm">
                 Pagamento
                 <ControlledSelect
+                  label="Pagamento"
                   value={payment}
                   onValueChange={setPayment}
                   options={PAYMENTS}
@@ -361,6 +362,7 @@ export function PdvClient({
               <label className="flex flex-col gap-1 text-sm">
                 Caixa (opcional)
                 <ControlledSelect
+                  label="Caixa"
                   value={cashBoxId}
                   onValueChange={setCashBoxId}
                   placeholder="Sem caixa"
