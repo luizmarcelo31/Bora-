@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { Permissao } from "@/lib/permissions";
 
 /**
  * Tipos de navegação compartilhados (única fonte — admin e tenant
@@ -24,6 +25,15 @@ interface NavItemBase {
   badge?: NavBadge;
   disabled?: boolean;
   newTab?: boolean;
+  /**
+   * Permissão exigida pela página de destino, a mesma que a página passa para
+   * `requirePermission`. Serve para FILTRAR o menu, não para autorizar: a
+   * autorização continua sendo da página. `null` = página sem guarda.
+   *
+   * Só o tenant-nav usa. O admin-não precisa porque /admin já exige
+   * SUPER_ADMIN inteiro (ver src/lib/admin.ts) e o comentário dele diz isso.
+   */
+  permission?: Permissao | null;
 }
 
 export interface NavMainLinkItem extends NavItemBase {

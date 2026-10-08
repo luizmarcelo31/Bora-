@@ -85,8 +85,14 @@ Next.js 16 App Router · Prisma · Supabase (Auth + Postgres) · Zod · Tailwind
 - Contraste WCAG AA é gate, não sugestão:
   `node scripts/auditar-contraste.mjs` (tem de sair 0 falhas).
   Mudou cor, rode o script.
-- Pesos: 400 (corpo) e 600 (ênfase). 700 é reservado ao valor de KPI e à
-  enfase numérica (roadmap 1.2 / 1.3).
+- Pesos: 400 (corpo), **500 (rótulo)** e 600 (ênfase). 700 é reservado ao
+  valor de KPI e à enfase numérica.
+- **Item de menu declara a permissão que a página exige.** `tenantNav` e
+  `TENANT_BOTTOM_NAV` trazem `permission`, e o filtro é `visibleTenantNav` /
+  `visibleBottomNavItems`. `adminNav` é isento por desenho (`/admin` exige
+  `SUPER_ADMIN` inteiro). Menu estático × página que barra = 403 no toque.
+- **O FAB da BottomNav é marcado por `fab: true`, nunca por índice.** A lista é
+  filtrada por permissão e a posição do PDV muda conforme o role.
 
 ## Depois de codar (obrigatório — parte do "done", sem exceção)
 Ordem: código → testes → docs → commit. Nenhuma tarefa está concluída sem docs.

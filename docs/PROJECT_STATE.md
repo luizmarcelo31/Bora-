@@ -1,6 +1,6 @@
 # PROJECT_STATE — fonte da verdade
 
-**Atualizado:** 02/10/2026 · **Fase:** **Fase 1 CONCLUÍDA** (1.1–1.4, com inspeção visual) · **Fase 2: código completo** (20 de 20 itens, 1 parcial) · **Fase 3: 15 de 15** — modo offline implementado, aguardando verificação manual em navegador
+**Atualizado:** 07/10/2026 · **Fase:** **Fase 1 CONCLUÍDA** (1.1–1.4, com inspeção visual) · **Fase 2: código completo** (20 de 20 itens, 1 parcial) · **Fase 3: 15 de 15** — modo offline implementado, aguardando verificação manual em navegador
 
 ## Implementado ✅
 - Next.js 16 + TS + Tailwind v4 + shadcn + `lib` (`payments`, `audit-labels`, `labels`, `plataforma`)
@@ -47,6 +47,10 @@
   defeito do shadow do Prisma 6.19.3 com Supabase, não do SQL
 
 ## Bugs conhecidos
+- **`src/styles/tokens.test.ts` falha no `origin/main`** (07/10): a regra "não
+  deixa seletor de `font-weight` solto" acusa o bloco de utilitárias replicadas
+  em `@layer components` que o `tokens.css` ganhou. Verificado com stash —
+  falha sem nenhuma alteração local. **Pendente de correção**
 - **3 `<Select>` (shadcn) sem nome acessível** em `/dashboard/produtos`: o
   `Select` não gera `aria-label` sozinho e o consumidor não nomeia. Leitor de
   tela anuncia "combobox" sem dizer o que é. Decisão de conteúdo (rótulo por
@@ -56,6 +60,15 @@
   `window.localStorage` indefinido por falta de jsdom no ambiente de teste.
   Vem do commit `0d4f962` (modo offline), **não é regressão do lote de
   migrations**. Falta um lote próprio.
+
+Corrigido em 07/10: **menu oferecia item que a página rejeitava.** A sidebar e a
+BottomNav listavam destinos fixos enquanto cada página barra com
+`requirePermission` → `/unauthorized`. Para `FUNCIONARIO` eram 3 de 5 destinos
+do mobile, **inclusive o FAB (PDV)** — que é a única navegação no celular.
+`adminNav` isenta de filtro por desenho: `/admin` exige `SUPER_ADMIN` inteiro.
+Prova em navegador nos dois roles: PROPRIETARIO 16/16 e 5/5, FUNCIONARIO 11/11
+e 2/2, **zero 403**. Detalhe em
+`docs/changes/2026-10-07-menu-permissao-tipografia.md`.
 
 ## Acessibilidade — verificado no navegador (02/10/2026)
 Auditoria real em 16 rotas (desktop 1249px + mobile 390px), com login e
@@ -74,6 +87,17 @@ medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
   `DATABASE_URL`/`DIRECT_URL` no `.env` e `.env.local`.
 
 ## Próxima tarefa
+- **Reversão da escala tipográfica: decisão do dono pendente.** O pedido
+  existe ("interface de UI UX no padrão antes das mudanças visuais") e o
+  diagnóstico está pronto em
+  `docs/changes/2026-10-07-menu-permissao-tipografia.md` — inclusive o achado de
+  que a escala encolhida vinha dos tokens `--text-*` (text-xs 12→11px), não dos
+  pesos. **Não foi aplicado** porque `origin/main` ganhou 19 commits de
+  redesign por cima (`mobile-tokens.css`, kit novo em `components/mobile/`,
+  refinamentos em PDV/Usuários/admin, ajuste de alvos de toque) e reverter em
+  cima disso jogaria fora trabalho recente sem saber qual parte ele quer de
+  volta. `tests/e2e/typography.spec.ts` já está no repo medindo o padrão
+  antigo, pronto para ser o gate do lote
 - **Backlog de UX escrito da perspectiva do dono da conveniência:**
   `docs/backlog-pedidos-dono.md` — 9 itens priorizados com o cenário do dia a
   dia que faz cada um acontecer, mais a seção "O que NÃO mudar". Nenhum código
@@ -92,6 +116,10 @@ medição no DOM. **Contraste: 0 violações WCAG AA.** **Overflow horizontal em
   modelo multi-loja trava a Fase 4 inteira. Precisa de decisão de negócio.
 
 ## Documentei nesta sessão
+- `docs/changes/2026-10-07-menu-permissao-tipografia.md` — menu por permissão na
+  sidebar e na BottomNav (com o FAB marcado por flag em vez de índice), mais o
+  diagnóstico da reversão tipográfica que ficou de fora por conflitar com os 19
+  commits de redesign do `origin/main`
 - `docs/changes/2026-10-02-modo-offline-pdv.md` — Fase 3.1 completa: 6 passos,
   as 4 políticas de conflito, o achado de migration que travava o banco, e o
   roteiro de verificação manual

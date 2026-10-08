@@ -109,8 +109,13 @@ export const PERMISSAO_LABEL: Record<Permissao, string> = {
   "reports.view": "Ver relatorios",
 };
 
-export function can(funcao: Funcao, permissao: Permissao): boolean {
-  return FUNCAO_PERMISSOES[funcao]?.includes(permissao) ?? false;
+/**
+ * `funcao` aceita null/undefined porque dado legado ou enum novo em rollout não
+ * pode virar `true`: o `?? false` já tratava a chave ausente, e filtrar menu
+ * por role precisa do mesmo "nega na dúvida" sem cast no call site.
+ */
+export function can(funcao: Funcao | null | undefined, permissao: Permissao): boolean {
+  return FUNCAO_PERMISSOES[funcao as Funcao]?.includes(permissao) ?? false;
 }
 
 export function requirePermission(funcao: Funcao, permissao: Permissao): void {

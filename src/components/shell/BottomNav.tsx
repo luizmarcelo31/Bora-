@@ -55,25 +55,43 @@ export interface BottomNavItem {
   title: string;
   url: string;
   icon: BottomNavIconKey;
+  /**
+   * Recebe o FAB elevado (ícone da logo), em vez do ícone da chave.
+   *
+   * O FAB é marcado por flag e NÃO por índice: a lista é filtrada por permissão
+   * antes de chegar aqui, então a posição do PDV muda conforme o role. Fixar
+   * `i === 2` colocaria a logo em cima de "Estoque" para quem não pode vender.
+   */
+  fab?: boolean;
 }
 
 /**
  * Bottom bar estilo Android nativo (Material M3 navigation bar).
- * Com `fabImage`, o item do meio (índice 2) vira FAB elevado com a logo.
+ * Com `fabImage`, o item marcado `fab` vira FAB elevado com a logo.
  * Labels sempre visíveis, alvos 44px+, safe-area respeitada.
  * `md:hidden` — desktop usa a sidebar.
+ *
+ * A grade acompanha o número de itens, não um `grid-cols-5` fixo: a lista já
+ * chega filtrada por permissão e uma coluna vazia sobrando distorceria o
+ * alinhamento do FAB.
  */
 export function BottomNav({ items, fabImage }: { items: readonly BottomNavItem[]; fabImage?: string }) {
   const pathname = usePathname();
+
+  if (items.length === 0) return null;
+
   return (
     <nav
       aria-label="Navegação principal"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur md:hidden"
     >
-      <div className="grid grid-cols-5 items-end px-1 pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))]">
-        {items.map((item, i) => {
+      <div
+        className="grid items-end px-1 pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))]"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
+        {items.map((item) => {
           const active = pathname === item.url;
-          if (fabImage && i === 2) {
+          if (fabImage && item.fab) {
             return (
               <Link
                 key={item.url}
